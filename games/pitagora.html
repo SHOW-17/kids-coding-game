@@ -29,21 +29,21 @@
   .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; align-items:center; flex:1;}
 
   /* status bar */
-  .statusbar{display:flex; gap:10px; align-items:center; margin:4px 0 2px;}
+  .statusbar{display:flex; gap:10px; align-items:center; margin:2px 0 1px;}
   .lv-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
-    padding:7px 16px; border-radius:999px; font-size:17px; color:var(--accent-d);}
+    padding:6px 15px; border-radius:999px; font-size:16px; color:var(--accent-d);}
   .budget-pill{font-weight:800; background:#fff; box-shadow:var(--sh-1);
-    padding:7px 14px; border-radius:999px; font-size:16px; color:var(--ink-soft);
+    padding:6px 13px; border-radius:999px; font-size:15px; color:var(--ink-soft);
     display:flex; align-items:center; gap:5px;}
   .budget-pill.low{color:var(--c-red-d);}
 
-  .dots{margin:4px 0 2px;}
+  .dots{margin:2px 0 1px;}
 
-  .hint{font-weight:800; font-size:15px; color:var(--ink-soft); min-height:22px;
-    text-align:center; margin:4px 0;}
+  .hint{font-weight:800; font-size:14px; color:var(--ink-soft); min-height:20px;
+    text-align:center; margin:2px 0;}
 
   /* board */
-  .board-wrap{position:relative; margin:4px 0;
+  .board-wrap{position:relative; margin:2px 0;
     border-radius:var(--r-md); padding:8px;
     background:linear-gradient(180deg,#bfe6ff 0%, #d7f0ff 100%);
     box-shadow:var(--sh-2), inset 0 0 0 4px #fff;}
@@ -89,8 +89,8 @@
   @keyframes wflash{0%,100%{filter:none;}50%{filter:brightness(1.6) saturate(2) hue-rotate(-30deg);}}
 
   /* どうぐトレイ */
-  .tray{display:flex; gap:14px; align-items:center; justify-content:center; margin:8px 0 4px;}
-  .tool-btn{position:relative; width:70px; height:70px; border-radius:var(--r-md);
+  .tray{display:flex; gap:14px; align-items:center; justify-content:center; margin:5px 0 2px;}
+  .tool-btn{position:relative; width:64px; height:64px; border-radius:var(--r-md);
     background:var(--paper); box-shadow:var(--sh-1);
     display:flex; align-items:center; justify-content:center;
     transition:transform .12s var(--spring), box-shadow .12s var(--ease);}
@@ -104,7 +104,7 @@
 
   /* buttons */
   .controls{display:flex; gap:16px; align-items:center; justify-content:center;
-    margin:6px 0 10px; min-height:80px;}
+    margin:4px 0 8px; min-height:72px;}
 </style>
 </head>
 <body>
@@ -156,19 +156,29 @@
 */
 const save = Save.game('pitagora');
 
-/* ---- level data (every level solvability checked by Node brute-force search) ---- */
+/* ---- level data (every level solvability checked by Node brute-force search) ----
+   かんたん→むずかしい の じゅんに。うしろの レベルは ばんめんが おおきく、
+   かべが おおく、さかを たくさん（4〜7ぼん）つかう。╲と╱ りょうほう つかう
+   レベルも あり（L5/L8/L10/L11/L13）。すべて こたえあり・さか0ぼんでは とけない。 */
 function W(arr){return arr.map(c=>({x:c[0],y:c[1]}));}
 const LEVELS=[
+  // 1〜3 かんたん（さか 1〜2ぼん）
   {w:5,h:6,start:{x:1,y:0},goal:{x:2,y:5},walls:W([]),budget:1},
   {w:5,h:6,start:{x:3,y:0},goal:{x:2,y:5},walls:W([]),budget:1},
-  {w:6,h:6,start:{x:2,y:0},goal:{x:3,y:5},walls:W([[2,2],[2,3],[2,4]]),budget:1},
-  {w:6,h:7,start:{x:1,y:0},goal:{x:3,y:6},walls:W([[1,4]]),budget:2},
-  {w:6,h:7,start:{x:1,y:0},goal:{x:1,y:6},walls:W([[1,3]]),budget:2},
-  {w:6,h:8,start:{x:2,y:0},goal:{x:2,y:7},walls:W([[2,3],[2,4]]),budget:2},
-  {w:6,h:8,start:{x:0,y:0},goal:{x:0,y:7},walls:W([[0,3],[3,5]]),budget:3},
-  {w:6,h:8,start:{x:0,y:0},goal:{x:3,y:7},walls:W([[3,3]]),budget:3},
-  {w:6,h:9,start:{x:2,y:0},goal:{x:4,y:8},walls:W([[2,2],[2,3],[4,4],[4,5]]),budget:3},
-  {w:6,h:9,start:{x:1,y:0},goal:{x:4,y:8},walls:W([[1,2],[5,4],[3,6]]),budget:4},
+  {w:6,h:6,start:{x:2,y:0},goal:{x:4,y:5},walls:W([[2,2],[2,3]]),budget:2},
+  // 4〜5 すこし むずかしい
+  {w:6,h:7,start:{x:1,y:0},goal:{x:4,y:6},walls:W([[3,3]]),budget:3},
+  {w:6,h:7,start:{x:1,y:0},goal:{x:1,y:6},walls:W([[1,3]]),budget:3},            // ╲╱ りょうほう
+  // 6〜7 ちゅうきゅう（さか 4〜5ぼん）
+  {w:7,h:8,start:{x:1,y:0},goal:{x:5,y:7},walls:W([[3,3],[3,4]]),budget:5},
+  {w:8,h:9,start:{x:5,y:0},goal:{x:0,y:8},walls:W([[5,3],[2,5]]),budget:6},
+  // 8〜13 むずかしい（さか 4〜7ぼん・おおきな ばんめん）
+  {w:8,h:10,start:{x:1,y:0},goal:{x:1,y:9},walls:W([[1,2],[2,2],[6,4],[6,5],[0,6],[1,6]]),budget:7},  // ╲╱
+  {w:8,h:10,start:{x:0,y:0},goal:{x:7,y:9},walls:W([[2,2],[2,3],[5,5],[5,6],[3,7]]),budget:7},
+  {w:8,h:11,start:{x:2,y:0},goal:{x:2,y:10},walls:W([[2,2],[3,2],[6,5],[6,6],[1,8],[2,8]]),budget:8}, // ╲╱
+  {w:8,h:12,start:{x:1,y:0},goal:{x:1,y:11},walls:W([[0,3],[1,3],[2,3],[5,7],[6,7],[7,7]]),budget:9}, // ╲╱
+  {w:8,h:12,start:{x:0,y:0},goal:{x:6,y:11},walls:W([[2,2],[2,3],[5,5],[5,6],[3,8],[3,9]]),budget:8},
+  {w:8,h:12,start:{x:1,y:0},goal:{x:1,y:11},walls:W([[1,2],[2,2],[6,5],[6,6],[0,8],[1,8]]),budget:8}, // ╲╱ さいご
 ];
 
 /* ---- DOM ---- */
@@ -209,18 +219,22 @@ function renderDots(){
   }
 }
 
-/* ---- compute cell size from screen (whole UI fits, no overflow) ---- */
+/* ---- compute cell size from screen (whole UI fits, no overflow) ----
+   たてながの ばんめん（h=12 まで）でも、ちいさい スマホ（360x640）で
+   topbar/ステータス/ドット/ヒント/トレイ/▶ まで がめんないに おさまるよう
+   クロームぶんを さしひいて セルサイズを きめる。 */
 function calcCell(lv){
   // board width: viewport minus side margins + 8px*2 board padding
   const maxW = Math.min(window.innerWidth-28, 432);
   // board height: viewport minus the fixed chrome above/below the board
-  // (topbar + statusbar + dots + hint + tray + controls + board padding ~= 360px).
-  const chrome = 374;
-  const maxBoardH = Math.max(150, window.innerHeight - chrome);
+  // (topbar≈72 + statusbar≈33 + dots≈15 + hint≈24 + tray≈71 + ▶controls≈96
+  //  + board padding 16 ≈ 327 → よゆうを みて 330)
+  const chrome = 330;
+  const maxBoardH = Math.max(140, window.innerHeight - chrome);
   const byW = Math.floor(maxW / lv.w);
   const byH = Math.floor(maxBoardH / lv.h);
-  // floor 24px keeps cells tappable on short screens while fitting tall boards
-  return Math.max(24, Math.min(byW, byH, 64));
+  // floor 22px keeps cells tappable on short screens while fitting tall boards
+  return Math.max(22, Math.min(byW, byH, 64));
 }
 
 function key(x,y){return x+','+y;}
