@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>まねっこ — あそびのもり</title>
+<meta name="description" content="ひかった じゅんばんを おぼえて まねっこ。きおくと しゅうちゅうの あそび。">
+<meta name="theme-color" content="#9165e0">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="まねっこ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/arcade.css">
+<style>
+  :root{
+    --accent:#b58cff; --accent-d:#9165e0; --accent-l:#e2d2ff;
+    --bg-2:#efe3ff; --bg-3:#dcc6ff;
+  }
+  body{display:flex; flex-direction:column; align-items:center;
+       background:
+        radial-gradient(120% 80% at 15% -10%, #f6efff 0%, transparent 55%),
+        radial-gradient(120% 80% at 95% 0%, #efe3ff 0%, transparent 50%),
+        linear-gradient(180deg,#efe3ff 0%, #dcc6ff 100%);}
+
+  .wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; flex:1;}
+
+  /* 状態バー */
+  .statusbar{display:flex; gap:10px; align-items:center; margin:6px 0 4px;}
+  .round-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
+    padding:8px 18px; border-radius:999px; font-size:18px; color:var(--accent-d);}
+  .best-pill{font-weight:800; background:#fff7; box-shadow:var(--sh-1);
+    padding:8px 14px; border-radius:999px; font-size:14px; color:var(--ink-soft);}
+
+  .hint{font-weight:800; font-size:17px; color:var(--ink-soft); min-height:26px;
+    text-align:center; margin:8px 0; transition:color .2s;}
+  .hint.watch{color:var(--accent-d);}
+  .hint.your{color:var(--c-green-d);}
+
+  /* サイモン・ダイヤル */
+  .dial-wrap{position:relative; width:min(86vw,400px); aspect-ratio:1; margin:6px 0 4px;}
+  .dial{position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr; gap:14px; border-radius:50%;
+    padding:0; transition:transform .3s var(--spring);}
+  .pad{
+    position:relative; border:none; cursor:pointer; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:clamp(34px,12vw,56px);
+    box-shadow:inset 0 -8px 0 rgba(0,0,0,.18), 0 6px 14px rgba(0,0,0,.15);
+    filter:brightness(.82) saturate(.9);
+    transition:filter .12s, transform .12s var(--spring);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pad:active{transform:scale(.97);}
+  .pad.tl{border-radius:100% 18px 18px 18px;}
+  .pad.tr{border-radius:18px 100% 18px 18px;}
+  .pad.bl{border-radius:18px 18px 18px 100%;}
+  .pad.br{border-radius:18px 18px 100% 18px;}
+  .pad[data-c="0"]{background:#5fcf80;}
+  .pad[data-c="1"]{background:#ff6b6b;}
+  .pad[data-c="2"]{background:#ffce2e;}
+  .pad[data-c="3"]{background:#5cc8e8;}
+  .pad .face{filter:drop-shadow(0 2px 2px rgba(0,0,0,.18)); transition:transform .15s var(--spring);}
+  /* 点灯状態 */
+  .pad.lit{filter:brightness(1.35) saturate(1.2); box-shadow:inset 0 -8px 0 rgba(255,255,255,.25),
+    0 0 40px rgba(255,255,255,.7), 0 6px 14px rgba(0,0,0,.15);}
+  .pad.lit .face{transform:scale(1.25) translateY(-2px);}
+  .dial.locked .pad{cursor:default;}
+
+  /* 中央ハブ */
+  .hub{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:30%; aspect-ratio:1; border-radius:50%; background:var(--cream);
+    box-shadow:0 6px 0 #d9c8ee, inset 0 0 0 6px #fff;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    z-index:5; font-family:'Mochiy Pop One'; color:var(--accent-d);}
+  .hub .big{font-size:clamp(28px,9vw,40px); line-height:1;}
+  .hub .lbl{font-size:11px; color:var(--ink-faint); margin-top:2px;}
+
+  /* スタート画面オーバーレイ（ダイヤル上に重ねる） */
+  .startcover{position:absolute; inset:0; z-index:8; border-radius:50%;
+    background:rgba(255,255,255,.55); backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .3s; }
+  .startcover.hide{opacity:0; pointer-events:none;}
+
+  /* 下部コントロール */
+  .controls{display:flex; gap:14px; align-items:center; justify-content:center;
+    margin-top:14px; min-height:74px;}
+  .peek{visibility:hidden;}
+  .peek.show{visibility:visible;}
+</style>
+</head>
+<body>
+
+<div class="topbar safe-top" id="topbar"></div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="round-pill" id="roundPill">だん 0</span>
+    <span class="best-pill" id="bestPill">🏆 さいこう 0</span>
+  </div>
+
+  <div class="hint enter d1" id="hint">みどりの ▶ で スタート！</div>
+
+  <div class="dial-wrap enter d2">
+    <div class="dial locked" id="dial">
+      <button class="pad tl" data-c="0"><span class="face">🐸</span></button>
+      <button class="pad tr" data-c="1"><span class="face">🦊</span></button>
+      <button class="pad bl" data-c="3"><span class="face">🐬</span></button>
+      <button class="pad br" data-c="2"><span class="face">🐤</span></button>
+    </div>
+    <div class="hub" id="hub"><div class="big" id="hubBig">🎵</div><div class="lbl" id="hubLbl">まねっこ</div></div>
+    <div class="startcover" id="startcover">
+      <button class="btn-play" id="startBtn" aria-label="スタート">▶</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn--ghost peek" id="peekBtn">👀 もういちど みる</button>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/shell.js"></script>
+<script>
+/* ====== まねっこ（サイモン） ====== */
+const save = Save.game('manekko');
+const dial = document.getElementById('dial');
+const pads = [...dial.querySelectorAll('.pad')]
+  .sort((a,b)=>(+a.dataset.c)-(+b.dataset.c)); // index = データ色番号
+const hint = document.getElementById('hint');
+const roundPill = document.getElementById('roundPill');
+const bestPill = document.getElementById('bestPill');
+const hubBig = document.getElementById('hubBig');
+const hubLbl = document.getElementById('hubLbl');
+const startcover = document.getElementById('startcover');
+const peekBtn = document.getElementById('peekBtn');
+
+// 各パッドの音（やさしい和音アルペジオ）
+const TONES = [329.63, 415.30, 493.88, 587.33]; // 緑・赤・黄・青
+let best = save.get('best', 0);
+let seq = [], inputPtr = 0, phase = 'idle', acceptInput = false;
+renderBest();
+
+/* ヘッダー */
+document.getElementById('topbar').replaceWith(
+  App.topbar({ title:'まねっこ', back:'../index.html' })
+);
+
+function renderBest(){ bestPill.textContent = '🏆 さいこう ' + best; }
+function setRound(n){ roundPill.textContent = 'だん ' + n; }
+function rand4(){ return Math.floor(Math.random()*4); }
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* パッドを光らせて鳴らす */
+async function light(i, dur){
+  const pad = pads[i];
+  pad.classList.add('lit');
+  Sfx.note(TONES[i], (dur||320)/1000 + 0.05, 'sine');
+  App.buzz(14);
+  const r = pad.getBoundingClientRect();
+  try{ FX.ring(r.left+r.width/2, r.top+r.height/2, {color:'#fff', vr:6, life:18, lw:5}); }catch(e){}
+  await wait(dur||320);
+  pad.classList.remove('lit');
+}
+
+/* お手本シーケンス再生 */
+async function playSequence(){
+  phase = 'show'; acceptInput = false; dial.classList.add('locked');
+  peekBtn.classList.remove('show');
+  hint.textContent = 'よく みてね 👀'; hint.className = 'hint watch';
+  hubBig.textContent = '👀'; hubLbl.textContent = 'みほん';
+  await wait(620);
+  // 段が増えるほど少しテンポアップ（下限あり）
+  const dur = Math.max(300, 560 - seq.length*16);
+  const gap = Math.max(120, 240 - seq.length*6);
+  for(const i of seq){ await light(i, dur); await wait(gap); }
+  // プレイヤーの番
+  phase = 'input'; inputPtr = 0; acceptInput = true; dial.classList.remove('locked');
+  hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className = 'hint your';
+  hubBig.textContent = '🖐️'; hubLbl.textContent = 'どうぞ';
+  peekBtn.classList.add('show');
+}
+
+/* 次の段へ */
+async function nextRound(){
+  seq.push(rand4());
+  setRound(seq.length);
+  await playSequence();
+}
+
+/* ゲーム開始 */
+async function startGame(){
+  Sfx.tap();
+  startcover.classList.add('hide');
+  seq = []; setRound(0);
+  await wait(280);
+  await nextRound();
+}
+
+/* パッド押下 */
+pads.forEach((pad,i)=>{
+  pad.addEventListener('pointerdown', ()=>{
+    if(!acceptInput || phase!=='input') return;
+    light(i, 220);
+    const expected = seq[inputPtr];
+    if(i === expected){
+      inputPtr++;
+      if(inputPtr === seq.length){
+        // この段クリア
+        acceptInput = false;
+        roundClear();
+      }
+    } else {
+      gameOver();
+    }
+  });
+});
+
+/* 段クリア演出 → 次へ */
+async function roundClear(){
+  hint.textContent = 'せいかい！ ✨'; hint.className = 'hint your';
+  hubBig.textContent = '🎉';
+  Sfx.ding();
+  const r = dial.getBoundingClientRect();
+  FX.sparkles(r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
+  // ベスト更新チェック
+  if(seq.length > best){
+    best = seq.length; save.set('best', best); renderBest();
+  }
+  await wait(720);
+  await nextRound();
+}
+
+/* ゲームオーバー（やさしく） */
+function gameOver(){
+  acceptInput = false; phase = 'over';
+  dial.classList.add('locked');
+  Sfx.error(); App.buzz([30,40,30]);
+  FX.shake(document.querySelector('.dial-wrap'), 9, 360);
+  // 「何段までできたか」= 直前にクリアした段数 = seq.length-1
+  const done = seq.length - 1;
+  hubBig.textContent = '🙈'; hubLbl.textContent = 'おしい';
+  hint.textContent = 'おしい！ もう いちど やってみよう'; hint.className = 'hint';
+  const isBest = (done >= best && done > 0);
+  setTimeout(()=>{
+    App.showModal({
+      emoji: done>=8 ? '🏆' : done>=4 ? '🌟' : '🐻',
+      title: done>0 ? (done + 'だん まで できたね！') : 'ドンマイ！',
+      text: isBest ? 'じこ さいこう きろく！ すごい！'
+                   : ('🏆 さいこうは ' + best + 'だん。<br>つぎは こえられるかな？'),
+      buttons:[
+        {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
+        {label:'もう いちど ▶', cls:'btn--green', onClick:()=>{ startcover.classList.remove('hide'); resetIdle(); startGame(); }}
+      ]
+    });
+    if(isBest){ Sfx.fanfare(); FX.celebrate(); }
+  }, 700);
+}
+
+function resetIdle(){
+  phase='idle'; seq=[]; inputPtr=0; acceptInput=false;
+  hubBig.textContent='🎵'; hubLbl.textContent='まねっこ';
+  setRound(0);
+}
+
+/* もういちど みる（やさしいヒント・無制限） */
+peekBtn.addEventListener('click', ()=>{
+  if(phase!=='input') return;
+  Sfx.tap();
+  replayCurrent();
+});
+async function replayCurrent(){
+  const wasAccept = acceptInput;
+  acceptInput = false; dial.classList.add('locked');
+  peekBtn.classList.remove('show');
+  hint.textContent = 'もういちど みてね 👀'; hint.className='hint watch';
+  await wait(420);
+  const dur = Math.max(300, 560 - seq.length*16);
+  for(const i of seq){ await light(i, dur); await wait(160); }
+  hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className='hint your';
+  acceptInput = true; dial.classList.remove('locked'); peekBtn.classList.add('show');
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+</script>
+</body>
+</html>
