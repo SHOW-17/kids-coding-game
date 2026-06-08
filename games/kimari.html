@@ -61,14 +61,16 @@
     font-size:calc(var(--side) * 0.58); }
   .seq[data-n="4"]{ --avail:calc((100vw - 64px) / 4); }
   .seq[data-n="5"]{ --avail:calc((100vw - 76px) / 5); }
-  .seq[data-n="6"]{ --avail:calc((100vw - 86px) / 6); }
-  .seq[data-n="7"]{ --avail:calc((100vw - 96px) / 7); }
-  .seq[data-n="8"]{ --avail:calc((100vw - 106px) / 8); }
+  .seq[data-n="6"]{ --avail:calc((100vw - 84px) / 6); }
+  .seq[data-n="7"]{ --avail:calc((100vw - 90px) / 7); }
+  .seq[data-n="8"]{ --avail:calc((100vw - 96px) / 8); }
+  .seq[data-n="9"]{ --avail:calc((100vw - 100px) / 9); }
   .seq[data-n="4"] .tile{ --side:min(62px, var(--avail)); }
   .seq[data-n="5"] .tile{ --side:min(60px, var(--avail)); }
   .seq[data-n="6"] .tile{ --side:min(54px, var(--avail)); }
   .seq[data-n="7"] .tile{ --side:min(48px, var(--avail)); }
-  .seq[data-n="8"] .tile{ --side:min(44px, var(--avail)); }
+  .seq[data-n="8"] .tile{ --side:min(42px, var(--avail)); }
+  .seq[data-n="9"] .tile{ --side:min(38px, var(--avail)); }
   .glyph{line-height:1; transition:transform .25s var(--spring);}
 
   /* ？タイル（こたえる場所） */
@@ -87,7 +89,7 @@
   /* ドット絵（かずパターン用） */
   .dotgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:3px;
     width:74%; height:74%; align-items:center; justify-items:center;}
-  .seq[data-n="6"] .dotgrid,.seq[data-n="7"] .dotgrid,.seq[data-n="8"] .dotgrid{gap:2px;}
+  .seq[data-n="6"] .dotgrid,.seq[data-n="7"] .dotgrid,.seq[data-n="8"] .dotgrid,.seq[data-n="9"] .dotgrid{gap:2px;}
   .dot{width:100%; aspect-ratio:1; border-radius:50%; background:var(--c-blue);
     box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
   .dot.off{background:transparent; box-shadow:none;}
@@ -238,47 +240,97 @@ function tokenKey(t){
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
-// A) 色/動物/くだもの の AB くりかえし
+/* 共通：くりかえし単位 unit[] から len 個ぶんの列とこたえを作る。
+   こたえ＝列の次（位置 len）。誤答は unit 内の他要素＋tokens の他の絵柄。 */
+function fromUnit(unit, len, tokens){
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(unit[i%unit.length]);
+  const answer = unit[len%unit.length];
+  // 紛らわしい誤答：unit 内の他のコマ（＝「同じ並びの別の位置」のもの）を最優先
+  const ansKey = tokenKey(answer);
+  const dist = [];
+  unit.forEach(u=>{ if (tokenKey(u)!==ansKey) dist.push(u); });
+  (tokens||[]).forEach(t=>dist.push(t));
+  return { seq, answer, distractors: dist };
+}
+
+// A) AB くりかえし
 function genAlt(tokens, len){
   const set = shuffle(tokens).slice(0,2);
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push(set[i%2]);
-  const answer = set[len%2];
-  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+  return fromUnit([set[0],set[1]], len, tokens);
 }
 
 // B) AABB のくりかえし
 function genAABB(tokens, len){
   const set = shuffle(tokens).slice(0,2);
-  const pat = [set[0],set[0],set[1],set[1]];
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push(pat[i%4]);
-  const answer = pat[len%4];
-  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+  return fromUnit([set[0],set[0],set[1],set[1]], len, tokens);
+}
+
+// B2) AAB のくりかえし
+function genAAB(tokens, len){
+  const set = shuffle(tokens).slice(0,2);
+  return fromUnit([set[0],set[0],set[1]], len, tokens);
+}
+
+// B3) ABB のくりかえし
+function genABB(tokens, len){
+  const set = shuffle(tokens).slice(0,2);
+  return fromUnit([set[0],set[1],set[1]], len, tokens);
 }
 
 // C) ABC くりかえし
 function genABC(tokens, len){
   const set = shuffle(tokens).slice(0,3);
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push(set[i%3]);
-  const answer = set[len%3];
-  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+  return fromUnit([set[0],set[1],set[2]], len, tokens);
 }
 
-// D) かず ふえる（ドット 1,2,3,..）
-function genCount(len){
-  // 列(seq)＋こたえ で 最大ドット = start + len。これが 6 を超えないよう start を決める。
-  const startMax = Math.max(1, 6 - len);     // 1..startMax から始める（こたえが必ず 6 以下）
-  const start = 1 + Math.floor(Math.random()*startMax);
+// C2) ABCD くりかえし
+function genABCD(tokens, len){
+  const set = shuffle(tokens).slice(0,4);
+  return fromUnit([set[0],set[1],set[2],set[3]], len, tokens);
+}
+
+// D) かず（ドット）等差：step は +1/+2/-1。列＋こたえ が必ず 1..6 に収まる start を選ぶ。
+function genCount(len, step){
+  step = step || 1;
+  // 値の系列 v(i)=start+step*i を i=0..len まで（こたえ含む len+1 個）すべて 1..6 に。
+  const lo = [], hi = [];
+  for(let i=0;i<=len;i++){ lo.push(step*i); hi.push(step*i); }
+  // start の取りうる範囲：1<=start+step*i<=6 すべて満たす
+  let smin=1, smax=6;
+  for(let i=0;i<=len;i++){
+    smin = Math.max(smin, 1 - step*i);
+    smax = Math.min(smax, 6 - step*i);
+  }
+  if (smin > smax){ // 念のため：レンジが取れなければ +1 に退避
+    return genCount(Math.min(len,4), 1);
+  }
+  const start = smin + Math.floor(Math.random()*(smax-smin+1));
   const seq = [];
-  for(let i=0;i<len;i++) seq.push({dots: start+i});
-  const answer = {dots: start+len};          // 1..6 に必ず収まる
-  // 誤答：1..6 のうち こたえ以外（重複排除は finalize 側）。隣の数を優先して紛らわしく。
+  for(let i=0;i<len;i++) seq.push({dots: start+step*i});
+  const answer = {dots: start+step*len};
+  // 誤答：隣の数を優先（紛らわしく）、続いて 1..6 の残り
   const cand = [];
   [answer.dots-1, answer.dots+1, answer.dots-2, answer.dots+2].forEach(d=>{
     if (d>=1 && d<=6 && d!==answer.dots) cand.push({dots:d});
   });
+  for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
+  return { seq, answer, distractors: cand };
+}
+
+// D2) かず やまがた（増えて減る）：1,2,3,2,1.. のような山をくりかえす。次の値を当てる。
+function genCountMountain(){
+  const peak = 3 + Math.floor(Math.random()*2);   // 山のてっぺん 3..4（周期を短くして列に収める）
+  // 周期：1,2,..,peak,peak-1,..,2（端の1は次周期の頭と重複しないよう片側だけ）
+  const up = []; for(let v=1; v<=peak; v++) up.push(v);
+  const down = []; for(let v=peak-1; v>=2; v--) down.push(v);
+  const unit = up.concat(down).map(v=>({dots:v})); // peak3: 1,2,3,2(周期4) / peak4: 1,2,3,4,3,2(周期6)
+  const len = 6 + Math.floor(Math.random()*2);     // 見える列 6..7（山を1周以上は見せる）
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(unit[i%unit.length]);
+  const answer = unit[len%unit.length];
+  const cand = [];
+  [answer.dots-1, answer.dots+1].forEach(d=>{ if(d>=1&&d<=6&&d!==answer.dots) cand.push({dots:d}); });
   for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
   return { seq, answer, distractors: cand };
 }
@@ -288,57 +340,99 @@ function genSize(){
   const all = ['⭐','❤️','🌸','🔵','🟢','🟠'];
   const emo = pick(all);
   const other = pick(all.filter(e=>e!==emo)); // ちがう えがら（おとり）
-  const len = 4 + (Math.random()<0.5?0:1);
+  const len = 4 + Math.floor(Math.random()*3);  // 4..6
   const seq = [];
   for(let i=0;i<len;i++) seq.push({emo, big: i%2===1}); // 小,大,小,大..
   const big = len%2===1;
   const answer = {emo, big};
   // 誤答1：おなじ えがらで 反対の おおきさ／誤答2：ちがう えがらで 正しい おおきさ
-  const distractors = [{emo, big: !big}, {emo: other, big}];
+  const distractors = [{emo, big: !big}, {emo: other, big}, {emo: other, big: !big}];
   return { seq, answer, distractors };
 }
 
-// F) むき（やじるし）回転 上→右→下→左
-function genRotate(len){
-  const start = Math.floor(Math.random()*4);
+// E2) 2ぞくせい どうじ：えがらが回る（A→B→C）＋ おおきさも こうご（小大小大）
+function genTwoAttr(){
+  const all = ['⭐','❤️','🌸','🔵','🟢','🟠','🍎','🐱'];
+  const set = shuffle(all).slice(0,3);           // 3つの えがらを 順ぐり
+  const len = 5 + Math.floor(Math.random()*2);   // 5..6
   const seq = [];
-  for(let i=0;i<len;i++) seq.push(ARROW_TOKENS[(start+i)%4]);
-  const answer = ARROW_TOKENS[(start+len)%4];
-  return { seq, answer, distractors: ARROW_TOKENS.filter(t=>t!==answer) };
+  for(let i=0;i<len;i++) seq.push({emo:set[i%3], big: i%2===1});
+  const emo = set[len%3], big = len%2===1;
+  const answer = {emo, big};
+  // 誤答：えがら合ってる/大きさ違う、えがら違う/大きさ合ってる、両方ずれ
+  const distractors = [
+    {emo, big:!big},
+    {emo:set[(len+1)%3], big},
+    {emo:set[(len+2)%3], big:!big}
+  ];
+  return { seq, answer, distractors };
 }
 
-/* 難易度に応じて出題を選ぶ。進むほど 種類↑ 列↑ */
+// F) むき（やじるし）回転 上→右→下→左（or 逆回転）
+function genRotate(len){
+  const start = Math.floor(Math.random()*4);
+  const dir = Math.random()<0.5 ? 1 : 3;          // +1=右回り / +3(=-1)=左回り
+  const unit = [];
+  for(let i=0;i<4;i++) unit.push(ARROW_TOKENS[(start+dir*i)%4]);
+  return fromUnit(unit, len, ARROW_TOKENS);
+}
+
+// G) とばし（A_A_A_ ）：ぐうすうの位置はいつも A で固定、きすうの位置は B→C→D と回る。
+//    例 🐶🍎🐶🍌🐶🍇 → つぎ(7番目=偶数位置)は 🐶。規則「ひとつおきに同じ」を読み取らせる。
+function genSkip(tokens, len){
+  const pool = shuffle(tokens);
+  const A = pool[0];                       // 固定で出る方
+  const others = pool.slice(1, 1+3);       // 間に回る 3つ（最低3種ある前提：各 TOKENS は6種）
+  const unit = [A, others[0], A, others[1], A, others[2]]; // 周期6：A _ A _ A _
+  return fromUnit(unit, len, tokens);
+}
+
+/* 難易度に応じて出題を選ぶ。難易度カーブは急め：
+   さいしょの2問だけ軽いウォームアップ。そのあとは種類・列の長さ・紛らわしさを段階的に強める。
+   各 tier は使える gen と「列の長さ候補(len)」を持つ。エンドレスで、後半ほど難しくなる。 */
+const TOK = ()=>pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]);
+
+// gen 名 → 実体。len を受けるものと受けないものがある。
+function runGen(name, len){
+  switch(name){
+    case 'alt':    return genAlt(TOK(), len);
+    case 'aabb':   return genAABB(TOK(), len);
+    case 'aab':    return genAAB(TOK(), len);
+    case 'abb':    return genABB(TOK(), len);
+    case 'abc':    return genABC(TOK(), len);
+    case 'abcd':   return genABCD(TOK(), len);
+    case 'skip':   return genSkip(TOK(), len);
+    case 'rotate': return genRotate(len);
+    case 'count1': return genCount(len, 1);
+    case 'count2': return genCount(len, 2);
+    case 'countm1':return genCount(len, -1);
+    case 'mountain':return genCountMountain();
+    case 'size':   return genSize();
+    case 'twoattr':return genTwoAttr();
+    default:       return genAlt(TOK(), len);
+  }
+}
+
+// tier 定義（idx の境界・使える gen・len 候補）。あとの tier ほど難しい gen と長い len。
+const TIERS = [
+  // ウォームアップ（最初の2問）：超やさしい AB交互・短い
+  { until:2,        gens:['alt','rotate'],                                  lens:[4] },
+  // 立ち上がり：交互/くりかえし/かず増加・少し長く
+  { until:5,        gens:['alt','aabb','count1','rotate'],                  lens:[5,6] },
+  // 中盤：3種くりかえし・AAB/ABB・かず±2や-1・おおきさ
+  { until:9,        gens:['abc','aab','abb','count1','count2','countm1','rotate','size'], lens:[6,7] },
+  // 中盤後半：ABCD・とばし・山型・2属性 が登場、列さらに長く
+  { until:14,       gens:['abc','abcd','aabb','skip','count2','countm1','mountain','twoattr','size','rotate'], lens:[7,8] },
+  // 終盤（エンドレス）：難しい gen 中心・最長列・紛らわしさ最大
+  { until:Infinity, gens:['abcd','skip','abc','mountain','twoattr','count2','countm1','aabb','size','rotate'], lens:[8] }
+];
+
 function buildProblem(idx, depth){
   depth = depth || 0;
-  let raw;
-  if (idx < 3){
-    // やさしい：AB交互（色 or 動物）、短め
-    raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 4);
-  } else if (idx < 6){
-    // 交互 or かず増加 or むき
-    const pickGen = pick(['alt','count','rotate']);
-    if (pickGen==='alt') raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([4,5]));
-    else if (pickGen==='count') raw = genCount(3);
-    else raw = genRotate(4);
-  } else if (idx < 10){
-    // ＋ABC, おおきさ, AABB, 列ちょい長く
-    const pickGen = pick(['abc','aabb','size','count','rotate','alt']);
-    if (pickGen==='abc') raw = genABC(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([5,6]));
-    else if (pickGen==='aabb') raw = genAABB(pick([COLOR_TOKENS, FRUIT_TOKENS]), pick([5,6]));
-    else if (pickGen==='size') raw = genSize();
-    else if (pickGen==='count') raw = genCount(pick([3,4]));
-    else if (pickGen==='rotate') raw = genRotate(pick([5,6]));
-    else raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 6);
-  } else {
-    // むずかしい：すべて、列さらに長く（最大7）、差を小さく
-    const pickGen = pick(['abc','aabb','size','count','rotate','alt']);
-    if (pickGen==='abc') raw = genABC(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([6,7]));
-    else if (pickGen==='aabb') raw = genAABB(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([6,7]));
-    else if (pickGen==='size') raw = genSize();
-    else if (pickGen==='count') raw = genCount(pick([4,5]));
-    else if (pickGen==='rotate') raw = genRotate(pick([6,7]));
-    else raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 7);
-  }
+  const tier = TIERS.find(t=>idx < t.until) || TIERS[TIERS.length-1];
+  const name = pick(tier.gens);
+  const len = pick(tier.lens);
+  const raw = runGen(name, len);
   return finalizeProblem(raw, depth);
 }
 
@@ -386,7 +480,7 @@ function finalizeProblem(raw, depth){
 function renderProblem(p){
   // ならび（？を末尾に）
   const n = p.seq.length + 1;
-  seqEl.dataset.n = Math.min(8, n);
+  seqEl.dataset.n = Math.min(9, n);
   seqEl.innerHTML = '';
   p.seq.forEach((tok,i)=>{
     const t = document.createElement('div');
