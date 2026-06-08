@@ -288,8 +288,9 @@ let cur = null;
 let boardPx = 300;      // ばんめんの 1ぺん ピクセル（せいほうけい）
 let trayH = 110;        // トレイの たかさ px
 let placedCount = 0;
-let pieceEls = [];      // {data, el, placed}
+let pieceEls = [];      // ピースの DOM はいれつ
 let dragging = null;    // いま つかんでる piece
+let winning = false;    // かんせいえんしゅつ ちゅうか（にじゅう はつどう ぼうし）
 
 /* U(0〜100) → board px へ */
 function u2bx(u){ return u/100 * boardPx; }
@@ -313,76 +314,109 @@ function calcSizes(){
   trayH = Math.max(96, Math.round(boardPx*0.32));
 }
 
-function polyPoints(pts, scale){
-  return pts.map(p=>(p[0]*scale)+','+(p[1]*scale)).join(' ');
-}
-
-/* ---- レベル びょうが ---- */
+/* ---- レベル を あたらしく ひらく（しんき・ぜんぶ リセット） ---- */
 function loadLevel(){
   cur = LEVELS[lvIndex];
-  calcSizes();
   placedCount = 0;
   pieceEls = [];
   dragging = null;
+  winning = false;
 
   lvPill.textContent = 'レベル ' + (lvIndex+1);
   renderDots();
   leftN.textContent = cur.pieces.length;
   hint.textContent = 'ピースを かげに はめてね';
   motifEl.textContent = cur.motif;
+  boardWrap.classList.remove('win');
+
+  // ちらばり いちを きめる（0〜1 そうたい）。リサイズしても いどうしない ように ほぞん。
+  const slots = scatterSlots(cur.pieces.length);
+  cur.pieces.forEach((p,i)=>{ p._slot = slots[i]; });
+
+  // ピース DOM を つくる（state は ここで しょきか）
+  [...tray.querySelectorAll('.piece')].forEach(e=>e.remove());
+  [...board.querySelectorAll('.piece')].forEach(e=>e.remove());
+  cur.pieces.forEach((p,i)=>{
+    const el = App.el('div','piece '+p.col+' enter d'+Math.min(6,i+1));
+    el._data = p; el._i = i; el._placed = false;
+    el.dataset.parent='tray';
+    p._el = el;
+    tray.appendChild(el);
+    pieceEls.push(el);
+    attachDrag(el);
+  });
+
+  layout();   // じっさいの サイズ・ざひょうを けいさん して はいち
+}
+
+/* ---- レイアウト（サイズ いぞん の ぶぶん だけ）----
+   リサイズ／かいてんで よびなおしても：
+   - かげの いち を さいけいさん
+   - すでに はまった ピースは かげに あわせて はりなおす
+   - まだの ピースは トレイの slot いちへ
+   → はいち が ズレない／しんちょく が きえない。 */
+function layout(){
+  calcSizes();
+  const sc = boardPx/100;
 
   // board (せいほうけい)
   board.style.width = boardPx+'px';
   board.style.height = boardPx+'px';
   boardSvg.setAttribute('viewBox', '0 0 '+boardPx+' '+boardPx);
-
   // tray
   tray.style.width = boardPx+'px';
   tray.style.height = trayH+'px';
 
-  // ---- かげ（ターゲットわく）を SVG に かく ----
+  // ---- かげ（ターゲットわく）を SVG に かきなおす ----
   boardSvg.innerHTML='';
   cur.pieces.forEach((p,i)=>{
-    const sc = boardPx/100;              // ピースの ローカルU も おなじ U スケール
-    // ピースの ちゅうしん（ローカル）
     const c = centroid(p.shape.pts);
-    // かげ ＝ ピースを ターゲットちゅうしんに あわせた ときの ちょうてん
     const sx = u2bx(p.tx) - c[0]*sc;
     const sy = u2bx(p.ty) - c[1]*sc;
     const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
     poly.setAttribute('points', p.shape.pts.map(pt=>(sx+pt[0]*sc)+','+(sy+pt[1]*sc)).join(' '));
     poly.setAttribute('class','shadow-poly');
+    if(p._el && p._el._placed) poly.classList.add('done');
     poly.dataset.i = i;
     boardSvg.appendChild(poly);
     p._shadow = poly;
-    p._scale = sc;
     p._c = c;
   });
 
-  // ---- ピースを トレイに ばらまく ----
-  // すでに ある ピースを けす
-  [...tray.querySelectorAll('.piece')].forEach(e=>e.remove());
-  const slots = scatterSlots(cur.pieces.length);
+  // ---- ピース の サイズ・いち を けいさん ----
   cur.pieces.forEach((p,i)=>{
-    const sc = boardPx/100;
+    const el = p._el;
     const pw = p.shape.w*sc, ph = p.shape.h*sc;
-    const el = App.el('div','piece '+p.col+' enter d'+Math.min(6,i+1));
-    el.style.width = pw+'px';
-    el.style.height = ph+'px';
-    const svg = '<svg viewBox="0 0 '+pw+' '+ph+'"><polygon class="poly" points="'+
-      polyPoints(p.shape.pts, sc)+'"/></svg>';
-    el.innerHTML = svg;
-    // トレイない はいち（ちゅうしんを slot に）
-    const slot = slots[i];
-    const tx = slot.x*boardPx - pw/2;
-    const ty = slot.y*trayH - ph/2;
-    el.dataset.home = JSON.stringify({x:tx, y:ty});
-    placeInTray(el, tx, ty);
-    el._data = p; el._i = i; el._placed = false;
-    el._pw = pw; el._ph = ph; el._sc = sc;
-    tray.appendChild(el);
-    pieceEls.push(el);
-    attachDrag(el);
+    // ちいさい ピースでも つかみやすいよう、さいてい 64px の あたりはんいを かくほ
+    const HIT = 64;
+    const padX = Math.max(0, (HIT - pw)/2);
+    const padY = Math.max(0, (HIT - ph)/2);
+    el.style.width = (pw + padX*2)+'px';
+    el.style.height = (ph + padY*2)+'px';
+    // SVG は あたりはんいの なかに ピースを ちゅうおう はいち（みためは そのまま）
+    el.innerHTML = '<svg viewBox="0 0 '+(pw+padX*2)+' '+(ph+padY*2)+'">'+
+      '<polygon class="poly" points="'+
+      p.shape.pts.map(pt=>(padX+pt[0]*sc)+','+(padY+pt[1]*sc)).join(' ')+'"/></svg>';
+    el._pw = pw + padX*2; el._ph = ph + padY*2; el._sc = sc;
+    // あたりはこ ちゅうしん から「かたちの じゅうしん（ちょうてん へいきん）」までの ずれ
+    el._cOffX = padX + p._c[0]*sc - el._pw/2;
+    el._cOffY = padY + p._c[1]*sc - el._ph/2;
+
+    if(el._placed){
+      // かげに あわせて はりなおす
+      placeOnShadow(el);
+    } else {
+      // トレイ slot へ
+      const slot = p._slot;
+      const tx = slot.x*boardPx - el._pw/2;
+      const ty = slot.y*trayH - el._ph/2;
+      el.dataset.home = JSON.stringify({x:tx, y:ty});
+      if(el.dataset.parent!=='tray'){ tray.appendChild(el); }
+      el.dataset.parent='tray';
+      el.style.left = tx+'px';
+      el.style.top = ty+'px';
+      el.style.transform='';
+    }
   });
 }
 
@@ -414,48 +448,39 @@ function scatterSlots(n){
   }));
 }
 
-function placeInTray(el, x, y){
-  el.style.left = x+'px';
-  el.style.top = y+'px';
-  el.dataset.parent = 'tray';
-}
-
 /* ---- ドラッグ（pointer events） ---- */
 function attachDrag(el){
   el.addEventListener('pointerdown', onDown);
 }
 
-function clientToContainer(container, clientX, clientY){
-  const r = container.getBoundingClientRect();
-  return { x: clientX - r.left, y: clientY - r.top };
-}
-
 function onDown(e){
   const el = e.currentTarget;
-  if(el._placed) return;
+  if(el._placed || dragging) return;
+  if(e.button!=null && e.button!==0 && e.pointerType==='mouse') return; // ひだりクリックのみ
   e.preventDefault();
-  Sfx.tap();
+  Sfx.unlock(); Sfx.tap();
   App.buzz(10);
 
   dragging = el;
+  el._pid = e.pointerId;
+  el.classList.remove('enter','d1','d2','d3','d4','d5','d6'); // にゅうじょうアニメを とめて opacity/いちの ズレを ふせぐ
+  el.style.opacity='1';
   el.classList.add('grab');
-  el.setPointerCapture && el.setPointerCapture(e.pointerId);
+  try{ el.setPointerCapture && el.setPointerCapture(e.pointerId); }catch(_){}
 
-  // どの コンテナに いても board ざひょうけいで うごかす（board に いどう）
-  // → board の うえに のせれば かげとの きょり くらべが かんたん。
+  // board ざひょうけいで うごかす（かげとの きょりくらべが かんたん）
   const boardRect = board.getBoundingClientRect();
-  const px = e.clientX - boardRect.left;
-  const py = e.clientY - boardRect.top;
-
-  // つかんだ ときの ピースちゅうしん オフセット
+  // ゆびが かたちの じゅうしん から どれだけ ずれて つかんだか（じゅうしんきじゅん）
   const cur = el.getBoundingClientRect();
-  el._grabDX = e.clientX - (cur.left + cur.width/2);
-  el._grabDY = e.clientY - (cur.top + cur.height/2);
+  const cMassX = cur.left + cur.width/2 + el._cOffX;
+  const cMassY = cur.top + cur.height/2 + el._cOffY;
+  el._grabDX = e.clientX - cMassX;
+  el._grabDY = e.clientY - cMassY;
 
   // board の こに いどう（ざひょうけいを board に そろえる）
   moveElToBoard(el);
-  // ちゅうしんが ゆびに くるよう はいち
-  setPieceCenterOnBoard(el, px - el._grabDX, py - el._grabDY);
+  // かたちの じゅうしん が ゆびの いちに くるよう はいち
+  setMassOnBoard(el, e.clientX - boardRect.left - el._grabDX, e.clientY - boardRect.top - el._grabDY);
   // すこし もちあげ
   el.style.transition='filter .12s';
   el.style.transform='scale(1.08)';
@@ -476,40 +501,55 @@ function moveElToBoard(el){
   el.dataset.parent='board';
 }
 
-function setPieceCenterOnBoard(el, cx, cy){
-  el.style.left = (cx - el._pw/2)+'px';
-  el.style.top = (cy - el._ph/2)+'px';
+/* かたちの じゅうしん（board px）を していして はいち */
+function setMassOnBoard(el, mx, my){
+  el.style.left = (mx - el._cOffX - el._pw/2)+'px';
+  el.style.top = (my - el._cOffY - el._ph/2)+'px';
+}
+/* いまの かたちの じゅうしん（board px）を かえす */
+function massOf(el){
+  const left = parseFloat(el.style.left)||0;
+  const top = parseFloat(el.style.top)||0;
+  return { x: left + el._pw/2 + el._cOffX, y: top + el._ph/2 + el._cOffY };
 }
 
 function onMove(e){
-  if(!dragging) return;
+  if(!dragging || e.pointerId!==dragging._pid) return;
   e.preventDefault();
   const boardRect = board.getBoundingClientRect();
-  const px = e.clientX - boardRect.left - dragging._grabDX;
-  const py = e.clientY - boardRect.top - dragging._grabDY;
-  setPieceCenterOnBoard(dragging, px, py);
+  const mx = e.clientX - boardRect.left - dragging._grabDX;
+  const my = e.clientY - boardRect.top - dragging._grabDY;
+  setMassOnBoard(dragging, mx, my);
+  // ちかい かげを ハイライト（ぴたっと よせる ヒント）
+  hoverHighlight(dragging);
+}
+
+/* ドラッグちゅう、じぶんの かげが ちかいと ひからせる */
+function hoverHighlight(el){
+  const p = el._data;
+  if(p._shadow.classList.contains('done')) return;
+  const m = massOf(el);
+  const dist = Math.hypot(m.x - u2bx(p.tx), m.y - u2bx(p.ty));
+  if(dist <= boardPx*0.16) p._shadow.classList.add('hi');
+  else p._shadow.classList.remove('hi');
 }
 
 function onUp(e){
-  if(!dragging) return;
+  if(!dragging || (e && e.pointerId!=null && e.pointerId!==dragging._pid)) return;
   const el = dragging;
   dragging = null;
   el.classList.remove('grab');
   el.style.transform='';
+  try{ el.releasePointerCapture && el._pid!=null && el.releasePointerCapture(el._pid); }catch(_){}
   window.removeEventListener('pointermove', onMove);
   window.removeEventListener('pointerup', onUp);
   window.removeEventListener('pointercancel', onUp);
 
-  // ピースの いまの ちゅうしん（board px）
-  const left = parseFloat(el.style.left);
-  const top = parseFloat(el.style.top);
-  const cx = left + el._pw/2;
-  const cy = top + el._ph/2;
-  // じぶんの かげの ちゅうしん（board px）
   const p = el._data;
-  const tcx = u2bx(p.tx);
-  const tcy = u2bx(p.ty);
-  const dist = Math.hypot(cx-tcx, cy-tcy);
+  p._shadow.classList.remove('hi');
+  // かたちの じゅうしん（board px）と かげの ちゅうしん
+  const m = massOf(el);
+  const dist = Math.hypot(m.x - u2bx(p.tx), m.y - u2bx(p.ty));
   const snapR = boardPx*0.16;   // スナップ はんてい はんけい（おおきめ＝やさしい）
 
   if(dist <= snapR){
@@ -519,21 +559,23 @@ function onUp(e){
   }
 }
 
+/* かげの いちに ピースを ぴたっと はりつける（ざひょうけいさん だけ） */
+function placeOnShadow(el){
+  const p = el._data;
+  // かたちの じゅうしん が かげの ちゅうしん（target）に かさなる ように おく
+  el.style.left = (u2bx(p.tx) - el._cOffX - el._pw/2)+'px';
+  el.style.top  = (u2bx(p.ty) - el._cOffY - el._ph/2)+'px';
+  el.style.transform='';
+  if(el.dataset.parent!=='board'){ board.appendChild(el); el.dataset.parent='board'; }
+}
+
 /* ---- スナップ せいこう ---- */
 function snapPiece(el){
   const p = el._data;
-  // かげに ぴたっと あわせる（ちゅうしん＝target、ローカルちゅうしん で ほせい）
-  const sc = el._sc;
-  const cLocal = p._c;
-  const left = u2bx(p.tx) - cLocal[0]*sc;
-  const top  = u2bx(p.ty) - cLocal[1]*sc;
-  // いれものサイズと ローカルげんてんの ずれ（pts の min を 0 と している ので そのまま）
-  el.style.left = left+'px';
-  el.style.top = top+'px';
+  placeOnShadow(el);
   el._placed = true;
   el.classList.remove('grab');
   el.classList.add('placed','pop');
-  el.dataset.parent='board';
   setTimeout(()=>el.classList.remove('pop'), 460);
 
   // かげ きえる
@@ -558,7 +600,8 @@ function snapPiece(el){
 
 /* ---- スナップ しっぱい → トレイへ もどす（やさしく） ---- */
 function returnToTray(el){
-  const home = JSON.parse(el.dataset.home);
+  let home = {x:0,y:0};
+  try{ home = JSON.parse(el.dataset.home); }catch(_){}
   // tray へ もどす
   if(el.dataset.parent!=='tray'){
     tray.appendChild(el);
@@ -572,6 +615,8 @@ function returnToTray(el){
 
 /* ---- かんせい！ ---- */
 function win(){
+  if(winning) return;          // にじゅう はつどう ぼうし
+  winning = true;
   Sfx.success();
   boardWrap.classList.add('win');
   setTimeout(()=>boardWrap.classList.remove('win'), 1000);
@@ -626,13 +671,15 @@ resetBtn.addEventListener('click', ()=>{
   loadLevel();
 });
 
-/* ---- リサイズ ---- */
+/* ---- リサイズ・かいてん（しんちょくを たもったまま はいちだけ なおす） ---- */
 let rzTimer=null;
-window.addEventListener('resize', ()=>{
-  if(dragging) return;
+function onResize(){
+  if(dragging || winning) return;
   clearTimeout(rzTimer);
-  rzTimer=setTimeout(loadLevel, 150);
-}, {passive:true});
+  rzTimer=setTimeout(()=>{ if(!dragging && !winning) layout(); }, 120);
+}
+window.addEventListener('resize', onResize, {passive:true});
+window.addEventListener('orientationchange', onResize, {passive:true});
 
 /* ---- boot ---- */
 loadLevel();

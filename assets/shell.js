@@ -71,40 +71,65 @@
 
   /* ---- 画面遷移（whoosh＋フェードアウト） ---- */
   var transitioning = false;
+  var fadeEl = null;
   function go(href) {
     if (transitioning) return;
     transitioning = true;
     try { if (global.Sfx) Sfx.whoosh(); } catch (e) {}
-    var fade = el('div');
-    fade.style.cssText =
+    fadeEl = el('div');
+    fadeEl.style.cssText =
       'position:fixed;inset:0;z-index:9998;background:var(--bg-2,#ffe9c7);' +
       'opacity:0;transition:opacity .32s ease;pointer-events:none;';
-    doc.body.appendChild(fade);
-    requestAnimationFrame(function () { fade.style.opacity = '1'; });
+    doc.body.appendChild(fadeEl);
+    requestAnimationFrame(function () { if (fadeEl) fadeEl.style.opacity = '1'; });
     setTimeout(function () { global.location.href = href; }, 300);
   }
+  // ブラウザ「戻る」での bfcache 復帰時にフェード幕と遷移ロックを解除
+  global.addEventListener('pageshow', function (e) {
+    if (e.persisted || transitioning) {
+      transitioning = false;
+      if (fadeEl && fadeEl.parentNode) fadeEl.parentNode.removeChild(fadeEl);
+      fadeEl = null;
+    }
+  });
 
   /* ---- 汎用モーダル ----
      show({emoji, title, text, buttons:[{label,cls,onClick}]}) */
-  var overlay = null, modal = null;
+  var overlay = null, modal = null, modalDismissable = false;
   function ensureModal() {
     if (overlay) return;
     overlay = el('div', 'overlay');
     modal = el('div', 'modal');
     overlay.appendChild(modal);
     doc.body.appendChild(overlay);
+    // アクセシビリティ：ダイアログとして読み上げ可能に
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    // 幕の外（ダイアログ自身でない部分）をタップで閉じる
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay && modalDismissable) hideModal();
+    });
+    // Escape でも閉じる
+    doc.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modalDismissable &&
+          overlay.classList.contains('show')) hideModal();
+    });
   }
   function showModal(cfg) {
     ensureModal();
     cfg = cfg || {};
+    // dismissOnBackdrop が明示 false のときだけ幕外タップ無効。既定は閉じてOK
+    modalDismissable = (cfg.dismissOnBackdrop !== false);
     modal.innerHTML = '';
     if (cfg.emoji) modal.appendChild(el('div', 'big-emoji', cfg.emoji));
     if (cfg.title) modal.appendChild(el('h2', null, cfg.title));
     if (cfg.text) modal.appendChild(el('p', null, cfg.text));
     var row = el('div');
     row.style.cssText = 'display:flex;gap:12px;justify-content:center;flex-wrap:wrap;';
+    var firstBtn = null;
     (cfg.buttons || []).forEach(function (b) {
       var btn = el('button', 'btn ' + (b.cls || ''), b.label);
+      if (!firstBtn) firstBtn = btn;
       btn.addEventListener('click', function () {
         if (global.Sfx) Sfx.tap();
         if (b.keepOpen !== true) hideModal();
@@ -113,7 +138,11 @@
       row.appendChild(btn);
     });
     if ((cfg.buttons || []).length) modal.appendChild(row);
-    requestAnimationFrame(function () { overlay.classList.add('show'); });
+    requestAnimationFrame(function () {
+      overlay.classList.add('show');
+      // 主ボタンへフォーカス（キーボード/スクリーンリーダー）
+      if (firstBtn) { try { firstBtn.focus(); } catch (e) {} }
+    });
     return { close: hideModal };
   }
   function hideModal() { if (overlay) overlay.classList.remove('show'); }

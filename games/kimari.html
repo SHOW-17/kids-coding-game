@@ -46,18 +46,29 @@
   /* ならび（出題列） */
   .seq-card{width:100%; background:var(--paper); border-radius:var(--r-lg);
     box-shadow:var(--sh-2); padding:16px 12px; margin:4px 0 10px;}
-  .seq{display:flex; gap:8px; justify-content:center; align-items:center;
-    flex-wrap:wrap;}
+  .seq{display:flex; gap:6px; justify-content:center; align-items:center;
+    flex-wrap:nowrap;}
   .tile{
     display:flex; align-items:center; justify-content:center;
     border-radius:18px; background:var(--cream);
     box-shadow:inset 0 -5px 0 rgba(0,0,0,.07), 0 3px 8px rgba(0,0,0,.08);
     flex:0 0 auto;
   }
-  /* タイルサイズはマス数で動的（はみ出し防止） */
-  .seq[data-n="4"] .tile,.seq[data-n="5"] .tile{width:62px; height:62px; font-size:36px;}
-  .seq[data-n="6"] .tile{width:54px; height:54px; font-size:32px;}
-  .seq[data-n="7"] .tile,.seq[data-n="8"] .tile{width:46px; height:46px; font-size:27px;}
+  /* タイルサイズはマス数で動的。狭い端末(～320px)でも 1行に収まるよう
+     「列が増えたら自動で小さく」なる上限つきの calc（min）で算出。
+     利用できる横幅 ≒ (100vw − 余白) を マス数で割る。 */
+  .tile{ --side:48px; width:var(--side); height:var(--side);
+    font-size:calc(var(--side) * 0.58); }
+  .seq[data-n="4"]{ --avail:calc((100vw - 64px) / 4); }
+  .seq[data-n="5"]{ --avail:calc((100vw - 76px) / 5); }
+  .seq[data-n="6"]{ --avail:calc((100vw - 86px) / 6); }
+  .seq[data-n="7"]{ --avail:calc((100vw - 96px) / 7); }
+  .seq[data-n="8"]{ --avail:calc((100vw - 106px) / 8); }
+  .seq[data-n="4"] .tile{ --side:min(62px, var(--avail)); }
+  .seq[data-n="5"] .tile{ --side:min(60px, var(--avail)); }
+  .seq[data-n="6"] .tile{ --side:min(54px, var(--avail)); }
+  .seq[data-n="7"] .tile{ --side:min(48px, var(--avail)); }
+  .seq[data-n="8"] .tile{ --side:min(44px, var(--avail)); }
   .glyph{line-height:1; transition:transform .25s var(--spring);}
 
   /* ？タイル（こたえる場所） */
@@ -257,26 +268,33 @@ function genABC(tokens, len){
 
 // D) かず ふえる（ドット 1,2,3,..）
 function genCount(len){
-  const startMax = Math.max(1, 6 - len);     // 列が長いほど 始まりは小さく（収まる範囲に）
-  let start = 1 + Math.floor(Math.random()*startMax);
-  if (start + len > 6) start = Math.max(1, 6 - len + 1);
+  // 列(seq)＋こたえ で 最大ドット = start + len。これが 6 を超えないよう start を決める。
+  const startMax = Math.max(1, 6 - len);     // 1..startMax から始める（こたえが必ず 6 以下）
+  const start = 1 + Math.floor(Math.random()*startMax);
   const seq = [];
   for(let i=0;i<len;i++) seq.push({dots: start+i});
-  const answer = {dots: start+len};
-  // 誤答：前後のドット数
+  const answer = {dots: start+len};          // 1..6 に必ず収まる
+  // 誤答：1..6 のうち こたえ以外（重複排除は finalize 側）。隣の数を優先して紛らわしく。
   const cand = [];
+  [answer.dots-1, answer.dots+1, answer.dots-2, answer.dots+2].forEach(d=>{
+    if (d>=1 && d<=6 && d!==answer.dots) cand.push({dots:d});
+  });
   for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
   return { seq, answer, distractors: cand };
 }
 
 // E) おおきさ こうご（小大小大..）
 function genSize(){
-  const emo = pick(['⭐','❤️','🌸','🔵','🟢','🟠']);
+  const all = ['⭐','❤️','🌸','🔵','🟢','🟠'];
+  const emo = pick(all);
+  const other = pick(all.filter(e=>e!==emo)); // ちがう えがら（おとり）
   const len = 4 + (Math.random()<0.5?0:1);
   const seq = [];
   for(let i=0;i<len;i++) seq.push({emo, big: i%2===1}); // 小,大,小,大..
-  const answer = {emo, big: len%2===1};
-  const distractors = [{emo, big: !(len%2===1)}]; // 反対の大きさ（同絵柄）
+  const big = len%2===1;
+  const answer = {emo, big};
+  // 誤答1：おなじ えがらで 反対の おおきさ／誤答2：ちがう えがらで 正しい おおきさ
+  const distractors = [{emo, big: !big}, {emo: other, big}];
   return { seq, answer, distractors };
 }
 
@@ -290,7 +308,8 @@ function genRotate(len){
 }
 
 /* 難易度に応じて出題を選ぶ。進むほど 種類↑ 列↑ */
-function buildProblem(idx){
+function buildProblem(idx, depth){
+  depth = depth || 0;
   let raw;
   if (idx < 3){
     // やさしい：AB交互（色 or 動物）、短め
@@ -320,11 +339,12 @@ function buildProblem(idx){
     else if (pickGen==='rotate') raw = genRotate(pick([6,7]));
     else raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 7);
   }
-  return finalizeProblem(raw);
+  return finalizeProblem(raw, depth);
 }
 
 /* 3択を作る：正解1＋誤答2。重複ゼロ・正解はちょうど1つ になるよう検証 */
-function finalizeProblem(raw){
+function finalizeProblem(raw, depth){
+  depth = depth || 0;
   const ansKey = tokenKey(raw.answer);
   // 誤答候補から「正解と違うキー」だけ集めて重複排除
   const seen = new Set([ansKey]);
@@ -333,19 +353,31 @@ function finalizeProblem(raw){
     const k = tokenKey(d);
     if (!seen.has(k)){ seen.add(k); distinct.push(d); }
   });
-  // 足りない場合の保険（基本は起きないが安全に）
-  const FALLBACK = COLOR_TOKENS.concat(SHAPE_TOKENS);
+  // 足りない場合の保険：かず問題はドット、それ以外は絵柄でうめる（種類が混ざりにくいよう）
+  let FALLBACK;
+  if (raw.answer && raw.answer.dots != null){
+    FALLBACK = [1,2,3,4,5,6].map(d=>({dots:d}));
+  } else {
+    FALLBACK = COLOR_TOKENS.concat(SHAPE_TOKENS, FRUIT_TOKENS);
+  }
   let fi = 0;
   while (distinct.length < 2 && fi < FALLBACK.length){
     const d = FALLBACK[fi++]; const k = tokenKey(d);
     if (!seen.has(k)){ seen.add(k); distinct.push(d); }
   }
+  // それでも足りない（理論上ありえない）場合は作り直し
+  if (distinct.length < 2 && depth < 8){
+    return buildProblem(qIndex, depth+1);
+  }
   const choices = shuffle([raw.answer, distinct[0], distinct[1]]);
-  // 検証：正解キーがちょうど1つ
-  const correctCount = choices.filter(c=>tokenKey(c)===ansKey).length;
-  if (correctCount !== 1){
-    // 生成が崩れたら作り直し（極めて稀）
-    return buildProblem(qIndex);
+  // 検証：3択そろっていて 正解キーがちょうど1つ・重複なし
+  const keys = choices.map(tokenKey);
+  const correctCount = keys.filter(k=>k===ansKey).length;
+  const allDefined = choices.every(c=>c != null);
+  const noDup = new Set(keys).size === keys.length;
+  if (choices.length !== 3 || correctCount !== 1 || !allDefined || !noDup){
+    // 生成が崩れたら作り直し（極めて稀）。再帰の暴走を防ぐため上限つき。
+    if (depth < 8) return buildProblem(qIndex, depth+1);
   }
   return { seq: raw.seq, answer: raw.answer, ansKey, choices };
 }

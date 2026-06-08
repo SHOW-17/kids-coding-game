@@ -209,28 +209,38 @@ function renderDots(){
   }
 }
 
-/* ---- compute cell size from screen (no overflow) ---- */
+/* ---- compute cell size from screen (whole UI fits, no overflow) ---- */
 function calcCell(lv){
-  const maxW = Math.min(window.innerWidth-28, 432);   // board max width
-  const maxBoardH = Math.max(220, window.innerHeight*0.50); // board max height
+  // board width: viewport minus side margins + 8px*2 board padding
+  const maxW = Math.min(window.innerWidth-28, 432);
+  // board height: viewport minus the fixed chrome above/below the board
+  // (topbar + statusbar + dots + hint + tray + controls + board padding ~= 360px).
+  const chrome = 374;
+  const maxBoardH = Math.max(150, window.innerHeight - chrome);
   const byW = Math.floor(maxW / lv.w);
   const byH = Math.floor(maxBoardH / lv.h);
-  return Math.max(34, Math.min(byW, byH, 64));
+  // floor 24px keeps cells tappable on short screens while fitting tall boards
+  return Math.max(24, Math.min(byW, byH, 64));
 }
 
 function key(x,y){return x+','+y;}
 
-/* ---- render level ---- */
+/* ---- render level (full reset: clears placed slopes) ---- */
 function loadLevel(){
   cur = LEVELS[lvIndex];
   tools = {};
   running = false;
-  cell = calcCell(cur);
 
   lvPill.textContent = 'レベル ' + (lvIndex+1);
   renderDots();
-  updateBudget();
   hint.textContent = 'さかを おいて ▶ を おそう！';
+  build();
+}
+
+/* ---- build/relayout board for current cell size, KEEPING placed slopes ---- */
+function build(){
+  cell = calcCell(cur);
+  updateBudget();
 
   board.style.width = (cur.w*cell)+'px';
   board.style.height = (cur.h*cell)+'px';
@@ -262,6 +272,12 @@ function loadLevel(){
       }
       board.appendChild(c);
     }
+  }
+
+  // redraw any already-placed slopes (preserved across relayout)
+  for(const k in tools){
+    const [tx,ty]=k.split(',').map(Number);
+    drawTool(tx,ty,tools[k]);
   }
 
   // ball element
@@ -479,7 +495,12 @@ resetBtn.addEventListener('click',()=>{
 
 playBtn.addEventListener('click', run);
 
-window.addEventListener('resize', ()=>{ if(!running) loadLevel(); }, {passive:true});
+let resizeT=null;
+window.addEventListener('resize', ()=>{
+  if(running) return;            // never relayout mid-roll
+  clearTimeout(resizeT);
+  resizeT=setTimeout(()=>{ if(!running) build(); }, 120); // keep placed slopes
+}, {passive:true});
 
 /* ---- boot ---- */
 loadLevel();

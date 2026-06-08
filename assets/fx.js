@@ -11,6 +11,22 @@
   var canvas = null, g = null, dpr = 1;
   var particles = [];
   var running = false;
+  var MAX_PARTICLES = 600;   // 溜まりすぎ防止（描画負荷の上限）
+
+  // 「動きを減らす」設定を尊重（無いブラウザでもエラーにならないよう判定）
+  function reduceMotion() {
+    try {
+      return global.matchMedia &&
+        global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) { return false; }
+  }
+
+  // 上限を超えた分は古いものから捨てる
+  function clampParticles() {
+    if (particles.length > MAX_PARTICLES) {
+      particles.splice(0, particles.length - MAX_PARTICLES);
+    }
+  }
 
   function init() {
     if (canvas) return;
@@ -48,7 +64,7 @@
     requestAnimationFrame(loop);
   }
 
-  function start() { if (!running) { running = true; requestAnimationFrame(loop); } }
+  function start() { clampParticles(); if (!running) { running = true; requestAnimationFrame(loop); } }
 
   function rnd(a, b) { return a + (b - a) * fakeRandom(); }
   // Math.random() はこの環境のスクリプトでは可。ブラウザでは普通に使える
@@ -63,6 +79,7 @@
     opts = opts || {};
     var W = global.innerWidth;
     var count = opts.count || 130;
+    if (reduceMotion()) count = Math.min(count, 36);  // 動き控えめ設定では量を抑える
     var originX = opts.x != null ? opts.x : W / 2;
     var originY = opts.y != null ? opts.y : -10;
     var spread = opts.spread != null ? opts.spread : W;
@@ -211,15 +228,18 @@
   // ---- 画面シェイク（失敗時など） ----
   function shake(el, intensity, dur) {
     el = el || document.body;
+    if (reduceMotion()) return;  // 動き控えめ設定では揺らさない
     intensity = intensity || 8; dur = dur || 380;
+    // 元の inline transform を退避し、終了後に必ず復元（他のtransformを壊さない）
+    var prev = el.style.transform || '';
     var start = performance.now();
     function frame(t) {
       var p = (t - start) / dur;
-      if (p >= 1) { el.style.transform = ''; return; }
+      if (p >= 1) { el.style.transform = prev; return; }
       var damp = (1 - p) * intensity;
       var dx = (Math.random() * 2 - 1) * damp;
       var dy = (Math.random() * 2 - 1) * damp;
-      el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      el.style.transform = prev + ' translate(' + dx + 'px,' + dy + 'px)';
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);

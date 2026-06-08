@@ -240,11 +240,13 @@ const GAMES = [
   }
 ];
 
-/* くまゲームの進捗（独自キー）を読む */
+/* くまゲームの進捗（独自キー）を読む
+   cleared は配列。重複が混ざっても水増しされないよう一意化して数える */
 function kumaCleared(){
   try{
     const d = JSON.parse(localStorage.getItem('kuma_prog_save_v1'));
-    return d && d.cleared ? d.cleared.length : 0;
+    if(!d || !Array.isArray(d.cleared)) return 0;
+    return new Set(d.cleared).size;
   }catch(e){ return 0; }
 }
 
@@ -252,6 +254,7 @@ function kumaCleared(){
 const grid = document.getElementById('grid');
 GAMES.forEach((g,i)=>{
   const card = App.el('button', 'game enter d'+Math.min(i+2,6) + (g.feature?' feature':''));
+  card.setAttribute('aria-label', g.name + ' であそぶ');
   card.style.setProperty('--g1', g.g1);
   card.style.setProperty('--ac', g.ac);
   const art = `<div class="art" style="background:linear-gradient(160deg,${g.g1},${g.g2});">${g.art}</div>`;
@@ -259,9 +262,9 @@ GAMES.forEach((g,i)=>{
   // 進捗
   let metaHtml='';
   if(g.total){
-    const done = (g.id==='kuma') ? kumaCleared() : 0;
-    const pct = Math.round(done/g.total*100);
-    metaHtml = `<div class="meta">
+    const done = Math.min((g.id==='kuma') ? kumaCleared() : 0, g.total);
+    const pct = g.total>0 ? Math.min(100, Math.round(done/g.total*100)) : 0;
+    metaHtml = `<div class="meta" role="img" aria-label="${done} / ${g.total} クリア">
         <div class="progress"><i style="width:${pct}%"></i></div>
         <span class="pct">${done}/${g.total}</span></div>`;
   } else if(g.ns){

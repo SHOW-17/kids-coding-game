@@ -43,15 +43,19 @@
     if (!c) return;
     try {
       var o = opts || {};
-      var t0 = (o.when != null ? o.when : c.currentTime);
+      // 過去の時刻を指定されても currentTime まで巻き戻す（負の when ガード）
+      var t0 = (o.when != null ? Math.max(o.when, c.currentTime) : c.currentTime);
       var dur = o.dur != null ? o.dur : 0.18;
       var atk = o.attack != null ? o.attack : 0.008;
       var rel = o.release != null ? o.release : Math.max(0.04, dur * 0.5);
-      var vol = o.vol != null ? o.vol : 0.5;
+      // exponentialRampToValueAtTime は 0 を渡すと例外。必ず正の最小値にクランプ
+      var vol = Math.max(0.0002, o.vol != null ? o.vol : 0.5);
+      // アタックが尺を食い潰さないように制限
+      if (atk > dur * 0.5) atk = dur * 0.5;
 
       var osc = c.createOscillator();
       osc.type = o.type || 'sine';
-      osc.frequency.setValueAtTime(o.freq || 440, t0);
+      osc.frequency.setValueAtTime(Math.max(1, o.freq || 440), t0);
       if (o.slideTo) {
         osc.frequency.exponentialRampToValueAtTime(
           Math.max(1, o.slideTo), t0 + dur);
@@ -62,10 +66,10 @@
       g.gain.exponentialRampToValueAtTime(vol, t0 + atk);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
 
-      var node = g;
       // パン（左右）— 対応端末のみ
+      var p = null;
       if (o.pan != null && c.createStereoPanner) {
-        var p = c.createStereoPanner();
+        p = c.createStereoPanner();
         p.pan.value = Math.max(-1, Math.min(1, o.pan));
         g.connect(p); p.connect(master);
       } else {
@@ -75,6 +79,10 @@
 
       osc.start(t0);
       osc.stop(t0 + dur + rel);
+      // 再生終了でノードを切り離し、連続再生でも溜まらないようにする
+      osc.onended = function () {
+        try { osc.disconnect(); g.disconnect(); if (p) p.disconnect(); } catch (e) {}
+      };
     } catch (e) {}
   }
 
@@ -98,7 +106,7 @@
     get muted() { return muted; },
     setMuted: function (m) { muted = !!m; },
     toggleMute: function () { muted = !muted; return muted; },
-    setVolume: function (v) { ensure(); if (master) master.gain.value = v; },
+    setVolume: function (v) { ensure(); if (master) master.gain.value = Math.max(0, Math.min(1, v)); },
 
     // 任意の周波数を1音（ゲームの「光って鳴る」用）
     note: function (freq, dur, type) {

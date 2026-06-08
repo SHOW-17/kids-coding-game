@@ -28,7 +28,7 @@
 
   .wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; flex:1;}
 
-  /* 状態バー */
+  /* じょうたいバー */
   .statusbar{display:flex; gap:10px; align-items:center; margin:6px 0 4px;}
   .round-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
     padding:8px 18px; border-radius:999px; font-size:18px; color:var(--accent-d);}
@@ -40,8 +40,8 @@
   .hint.watch{color:var(--accent-d);}
   .hint.your{color:var(--c-green-d);}
 
-  /* サイモン・ダイヤル */
-  .dial-wrap{position:relative; width:min(86vw,400px); aspect-ratio:1; margin:6px 0 4px;}
+  /* サイモン・ダイヤル（よこ・たて どちらでも はみでない） */
+  .dial-wrap{position:relative; width:min(86vw,72vh,400px); aspect-ratio:1; margin:6px 0 4px;}
   .dial{position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr;
     grid-template-rows:1fr 1fr; gap:14px; border-radius:50%;
     padding:0; transition:transform .3s var(--spring);}
@@ -64,13 +64,13 @@
   .pad[data-c="2"]{background:#ffce2e;}
   .pad[data-c="3"]{background:#5cc8e8;}
   .pad .face{filter:drop-shadow(0 2px 2px rgba(0,0,0,.18)); transition:transform .15s var(--spring);}
-  /* 点灯状態 */
+  /* てんとう じょうたい */
   .pad.lit{filter:brightness(1.35) saturate(1.2); box-shadow:inset 0 -8px 0 rgba(255,255,255,.25),
     0 0 40px rgba(255,255,255,.7), 0 6px 14px rgba(0,0,0,.15);}
   .pad.lit .face{transform:scale(1.25) translateY(-2px);}
   .dial.locked .pad{cursor:default;}
 
-  /* 中央ハブ */
+  /* ちゅうおう ハブ */
   .hub{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
     width:30%; aspect-ratio:1; border-radius:50%; background:var(--cream);
     box-shadow:0 6px 0 #d9c8ee, inset 0 0 0 6px #fff;
@@ -79,18 +79,34 @@
   .hub .big{font-size:clamp(28px,9vw,40px); line-height:1;}
   .hub .lbl{font-size:11px; color:var(--ink-faint); margin-top:2px;}
 
-  /* スタート画面オーバーレイ（ダイヤル上に重ねる） */
+  /* スタートがめん オーバーレイ（ダイヤルの うえに かさねる） */
   .startcover{position:absolute; inset:0; z-index:8; border-radius:50%;
     background:rgba(255,255,255,.55); backdrop-filter:blur(2px);
     display:flex; align-items:center; justify-content:center;
     transition:opacity .3s; }
   .startcover.hide{opacity:0; pointer-events:none;}
 
-  /* 下部コントロール */
+  /* したの コントロール */
   .controls{display:flex; gap:14px; align-items:center; justify-content:center;
-    margin-top:14px; min-height:74px;}
+    margin-top:14px; min-height:74px; padding-bottom:env(safe-area-inset-bottom);}
   .peek{visibility:hidden;}
   .peek.show{visibility:visible;}
+
+  /* せまい たんまつ（320px くらい）でも はみでない */
+  @media (max-width:360px){
+    .round-pill{font-size:16px; padding:7px 14px;}
+    .best-pill{font-size:13px; padding:7px 11px;}
+    .hint{font-size:15px;}
+    .peek{font-size:17px; padding:0 18px;}
+  }
+
+  /* よこむき：たてに つめて ダイヤルを みせる */
+  @media (orientation:landscape) and (max-height:520px){
+    .statusbar{margin:2px 0;}
+    .hint{margin:4px 0; min-height:20px;}
+    .dial-wrap{width:min(58vh,86vw,400px); margin:2px 0;}
+    .controls{margin-top:8px; min-height:60px;}
+  }
 </style>
 </head>
 <body>
@@ -107,10 +123,10 @@
 
   <div class="dial-wrap enter d2">
     <div class="dial locked" id="dial">
-      <button class="pad tl" data-c="0"><span class="face">🐸</span></button>
-      <button class="pad tr" data-c="1"><span class="face">🦊</span></button>
-      <button class="pad bl" data-c="3"><span class="face">🐬</span></button>
-      <button class="pad br" data-c="2"><span class="face">🐤</span></button>
+      <button class="pad tl" data-c="0" aria-label="かえる"><span class="face">🐸</span></button>
+      <button class="pad tr" data-c="1" aria-label="きつね"><span class="face">🦊</span></button>
+      <button class="pad bl" data-c="3" aria-label="いるか"><span class="face">🐬</span></button>
+      <button class="pad br" data-c="2" aria-label="ひよこ"><span class="face">🐤</span></button>
     </div>
     <div class="hub" id="hub"><div class="big" id="hubBig">🎵</div><div class="lbl" id="hubLbl">まねっこ</div></div>
     <div class="startcover" id="startcover">
@@ -132,7 +148,7 @@
 const save = Save.game('manekko');
 const dial = document.getElementById('dial');
 const pads = [...dial.querySelectorAll('.pad')]
-  .sort((a,b)=>(+a.dataset.c)-(+b.dataset.c)); // index = データ色番号
+  .sort((a,b)=>(+a.dataset.c)-(+b.dataset.c)); // index = データの いろ ばんごう
 const hint = document.getElementById('hint');
 const roundPill = document.getElementById('roundPill');
 const bestPill = document.getElementById('bestPill');
@@ -141,10 +157,13 @@ const hubLbl = document.getElementById('hubLbl');
 const startcover = document.getElementById('startcover');
 const peekBtn = document.getElementById('peekBtn');
 
-// 各パッドの音（やさしい和音アルペジオ）
-const TONES = [329.63, 415.30, 493.88, 587.33]; // 緑・赤・黄・青
+// パッドごとの おと（やさしい アルペジオ）
+const TONES = [329.63, 415.30, 493.88, 587.33]; // みどり・あか・きいろ・あお
 let best = save.get('best', 0);
+let bestAtStart = best;          // この あそびを はじめる まえの さいこう（おいわい はんてい よう）
 let seq = [], inputPtr = 0, phase = 'idle', acceptInput = false;
+let starting = false;            // たじゅう スタート ぼうし
+let runId = 0;                   // さいせい・にゅうりょくの せだい（とちゅうで やりなおしても まざらない）
 renderBest();
 
 /* ヘッダー */
@@ -157,7 +176,7 @@ function setRound(n){ roundPill.textContent = 'だん ' + n; }
 function rand4(){ return Math.floor(Math.random()*4); }
 function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* パッドを光らせて鳴らす */
+/* パッドを ひからせて ならす */
 async function light(i, dur){
   const pad = pads[i];
   pad.classList.add('lit');
@@ -169,41 +188,55 @@ async function light(i, dur){
   pad.classList.remove('lit');
 }
 
-/* お手本シーケンス再生 */
+/* おてほん シーケンス さいせい */
 async function playSequence(){
+  const my = runId;
   phase = 'show'; acceptInput = false; dial.classList.add('locked');
   peekBtn.classList.remove('show');
   hint.textContent = 'よく みてね 👀'; hint.className = 'hint watch';
   hubBig.textContent = '👀'; hubLbl.textContent = 'みほん';
   await wait(620);
-  // 段が増えるほど少しテンポアップ（下限あり）
-  const dur = Math.max(300, 560 - seq.length*16);
-  const gap = Math.max(120, 240 - seq.length*6);
-  for(const i of seq){ await light(i, dur); await wait(gap); }
-  // プレイヤーの番
+  if(my !== runId) return;                       // とちゅうで やりなおされたら ちゅうし
+  // だんが ふえるほど すこし はやく（したかぎり あり・きつすぎない ひかえめ）
+  const dur = Math.max(340, 560 - seq.length*12);
+  const gap = Math.max(150, 260 - seq.length*5);
+  for(const i of seq){
+    if(my !== runId) return;
+    await light(i, dur);
+    if(my !== runId) return;
+    await wait(gap);
+  }
+  if(my !== runId) return;
+  // プレイヤーの ばん
   phase = 'input'; inputPtr = 0; acceptInput = true; dial.classList.remove('locked');
   hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className = 'hint your';
   hubBig.textContent = '🖐️'; hubLbl.textContent = 'どうぞ';
   peekBtn.classList.add('show');
 }
 
-/* 次の段へ */
+/* つぎの だんへ */
 async function nextRound(){
   seq.push(rand4());
   setRound(seq.length);
   await playSequence();
 }
 
-/* ゲーム開始 */
+/* ゲーム かいし */
 async function startGame(){
+  if(starting) return;                 // たじゅう スタート ぼうし（れんだ・モーダル）
+  if(phase==='show' || phase==='input') return; // あそんで いる さいちゅうは むし
+  starting = true;
+  runId++;                             // あたらしい あそびの せだい
   Sfx.tap();
+  bestAtStart = best;                  // この あそびの まえの さいこうを ひかえる
   startcover.classList.add('hide');
-  seq = []; setRound(0);
+  seq = []; inputPtr = 0; setRound(0);
   await wait(280);
+  starting = false;
   await nextRound();
 }
 
-/* パッド押下 */
+/* パッド おした とき */
 pads.forEach((pad,i)=>{
   pad.addEventListener('pointerdown', ()=>{
     if(!acceptInput || phase!=='input') return;
@@ -212,7 +245,7 @@ pads.forEach((pad,i)=>{
     if(i === expected){
       inputPtr++;
       if(inputPtr === seq.length){
-        // この段クリア
+        // この だん クリア
         acceptInput = false;
         roundClear();
       }
@@ -222,18 +255,22 @@ pads.forEach((pad,i)=>{
   });
 });
 
-/* 段クリア演出 → 次へ */
+/* だんクリアの えんしゅつ → つぎへ */
 async function roundClear(){
+  const my = runId;
+  phase = 'clear';                 // つぎの だんが はじまる まで にゅうりょく・のぞき むこう
+  peekBtn.classList.remove('show');
   hint.textContent = 'せいかい！ ✨'; hint.className = 'hint your';
   hubBig.textContent = '🎉';
   Sfx.ding();
   const r = dial.getBoundingClientRect();
   FX.sparkles(r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
-  // ベスト更新チェック
+  // ベスト こうしん チェック
   if(seq.length > best){
     best = seq.length; save.set('best', best); renderBest();
   }
   await wait(720);
+  if(my !== runId) return;          // とちゅうで やりなおされたら つぎへ いかない
   await nextRound();
 }
 
@@ -243,11 +280,12 @@ function gameOver(){
   dial.classList.add('locked');
   Sfx.error(); App.buzz([30,40,30]);
   FX.shake(document.querySelector('.dial-wrap'), 9, 360);
-  // 「何段までできたか」= 直前にクリアした段数 = seq.length-1
+  // なんだんまで できたか = ちょくぜんに クリアした だんすう = seq.length-1
   const done = seq.length - 1;
   hubBig.textContent = '🙈'; hubLbl.textContent = 'おしい';
   hint.textContent = 'おしい！ もう いちど やってみよう'; hint.className = 'hint';
-  const isBest = (done >= best && done > 0);
+  // じこ さいこう = この あそびの まえの きろくを こえた とき だけ おいわい
+  const isBest = (done > bestAtStart && done > 0);
   setTimeout(()=>{
     App.showModal({
       emoji: done>=8 ? '🏆' : done>=4 ? '🌟' : '🐻',
@@ -256,7 +294,7 @@ function gameOver(){
                    : ('🏆 さいこうは ' + best + 'だん。<br>つぎは こえられるかな？'),
       buttons:[
         {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
-        {label:'もう いちど ▶', cls:'btn--green', onClick:()=>{ startcover.classList.remove('hide'); resetIdle(); startGame(); }}
+        {label:'もう いちど ▶', cls:'btn--green', onClick:()=>{ resetIdle(); startGame(); }}
       ]
     });
     if(isBest){ Sfx.fanfare(); FX.celebrate(); }
@@ -264,25 +302,41 @@ function gameOver(){
 }
 
 function resetIdle(){
+  runId++;                         // のこって いる さいせいを むこうに する
   phase='idle'; seq=[]; inputPtr=0; acceptInput=false;
+  dial.classList.add('locked');
+  pads.forEach(p=>p.classList.remove('lit'));
+  peekBtn.classList.remove('show');
+  startcover.classList.remove('hide');
   hubBig.textContent='🎵'; hubLbl.textContent='まねっこ';
+  hint.textContent='みどりの ▶ で スタート！'; hint.className='hint';
   setRound(0);
 }
 
-/* もういちど みる（やさしいヒント・無制限） */
+/* もういちど みる（やさしい ヒント・なんども OK） */
 peekBtn.addEventListener('click', ()=>{
   if(phase!=='input') return;
   Sfx.tap();
   replayCurrent();
 });
+let peeking = false;
 async function replayCurrent(){
-  const wasAccept = acceptInput;
+  if(peeking) return;                 // のぞき なおしの れんだ ぼうし
+  peeking = true;
+  const my = runId;
   acceptInput = false; dial.classList.add('locked');
   peekBtn.classList.remove('show');
   hint.textContent = 'もういちど みてね 👀'; hint.className='hint watch';
   await wait(420);
-  const dur = Math.max(300, 560 - seq.length*16);
-  for(const i of seq){ await light(i, dur); await wait(160); }
+  const dur = Math.max(340, 560 - seq.length*12);
+  for(const i of seq){
+    if(my !== runId || phase!=='input'){ peeking=false; return; }
+    await light(i, dur);
+    if(my !== runId || phase!=='input'){ peeking=false; return; }
+    await wait(160);
+  }
+  peeking = false;
+  if(my !== runId || phase!=='input') return;
   hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className='hint your';
   acceptInput = true; dial.classList.remove('locked'); peekBtn.classList.add('show');
 }
