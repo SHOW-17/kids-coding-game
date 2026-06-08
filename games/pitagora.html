@@ -235,6 +235,8 @@ function loadLevel(){
   renderDots();
   hint.textContent = 'さかを おいて ▶ を おそう！';
   build();
+  // クリア→つぎへ の けいろでは run() の ロックが のこるので かならず かいじょする
+  setBoardLocked(false);
 }
 
 /* ---- build/relayout board for current cell size, KEEPING placed slopes ---- */
