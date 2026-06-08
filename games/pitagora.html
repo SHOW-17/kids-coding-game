@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ぴたごら — あそびのもり</title>
+<meta name="description" content="さかを おいて たまを ころがそう。ゴールに いれたら クリア。だんどりと くうかんの あそび。">
+<meta name="theme-color" content="#e57e1c">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ぴたごら">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/arcade.css">
+<style>
+  :root{
+    --accent:#ff9f43; --accent-d:#e57e1c; --accent-l:#ffe2c2;
+    --bg-2:#ffe6c2; --bg-3:#ffcf8e;
+  }
+  body{display:flex; flex-direction:column; align-items:center;
+       background:
+        radial-gradient(120% 80% at 15% -10%, #fff3df 0%, transparent 55%),
+        radial-gradient(120% 80% at 95% 0%, #ffe6c2 0%, transparent 50%),
+        linear-gradient(180deg,#ffe6c2 0%, #ffcf8e 100%);}
+
+  .wrap{width:100%; max-width:460px; display:flex; flex-direction:column; align-items:center; flex:1;}
+
+  /* status bar */
+  .statusbar{display:flex; gap:10px; align-items:center; margin:4px 0 2px;}
+  .lv-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
+    padding:7px 16px; border-radius:999px; font-size:17px; color:var(--accent-d);}
+  .budget-pill{font-weight:800; background:#fff; box-shadow:var(--sh-1);
+    padding:7px 14px; border-radius:999px; font-size:16px; color:var(--ink-soft);
+    display:flex; align-items:center; gap:5px;}
+  .budget-pill.low{color:var(--c-red-d);}
+
+  .dots{margin:4px 0 2px;}
+
+  .hint{font-weight:800; font-size:15px; color:var(--ink-soft); min-height:22px;
+    text-align:center; margin:4px 0;}
+
+  /* board */
+  .board-wrap{position:relative; margin:4px 0;
+    border-radius:var(--r-md); padding:8px;
+    background:linear-gradient(180deg,#bfe6ff 0%, #d7f0ff 100%);
+    box-shadow:var(--sh-2), inset 0 0 0 4px #fff;}
+  .board{position:relative;}
+  .cell{position:absolute; border-radius:7px; display:flex; align-items:center;
+    justify-content:center; box-sizing:border-box; transition:transform .1s var(--spring);}
+  .cell.slot{background:rgba(255,255,255,.34); box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
+    cursor:pointer;}
+  .cell.slot:active{transform:scale(.92);}
+  .cell.wall{background:linear-gradient(180deg,#9c6b3f,#7a4f2a);
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.18), inset 0 -4px 0 rgba(0,0,0,.22);}
+  .cell.wall::after{content:'🪵'; font-size:60%; opacity:.85;}
+  .cell.goal{font-size:78%;}
+  .cell.goal .pot{filter:drop-shadow(0 3px 2px rgba(0,0,0,.2)); animation:bob 2.4s var(--ease) infinite;}
+  .cell.start .chute{font-size:60%; opacity:.9;}
+
+  /* tool (slope) chip */
+  .tool{position:absolute; border-radius:7px; box-sizing:border-box;
+    display:flex; align-items:center; justify-content:center; z-index:3;
+    animation:pop-in .3s var(--spring);}
+  .plank{width:86%; height:20%; border-radius:6px;
+    background:linear-gradient(180deg,#f0b860,#cf8f33);
+    box-shadow:0 2px 0 #a9701f, inset 0 1px 0 rgba(255,255,255,.5);}
+  .tool.bs .plank{transform:rotate(38deg);}   /* ╲ */
+  .tool.fs .plank{transform:rotate(-38deg);}  /* ╱ */
+  .tool.removable{cursor:pointer;}
+  .tool.removable:active{transform:scale(.9);}
+
+  /* たま */
+  .ball{position:absolute; border-radius:50%; z-index:6;
+    background:radial-gradient(circle at 34% 28%, #ffe08a 0%, #ff9f43 45%, #e0641c 100%);
+    box-shadow:0 3px 6px rgba(180,90,20,.5), inset 0 -3px 4px rgba(150,60,0,.4);
+    transition:left .16s linear, top .16s linear; display:none;}
+  .ball.show{display:block;}
+
+  /* trail (ato) */
+  .trail{position:absolute; border-radius:50%; z-index:2;
+    background:rgba(255,160,60,.35); pointer-events:none;
+    animation:fade-trail 1.2s ease forwards;}
+  @keyframes fade-trail{from{opacity:.7; transform:scale(1);}to{opacity:0; transform:scale(.5);}}
+
+  .cell.flash{animation:wflash .4s ease 2;}
+  @keyframes wflash{0%,100%{filter:none;}50%{filter:brightness(1.6) saturate(2) hue-rotate(-30deg);}}
+
+  /* どうぐトレイ */
+  .tray{display:flex; gap:14px; align-items:center; justify-content:center; margin:8px 0 4px;}
+  .tool-btn{position:relative; width:70px; height:70px; border-radius:var(--r-md);
+    background:var(--paper); box-shadow:var(--sh-1);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s var(--spring), box-shadow .12s var(--ease);}
+  .tool-btn:active{transform:translateY(3px) scale(.97); box-shadow:var(--sh-press);}
+  .tool-btn.sel{box-shadow:0 0 0 4px var(--accent), var(--sh-1); background:var(--accent-l);}
+  .tool-btn .mini{width:46px; height:46px; position:relative;}
+  .tool-btn .mini .plank{position:absolute; top:50%; left:7%; width:86%; height:22%;
+    margin-top:-11%;}
+  .tool-btn .lbl{position:absolute; bottom:3px; left:0; right:0; text-align:center;
+    font-size:11px; font-weight:800; color:var(--ink-soft);}
+
+  /* buttons */
+  .controls{display:flex; gap:16px; align-items:center; justify-content:center;
+    margin:6px 0 10px; min-height:80px;}
+</style>
+</head>
+<body>
+
+<div class="topbar safe-top" id="topbar"></div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="lv-pill" id="lvPill">レベル 1</span>
+    <span class="budget-pill" id="budgetPill">🪵 <span id="budgetN">1</span></span>
+  </div>
+
+  <div class="dots enter d1" id="dots"></div>
+
+  <div class="hint enter d1" id="hint">さかを おいて ▶ を おそう！</div>
+
+  <div class="board-wrap enter d2" id="boardWrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="tray enter d3" id="tray">
+    <button class="tool-btn sel" id="btnBS" data-k="bs" aria-label="みぎした さか">
+      <div class="mini"><div class="plank" style="transform:rotate(38deg)"></div></div>
+      <span class="lbl">↘</span>
+    </button>
+    <button class="tool-btn" id="btnFS" data-k="fs" aria-label="ひだりした さか">
+      <div class="mini"><div class="plank" style="transform:rotate(-38deg)"></div></div>
+      <span class="lbl">↙</span>
+    </button>
+  </div>
+
+  <div class="controls enter d4">
+    <button class="icon-btn" id="resetBtn" aria-label="やりなおし">🔄</button>
+    <button class="btn-play" id="playBtn" aria-label="スタート">▶</button>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/shell.js"></script>
+<script>
+/* ====== ぴたごら（たまころがし） ======
+   deterministic grid simulation:
+   - たまは 1マスずつ「した」へ おちる
+   - さか ╲(bs) … みぎした へ / さか ╱(fs) … ひだりした へ
+   - かべ・わくに ぶつかったら とまる（しっぱい→やさしく スタートへ）
+   - ゴール🍯に はいったら クリア
+*/
+const save = Save.game('pitagora');
+
+/* ---- level data (every level solvability checked by Node brute-force search) ---- */
+function W(arr){return arr.map(c=>({x:c[0],y:c[1]}));}
+const LEVELS=[
+  {w:5,h:6,start:{x:1,y:0},goal:{x:2,y:5},walls:W([]),budget:1},
+  {w:5,h:6,start:{x:3,y:0},goal:{x:2,y:5},walls:W([]),budget:1},
+  {w:6,h:6,start:{x:2,y:0},goal:{x:3,y:5},walls:W([[2,2],[2,3],[2,4]]),budget:1},
+  {w:6,h:7,start:{x:1,y:0},goal:{x:3,y:6},walls:W([[1,4]]),budget:2},
+  {w:6,h:7,start:{x:1,y:0},goal:{x:1,y:6},walls:W([[1,3]]),budget:2},
+  {w:6,h:8,start:{x:2,y:0},goal:{x:2,y:7},walls:W([[2,3],[2,4]]),budget:2},
+  {w:6,h:8,start:{x:0,y:0},goal:{x:0,y:7},walls:W([[0,3],[3,5]]),budget:3},
+  {w:6,h:8,start:{x:0,y:0},goal:{x:3,y:7},walls:W([[3,3]]),budget:3},
+  {w:6,h:9,start:{x:2,y:0},goal:{x:4,y:8},walls:W([[2,2],[2,3],[4,4],[4,5]]),budget:3},
+  {w:6,h:9,start:{x:1,y:0},goal:{x:4,y:8},walls:W([[1,2],[5,4],[3,6]]),budget:4},
+];
+
+/* ---- DOM ---- */
+const boardWrap=document.getElementById('boardWrap');
+const board=document.getElementById('board');
+const lvPill=document.getElementById('lvPill');
+const budgetPill=document.getElementById('budgetPill');
+const budgetN=document.getElementById('budgetN');
+const hint=document.getElementById('hint');
+const dotsEl=document.getElementById('dots');
+const btnBS=document.getElementById('btnBS');
+const btnFS=document.getElementById('btnFS');
+const playBtn=document.getElementById('playBtn');
+const resetBtn=document.getElementById('resetBtn');
+
+document.getElementById('topbar').replaceWith(
+  App.topbar({ title:'ぴたごら', back:'../index.html' })
+);
+
+/* ---- state ---- */
+let cleared = save.get('cleared', 0);
+let lvIndex = Math.min(cleared, LEVELS.length-1);
+let selKind = 'bs';            // selected slope kind
+let tools = {};                // key "x,y" -> 'bs'|'fs'
+let running = false;
+let cell = 40;                 // セルサイズ(px)
+let cur = null;                // current level
+let ballEl = null;
+
+/* ---- progress dots ---- */
+function renderDots(){
+  dotsEl.innerHTML='';
+  for(let i=0;i<LEVELS.length;i++){
+    const d=App.el('span','d');
+    if(i<cleared) d.classList.add('on');
+    if(i===lvIndex) d.classList.add('cur');
+    dotsEl.appendChild(d);
+  }
+}
+
+/* ---- compute cell size from screen (whole UI fits, no overflow) ---- */
+function calcCell(lv){
+  // board width: viewport minus side margins + 8px*2 board padding
+  const maxW = Math.min(window.innerWidth-28, 432);
+  // board height: viewport minus the fixed chrome above/below the board
+  // (topbar + statusbar + dots + hint + tray + controls + board padding ~= 360px).
+  const chrome = 374;
+  const maxBoardH = Math.max(150, window.innerHeight - chrome);
+  const byW = Math.floor(maxW / lv.w);
+  const byH = Math.floor(maxBoardH / lv.h);
+  // floor 24px keeps cells tappable on short screens while fitting tall boards
+  return Math.max(24, Math.min(byW, byH, 64));
+}
+
+function key(x,y){return x+','+y;}
+
+/* ---- render level (full reset: clears placed slopes) ---- */
+function loadLevel(){
+  cur = LEVELS[lvIndex];
+  tools = {};
+  running = false;
+
+  lvPill.textContent = 'レベル ' + (lvIndex+1);
+  renderDots();
+  hint.textContent = 'さかを おいて ▶ を おそう！';
+  build();
+  // クリア→つぎへ の けいろでは run() の ロックが のこるので かならず かいじょする
+  setBoardLocked(false);
+}
+
+/* ---- build/relayout board for current cell size, KEEPING placed slopes ---- */
+function build(){
+  cell = calcCell(cur);
+  updateBudget();
+
+  board.style.width = (cur.w*cell)+'px';
+  board.style.height = (cur.h*cell)+'px';
+  board.innerHTML='';
+
+  const wallSet=new Set(cur.walls.map(c=>key(c.x,c.y)));
+
+  for(let y=0;y<cur.h;y++){
+    for(let x=0;x<cur.w;x++){
+      const c=App.el('div','cell');
+      c.style.left=(x*cell)+'px';
+      c.style.top=(y*cell)+'px';
+      c.style.width=cell+'px';
+      c.style.height=cell+'px';
+      c.style.fontSize=(cell*0.7)+'px';
+      c.dataset.x=x; c.dataset.y=y;
+
+      if(wallSet.has(key(x,y))){
+        c.classList.add('wall');
+      } else if(x===cur.goal.x && y===cur.goal.y){
+        c.classList.add('goal');
+        c.innerHTML='<span class="pot">🍯</span>';
+      } else if(x===cur.start.x && y===cur.start.y){
+        c.classList.add('start');
+        c.innerHTML='<span class="chute">⬇️</span>';
+      } else {
+        c.classList.add('slot');
+        c.addEventListener('click', ()=>onSlotTap(x,y,c));
+      }
+      board.appendChild(c);
+    }
+  }
+
+  // redraw any already-placed slopes (preserved across relayout)
+  for(const k in tools){
+    const [tx,ty]=k.split(',').map(Number);
+    drawTool(tx,ty,tools[k]);
+  }
+
+  // ball element
+  ballEl=App.el('div','ball');
+  const bs=Math.round(cell*0.6);
+  ballEl.style.width=bs+'px';
+  ballEl.style.height=bs+'px';
+  board.appendChild(ballEl);
+  placeBallAtStart();
+}
+
+function placeBallAtStart(){
+  const bs=Math.round(cell*0.6);
+  ballEl.style.left=(cur.start.x*cell + (cell-bs)/2)+'px';
+  ballEl.style.top =(cur.start.y*cell + (cell-bs)/2)+'px';
+  ballEl.classList.remove('show');
+}
+
+function toolsUsed(){ return Object.keys(tools).length; }
+function remaining(){ return cur.budget - toolsUsed(); }
+
+function updateBudget(){
+  const r=remaining();
+  budgetN.textContent = r;
+  budgetPill.classList.toggle('low', r<=0);
+}
+
+/* ---- tap a slot: place / remove a slope ---- */
+function onSlotTap(x,y,cellEl){
+  if(running) return;
+  const k=key(x,y);
+  if(tools[k]){           // already placed -> remove
+    removeTool(x,y);
+    Sfx.pop();
+    return;
+  }
+  if(remaining()<=0){
+    Sfx.error();
+    hint.textContent='🪵が たりない！ いらない さかを タップで はずせるよ';
+    App.toast('🪵が たりないよ');
+    return;
+  }
+  tools[k]=selKind;
+  Sfx.pop();
+  App.buzz(12);
+  drawTool(x,y,selKind);
+  updateBudget();
+  hint.textContent='いいね！ ▶ で たまを ころがそう';
+}
+
+function drawTool(x,y,kind){
+  const t=App.el('div','tool removable '+(kind==='bs'?'bs':'fs'));
+  t.style.left=(x*cell)+'px';
+  t.style.top=(y*cell)+'px';
+  t.style.width=cell+'px';
+  t.style.height=cell+'px';
+  t.dataset.tk=key(x,y);
+  t.innerHTML='<div class="plank"></div>';
+  t.addEventListener('click',(e)=>{
+    if(running) return;
+    e.stopPropagation();
+    removeTool(x,y);
+    Sfx.pop();
+  });
+  board.appendChild(t);
+}
+function removeTool(x,y){
+  const k=key(x,y);
+  delete tools[k];
+  const el=board.querySelector('.tool[data-tk="'+k+'"]');
+  if(el) el.remove();
+  updateBudget();
+}
+
+/* ---- tray select ---- */
+btnBS.addEventListener('click',()=>{ selKind='bs'; Sfx.tap();
+  btnBS.classList.add('sel'); btnFS.classList.remove('sel'); });
+btnFS.addEventListener('click',()=>{ selKind='fs'; Sfx.tap();
+  btnFS.classList.add('sel'); btnBS.classList.remove('sel'); });
+
+/* ---- simulation (deterministic) ---- */
+function nextPos(x,y){
+  const k=key(x,y);
+  const t=tools[k];
+  if(t==='bs') return {x:x+1,y:y+1};
+  if(t==='fs') return {x:x-1,y:y+1};
+  return {x:x, y:y+1};
+}
+function isWall(x,y){
+  return cur.walls.some(c=>c.x===x && c.y===y);
+}
+
+function clearTrails(){
+  board.querySelectorAll('.trail').forEach(t=>t.remove());
+}
+function dropTrail(x,y){
+  const s=Math.round(cell*0.3);
+  const tr=App.el('div','trail');
+  tr.style.width=s+'px'; tr.style.height=s+'px';
+  tr.style.left=(x*cell+(cell-s)/2)+'px';
+  tr.style.top=(y*cell+(cell-s)/2)+'px';
+  board.appendChild(tr);
+}
+
+function moveBallTo(x,y){
+  const bs=Math.round(cell*0.6);
+  ballEl.style.left=(x*cell+(cell-bs)/2)+'px';
+  ballEl.style.top =(y*cell+(cell-bs)/2)+'px';
+}
+
+async function run(){
+  if(running) return;
+  if(toolsUsed()===0){
+    Sfx.error();
+    hint.textContent='さかを おいてから ▶ を おそう！';
+    App.toast('さかを おいてね');
+    return;
+  }
+  running=true;
+  setBoardLocked(true);
+  Sfx.tap();
+  clearTrails();
+  hint.textContent='ころがるよ…';
+
+  let x=cur.start.x, y=cur.start.y;
+  ballEl.classList.add('show');
+  moveBallTo(x,y);
+  await wait(180);
+
+  const maxSteps=cur.w*cur.h*4;
+  for(let s=0;s<maxSteps;s++){
+    if(x===cur.goal.x && y===cur.goal.y){ return win(); }
+    const n=nextPos(x,y);
+    // わく / かべ チェック
+    if(n.x<0 || n.x>=cur.w || n.y<0 || n.y>=cur.h){ return fail(n.x,n.y,true); }
+    if(isWall(n.x,n.y)){ return fail(n.x,n.y,false); }
+    dropTrail(x,y);
+    x=n.x; y=n.y;
+    moveBallTo(x,y);
+    Sfx.step();
+    await wait(170);
+    if(x===cur.goal.x && y===cur.goal.y){ return win(); }
+  }
+  return fail(x,y,true);
+}
+
+/* ---- クリア ---- */
+function win(){
+  Sfx.success();
+  setTimeout(()=>{ Sfx.fanfare(); FX.celebrate(); }, 120);
+  const r=boardWrap.getBoundingClientRect();
+  FX.burst(r.left+r.width/2, r.top+r.height/2, {count:26, power:1.3});
+  hint.textContent='ゴール！ 🎉';
+
+  if(lvIndex+1 > cleared){ cleared=lvIndex+1; save.set('cleared', cleared); renderDots(); }
+
+  const isLast = (lvIndex >= LEVELS.length-1);
+  setTimeout(()=>{
+    App.showModal({
+      emoji: isLast ? '🏆' : '🎉',
+      title: isLast ? 'ぜんぶ クリア！' : 'ゴール！',
+      text: isLast ? 'すごい！ さかの たつじんだね！' : 'たまが はいったよ！ つぎに いこう',
+      buttons: isLast
+        ? [
+            {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
+            {label:'もういちど ▶', cls:'btn--green', onClick:()=>{ lvIndex=0; running=false; loadLevel(); }}
+          ]
+        : [
+            {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
+            {label:'つぎへ ▶', cls:'btn--green', onClick:()=>{ lvIndex++; running=false; loadLevel(); }}
+          ]
+    });
+  }, 700);
+}
+
+/* ---- しっぱい（やさしく） ---- */
+function fail(bx,by,oob){
+  Sfx.error(); App.buzz([30,40,30]);
+  FX.shake(boardWrap, 9, 380);
+  // flash the hit wall
+  if(!oob){
+    const wc=board.querySelector('.cell[data-x="'+bx+'"][data-y="'+by+'"]');
+    if(wc){ wc.classList.add('flash'); setTimeout(()=>wc.classList.remove('flash'),900); }
+  }
+  hint.textContent='あれれ ぶつかった！ さかを なおして もういちど';
+  setTimeout(()=>{
+    placeBallAtStart();
+    clearTrails();
+    running=false;
+    setBoardLocked(false);
+  }, 700);
+}
+
+function setBoardLocked(lock){
+  board.querySelectorAll('.slot').forEach(s=>{ s.style.pointerEvents = lock?'none':''; });
+  board.querySelectorAll('.tool').forEach(t=>{ t.style.pointerEvents = lock?'none':''; });
+  playBtn.disabled = lock;
+  btnBS.style.pointerEvents = lock?'none':'';
+  btnFS.style.pointerEvents = lock?'none':'';
+}
+
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ---- reset (remove all placed slopes) ---- */
+resetBtn.addEventListener('click',()=>{
+  if(running) return;
+  Sfx.tap();
+  tools={};
+  board.querySelectorAll('.tool').forEach(t=>t.remove());
+  clearTrails();
+  placeBallAtStart();
+  updateBudget();
+  hint.textContent='さかを おいて ▶ を おそう！';
+});
+
+playBtn.addEventListener('click', run);
+
+let resizeT=null;
+window.addEventListener('resize', ()=>{
+  if(running) return;            // never relayout mid-roll
+  clearTimeout(resizeT);
+  resizeT=setTimeout(()=>{ if(!running) build(); }, 120); // keep placed slopes
+}, {passive:true});
+
+/* ---- boot ---- */
+loadLevel();
+</script>
+</body>
+</html>

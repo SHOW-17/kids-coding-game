@@ -1,13 +1,13 @@
 {
-  "name": "くまさんプログラミング",
-  "short_name": "くまプロ",
-  "description": "やじるしをならべて くまさんを ゴールへ。よめなくても あそべる プログラミングゲーム。",
+  "name": "あそびのもり",
+  "short_name": "あそびのもり",
+  "description": "あそびながら かしこくなる。よめなくても あそべる ちいさな こどもの ゲームランド。",
   "lang": "ja",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fff7e8",
+  "background_color": "#ffe9c7",
   "theme_color": "#ffb43d",
   "icons": [
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },

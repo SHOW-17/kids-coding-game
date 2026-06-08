@@ -1,0 +1,231 @@
+/* ============================================================
+   arcade.css — あそびのもり 共通デザインシステム
+   ------------------------------------------------------------
+   全ゲーム・アーケードで共有する見た目の土台。
+   - デザイントークン（色・余白・影・角丸・モーション）
+   - 大きなタップ前提のボタン / カード / ヘッダー
+   - 共通アニメーション（pop / float / wiggle …）
+   設計前提：小1・ひらがな＋アイコンのみ・指タップ（44px以上）
+   ============================================================ */
+
+/* ---------- デザイントークン ---------- */
+:root{
+  /* ベースの世界観（やさしい森・はちみつ色） */
+  --bg-1:#fff6e0;  --bg-2:#ffe9c7;  --bg-3:#ffd99e;
+  --cream:#fff9f0; --paper:#ffffff;
+  --ink:#5a3a22;   --ink-soft:#8a6a4a;  --ink-faint:#b8946a;
+  --line:#f0dcb8;
+
+  /* ブランド（はちみつ） */
+  --honey:#ffb43d; --honey-d:#f59312; --honey-l:#ffd98a;
+
+  /* ゲーム別アクセント（各ゲームで --accent を上書き） */
+  --accent:#ff8fab; --accent-d:#e0648a; --accent-l:#ffd0dd;
+
+  /* 共通カラーパレット（チップ・パーツ用） */
+  --c-pink:#ff6b9d;  --c-pink-d:#e0507f;
+  --c-yellow:#ffce2e;--c-yellow-d:#e8ad00;
+  --c-blue:#5cc8e8;  --c-blue-d:#2fa6cc;
+  --c-green:#6ad08a; --c-green-d:#46b56a;
+  --c-purple:#b58cff;--c-purple-d:#9165e0;
+  --c-orange:#ff9f43;--c-orange-d:#e57e1c;
+  --c-red:#ff6b6b;   --c-red-d:#e04848;
+
+  /* 余白・角丸 */
+  --r-sm:12px; --r-md:20px; --r-lg:28px; --r-xl:36px; --r-pill:999px;
+  --pad:14px;
+
+  /* 影（やわらかい立体 + 下に効く落ち影） */
+  --sh-1:0 4px 0 rgba(180,140,80,.22);
+  --sh-2:0 6px 0 rgba(180,140,80,.20), 0 14px 26px rgba(180,140,80,.18);
+  --sh-3:0 8px 0 rgba(180,140,80,.18), 0 20px 40px rgba(180,140,80,.22);
+  --sh-press:0 2px 0 rgba(180,140,80,.22);
+
+  /* モーション */
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+/* ---------- リセット ---------- */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',-apple-system,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(120% 80% at 15% -10%, var(--bg-1) 0%, transparent 55%),
+    radial-gradient(120% 80% at 95% 0%, var(--bg-2) 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg-3) 100%);
+  background-attachment:fixed;
+  min-height:100%;
+  overflow-x:hidden;
+  user-select:none; -webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  touch-action:manipulation;
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;}
+img{display:block;max-width:100%;}
+
+/* セーフエリア（iPhoneのノッチ対応） */
+.safe-top{padding-top:env(safe-area-inset-top);}
+.safe-bottom{padding-bottom:env(safe-area-inset-bottom);}
+
+/* ---------- 見出し ---------- */
+.display{
+  font-family:'Mochiy Pop One',sans-serif;
+  color:var(--ink);
+  text-shadow:2px 3px 0 #fff, 4px 6px 0 rgba(138,90,60,.13);
+  letter-spacing:.5px; line-height:1.2;
+}
+
+/* ---------- 共通ヘッダー（戻る・タイトル・スコア） ---------- */
+.topbar{
+  width:100%; max-width:560px; margin:0 auto;
+  display:flex; align-items:center; gap:10px;
+  padding:10px 4px;
+}
+.topbar .title{
+  font-family:'Mochiy Pop One',sans-serif; font-size:clamp(18px,5vw,24px);
+  color:var(--ink); text-shadow:1px 2px 0 #fff; flex:1; text-align:center;
+}
+.topbar .spacer{flex:1;}
+
+/* 丸い小ボタン（戻る・音・リセット） */
+.icon-btn{
+  width:52px; height:52px; min-width:52px;
+  border-radius:var(--r-pill);
+  background:var(--paper);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; line-height:1;
+  box-shadow:var(--sh-1);
+  transition:transform .12s var(--spring), box-shadow .12s var(--ease);
+}
+.icon-btn:active{transform:translateY(3px) scale(.96); box-shadow:var(--sh-press);}
+
+/* ---------- 大きなボタン ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:60px; padding:0 26px;
+  font-family:'Mochiy Pop One',sans-serif; font-size:20px;
+  color:#fff; background:var(--accent);
+  border-radius:var(--r-pill);
+  box-shadow:0 6px 0 var(--accent-d), 0 12px 22px rgba(180,140,80,.22);
+  transition:transform .12s var(--spring), box-shadow .12s var(--ease), filter .15s;
+}
+.btn:active{transform:translateY(5px); box-shadow:0 1px 0 var(--accent-d);}
+.btn:disabled{filter:grayscale(.5) opacity(.6); pointer-events:none;}
+.btn--big{min-height:74px; font-size:26px; padding:0 38px;}
+.btn--ghost{background:var(--paper); color:var(--ink);
+  box-shadow:0 5px 0 var(--line), 0 10px 18px rgba(180,140,80,.16);}
+.btn--ghost:active{box-shadow:0 1px 0 var(--line);}
+.btn--green{background:var(--c-green); box-shadow:0 6px 0 var(--c-green-d),0 12px 22px rgba(180,140,80,.22);}
+.btn--green:active{box-shadow:0 1px 0 var(--c-green-d);}
+.btn--honey{background:var(--honey); box-shadow:0 6px 0 var(--honey-d),0 12px 22px rgba(180,140,80,.22);}
+.btn--honey:active{box-shadow:0 1px 0 var(--honey-d);}
+
+/* スタートの大きな▶ボタン */
+.btn-play{
+  width:84px; height:84px; border-radius:var(--r-pill);
+  background:radial-gradient(circle at 38% 30%, #7fe39b, var(--c-green));
+  color:#fff; font-size:38px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 0 var(--c-green-d), 0 16px 30px rgba(70,180,100,.4);
+  transition:transform .12s var(--spring), box-shadow .12s var(--ease);
+  animation:breathe 2.4s var(--ease) infinite;
+}
+.btn-play:active{transform:translateY(6px) scale(.97); box-shadow:0 2px 0 var(--c-green-d);}
+
+/* ---------- カード ---------- */
+.card{
+  background:var(--paper); border-radius:var(--r-lg);
+  box-shadow:var(--sh-2); padding:18px;
+}
+
+/* ---------- バッジ・ピル ---------- */
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 16px; border-radius:var(--r-pill);
+  background:var(--paper); box-shadow:var(--sh-1);
+  font-weight:800; font-size:16px; color:var(--ink);
+}
+.pill .lv{font-family:'Mochiy Pop One'; color:var(--honey-d);}
+.stars{font-size:17px; letter-spacing:2px;}
+
+/* ---------- レベル/結果モーダル ---------- */
+.overlay{
+  position:fixed; inset:0; z-index:200;
+  display:flex; align-items:center; justify-content:center; padding:22px;
+  background:rgba(90,58,34,.42); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:opacity .25s var(--ease);
+}
+.overlay.show{opacity:1; pointer-events:auto;}
+.modal{
+  width:min(420px,92vw);
+  background:var(--cream); border-radius:var(--r-xl);
+  box-shadow:0 18px 50px rgba(90,58,34,.4);
+  padding:26px 22px 24px; text-align:center;
+  transform:translateY(20px) scale(.94); transition:transform .35s var(--spring);
+}
+.overlay.show .modal{transform:none;}
+.modal h2{font-family:'Mochiy Pop One'; font-size:26px; margin:6px 0 4px; color:var(--ink);}
+.modal p{font-size:16px; color:var(--ink-soft); font-weight:700; margin:8px 0 18px; line-height:1.6;}
+.modal .big-emoji{font-size:66px; line-height:1; margin:4px 0; display:inline-block;
+  animation:pop-in .5s var(--spring) both;}
+
+/* ---------- トースト（その場のヒント） ---------- */
+.toast{
+  position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; font-weight:800; font-size:16px;
+  padding:13px 22px; border-radius:var(--r-pill);
+  box-shadow:0 10px 26px rgba(0,0,0,.3); z-index:300;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s var(--spring);
+  max-width:90vw; text-align:center;
+}
+.toast.show{opacity:.97; transform:translateX(-50%) translateY(0);}
+
+/* ---------- 進捗ドット ---------- */
+.dots{display:flex; gap:7px; justify-content:center; flex-wrap:wrap;}
+.dots .d{width:12px; height:12px; border-radius:50%; background:var(--line);
+  transition:transform .25s var(--spring), background .25s;}
+.dots .d.on{background:var(--accent); transform:scale(1.25);}
+.dots .d.cur{background:var(--honey); box-shadow:0 0 0 4px rgba(255,180,61,.3);}
+
+/* ---------- アニメーション ---------- */
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+@keyframes pop-in{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+@keyframes wiggle{0%,100%{transform:rotate(0);}25%{transform:rotate(-5deg);}75%{transform:rotate(5deg);}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
+@keyframes shine{0%{background-position:-150% 0;}100%{background-position:250% 0;}}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 var(--accent-l);}70%{box-shadow:0 0 0 16px transparent;}100%{box-shadow:0 0 0 0 transparent;}}
+@keyframes slide-up{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+@keyframes flash{0%,100%{filter:none;}50%{filter:brightness(1.4) saturate(1.3);}}
+
+.anim-float{animation:float 3s var(--ease) infinite;}
+.anim-bob{animation:bob 2.6s var(--ease) infinite;}
+.anim-wiggle{animation:wiggle .5s var(--ease);}
+.anim-pop{animation:pop-in .45s var(--spring);}
+
+/* 画面入場（要素を順に出す） */
+.enter{opacity:0; animation:slide-up .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.06s;} .enter.d2{animation-delay:.12s;}
+.enter.d3{animation-delay:.18s;} .enter.d4{animation-delay:.24s;}
+.enter.d5{animation-delay:.30s;} .enter.d6{animation-delay:.36s;}
+
+/* キラッと光るスイープ（ロゴ・看板用） */
+.shine{
+  background-image:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
+  background-size:250% 100%; animation:shine 3.5s var(--ease) infinite;
+}
+
+/* アクセシビリティ：動きを減らす設定を尊重 */
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.05ms !important;}
+}
+
+/* フォーカスリング（キーボード操作時のみ） */
+:focus-visible{outline:3px solid var(--honey); outline-offset:3px;}

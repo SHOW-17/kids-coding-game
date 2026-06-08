@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>きまり あそび — あそびのもり</title>
+<meta name="description" content="ならびの つぎは なに？ きまりを みつけて あてる あそび。ろんりてきな かんがえる ちからを そだてる。">
+<meta name="theme-color" content="#2fa6cc">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="きまり あそび">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/arcade.css">
+<style>
+  :root{
+    --accent:#5cc8e8; --accent-d:#2fa6cc; --accent-l:#cfeeff;
+    --bg-2:#dff4fc; --bg-3:#bfe6f6;
+  }
+  body{display:flex; flex-direction:column; align-items:center;
+       background:
+        radial-gradient(120% 80% at 15% -10%, #eef9ff 0%, transparent 55%),
+        radial-gradient(120% 80% at 95% 0%, #dff4fc 0%, transparent 50%),
+        linear-gradient(180deg,#dff4fc 0%, #bfe6f6 100%);}
+
+  .wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; flex:1; padding:0 10px 16px;}
+
+  /* 状態バー */
+  .statusbar{display:flex; gap:10px; align-items:center; justify-content:center;
+    flex-wrap:wrap; margin:6px 0 2px;}
+  .score-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
+    padding:8px 16px; border-radius:999px; font-size:17px; color:var(--accent-d);}
+  .best-pill{font-weight:800; background:#fff7; box-shadow:var(--sh-1);
+    padding:8px 14px; border-radius:999px; font-size:14px; color:var(--ink-soft);}
+  .streak-pill{font-family:'Mochiy Pop One'; background:var(--honey); color:#fff;
+    box-shadow:0 4px 0 var(--honey-d); padding:8px 16px; border-radius:999px;
+    font-size:16px; transition:transform .2s var(--spring);}
+  .streak-pill.bump{transform:scale(1.18);}
+
+  .hint{font-weight:800; font-size:18px; color:var(--accent-d); min-height:26px;
+    text-align:center; margin:10px 0 6px;}
+
+  /* ならび（出題列） */
+  .seq-card{width:100%; background:var(--paper); border-radius:var(--r-lg);
+    box-shadow:var(--sh-2); padding:16px 12px; margin:4px 0 10px;}
+  .seq{display:flex; gap:6px; justify-content:center; align-items:center;
+    flex-wrap:nowrap;}
+  .tile{
+    display:flex; align-items:center; justify-content:center;
+    border-radius:18px; background:var(--cream);
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.07), 0 3px 8px rgba(0,0,0,.08);
+    flex:0 0 auto;
+  }
+  /* タイルサイズはマス数で動的。狭い端末(～320px)でも 1行に収まるよう
+     「列が増えたら自動で小さく」なる上限つきの calc（min）で算出。
+     利用できる横幅 ≒ (100vw − 余白) を マス数で割る。 */
+  .tile{ --side:48px; width:var(--side); height:var(--side);
+    font-size:calc(var(--side) * 0.58); }
+  .seq[data-n="4"]{ --avail:calc((100vw - 64px) / 4); }
+  .seq[data-n="5"]{ --avail:calc((100vw - 76px) / 5); }
+  .seq[data-n="6"]{ --avail:calc((100vw - 86px) / 6); }
+  .seq[data-n="7"]{ --avail:calc((100vw - 96px) / 7); }
+  .seq[data-n="8"]{ --avail:calc((100vw - 106px) / 8); }
+  .seq[data-n="4"] .tile{ --side:min(62px, var(--avail)); }
+  .seq[data-n="5"] .tile{ --side:min(60px, var(--avail)); }
+  .seq[data-n="6"] .tile{ --side:min(54px, var(--avail)); }
+  .seq[data-n="7"] .tile{ --side:min(48px, var(--avail)); }
+  .seq[data-n="8"] .tile{ --side:min(44px, var(--avail)); }
+  .glyph{line-height:1; transition:transform .25s var(--spring);}
+
+  /* ？タイル（こたえる場所） */
+  .tile.qmark{background:linear-gradient(160deg,var(--accent-l),#fff);
+    box-shadow:inset 0 0 0 4px var(--accent), 0 4px 12px rgba(47,166,204,.35);
+    color:var(--accent-d); font-family:'Mochiy Pop One';
+    animation:qpulse 1.1s var(--ease) infinite;}
+  @keyframes qpulse{0%,100%{transform:scale(1); box-shadow:inset 0 0 0 4px var(--accent),0 4px 12px rgba(47,166,204,.35);}
+    50%{transform:scale(1.1); box-shadow:inset 0 0 0 5px var(--accent),0 6px 20px rgba(47,166,204,.55);}}
+  .tile.qmark.solved{animation:none; background:var(--cream);
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.07),0 3px 8px rgba(0,0,0,.08);
+    color:var(--ink);}
+  .tile.reveal .glyph{animation:flip-in .5s var(--spring);}
+  @keyframes flip-in{0%{transform:rotateY(90deg) scale(.5);}60%{transform:rotateY(0) scale(1.2);}100%{transform:scale(1);}}
+
+  /* ドット絵（かずパターン用） */
+  .dotgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:3px;
+    width:74%; height:74%; align-items:center; justify-items:center;}
+  .seq[data-n="6"] .dotgrid,.seq[data-n="7"] .dotgrid,.seq[data-n="8"] .dotgrid{gap:2px;}
+  .dot{width:100%; aspect-ratio:1; border-radius:50%; background:var(--c-blue);
+    box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
+  .dot.off{background:transparent; box-shadow:none;}
+
+  /* やじるし（むき回転用）— 絵文字を回す */
+  .arrow{display:inline-block;}
+
+  /* こたえ つなぎ */
+  .ask{font-family:'Mochiy Pop One'; font-size:20px; color:var(--accent-d);
+    text-align:center; margin:2px 0 8px;}
+
+  /* せんたくし */
+  .choices{display:flex; gap:14px; justify-content:center; align-items:stretch;
+    margin-top:6px; width:100%;}
+  .choice{
+    flex:1 1 0; max-width:118px; aspect-ratio:1;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--paper); border-radius:22px; font-size:44px;
+    box-shadow:0 6px 0 var(--line), 0 10px 18px rgba(120,160,180,.22);
+    transition:transform .12s var(--spring), box-shadow .12s var(--ease), filter .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .choice:active{transform:translateY(5px); box-shadow:0 1px 0 var(--line);}
+  .choice.wrong{animation:wrongflash .4s; }
+  @keyframes wrongflash{0%,100%{background:var(--paper);}40%{background:#ffd6d6;}}
+  .choice.correctpick{background:#d7f7e0; box-shadow:0 6px 0 var(--c-green-d),0 10px 18px rgba(120,160,180,.22);}
+  .choice.locked{pointer-events:none;}
+  .choice .glyph{line-height:1;}
+  .choice .dotgrid{width:64%; height:64%;}
+
+  /* せんたくし内の数ドットは少し小さめ */
+  .choice .dot{box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
+</style>
+</head>
+<body>
+
+<div class="topbar safe-top" id="topbar"></div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="score-pill" id="scorePill">⭐ 0もん</span>
+    <span class="streak-pill" id="streakPill">🔥 0</span>
+    <span class="best-pill" id="bestPill">🏆 0</span>
+  </div>
+
+  <div class="hint enter d1" id="hint">つぎは なにかな？ 🤔</div>
+
+  <div class="seq-card enter d2">
+    <div class="seq" id="seq"></div>
+  </div>
+
+  <div class="ask enter d3">⬇ どれかな？ ⬇</div>
+
+  <div class="choices enter d4" id="choices"></div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/shell.js"></script>
+<script>
+/* ====== きまり あそび（パターン推理） ====== */
+const save = Save.game('kimari');
+const seqEl = document.getElementById('seq');
+const choicesEl = document.getElementById('choices');
+const hintEl = document.getElementById('hint');
+const scorePill = document.getElementById('scorePill');
+const streakPill = document.getElementById('streakPill');
+const bestPill = document.getElementById('bestPill');
+
+/* ヘッダー */
+document.getElementById('topbar').replaceWith(
+  App.topbar({ title:'きまり あそび', back:'../index.html' })
+);
+
+/* 進捗（累計せいかい数・最高れんぞく） */
+let total = save.get('cleared', 0);
+let streak = 0;
+let best = save.get('best', 0);
+let qIndex = 0;        // 出した問題数（難易度に使う）
+let current = null;    // 今の問題
+let locked = false;
+
+renderStatus();
+
+function renderStatus(){
+  scorePill.textContent = '⭐ ' + total + 'もん';
+  streakPill.textContent = '🔥 ' + streak;
+  bestPill.textContent = '🏆 ' + best;
+}
+
+/* ---------- パーツ表現（すべて絵文字・図形・ドット。文字は使わない） ---------- */
+// 色つき丸（色の交互・くりかえし用）。色だけでなく形/顔でも区別がつくよう絵文字を使う
+const COLOR_TOKENS = ['🔴','🔵','🟡','🟢','🟣','🟠'];
+const SHAPE_TOKENS = ['🐶','🐱','🐰','🐸','🐥','🐼','🦊','🐻'];
+const FRUIT_TOKENS = ['🍎','🍌','🍇','🍊','🍓','🍑'];
+// むき（回転）：上→右→下→左 のくりかえし
+const ARROW_TOKENS = ['⬆️','➡️','⬇️','⬅️'];
+
+/* 表示要素を作る。tokenの種類で出し分け */
+function makeGlyph(token){
+  // ドット数（かずパターン）は {dots:n} で渡す
+  if (token && token.dots != null){
+    return makeDotGrid(token.dots);
+  }
+  // 大きさ交互は {big:bool, emo:'⭐'}
+  if (token && token.emo != null){
+    const g = document.createElement('span');
+    g.className = 'glyph';
+    g.textContent = token.emo;
+    g.style.fontSize = token.big ? '1em' : '0.55em';
+    return g;
+  }
+  const g = document.createElement('span');
+  g.className = 'glyph';
+  g.textContent = token;
+  return g;
+}
+
+function makeDotGrid(n){
+  // 1..6 のドットを 3x2 グリッドで決まった位置に置く
+  const grid = document.createElement('div');
+  grid.className = 'dotgrid';
+  // 各個数の点灯パターン（位置固定で見やすく）
+  const PATTERNS = {
+    1:[4], 2:[0,5], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8]
+  };
+  const on = new Set(PATTERNS[n] || []);
+  for (let i=0;i<9;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (on.has(i) ? '' : ' off');
+    grid.appendChild(d);
+  }
+  return grid;
+}
+
+/* tokenの「同じか」判定（選択肢の重複チェック・正解判定に使う） */
+function tokenKey(t){
+  if (t && t.dots != null) return 'dots:' + t.dots;
+  if (t && t.emo != null) return 'emo:' + t.emo + ':' + (t.big?'B':'s');
+  return 'g:' + t;
+}
+
+/* ---------- パターン・ジェネレータ ----------
+   各 generator は {seq:[...tokens...], answer:token, distractors:[...]} を返す。
+   seq は ？ を除いた「見える並び」。answer が正解、distractors が誤答候補（多めに）。 */
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// A) 色/動物/くだもの の AB くりかえし
+function genAlt(tokens, len){
+  const set = shuffle(tokens).slice(0,2);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(set[i%2]);
+  const answer = set[len%2];
+  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+}
+
+// B) AABB のくりかえし
+function genAABB(tokens, len){
+  const set = shuffle(tokens).slice(0,2);
+  const pat = [set[0],set[0],set[1],set[1]];
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(pat[i%4]);
+  const answer = pat[len%4];
+  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+}
+
+// C) ABC くりかえし
+function genABC(tokens, len){
+  const set = shuffle(tokens).slice(0,3);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(set[i%3]);
+  const answer = set[len%3];
+  return { seq, answer, distractors: tokens.filter(t=>t!==answer) };
+}
+
+// D) かず ふえる（ドット 1,2,3,..）
+function genCount(len){
+  // 列(seq)＋こたえ で 最大ドット = start + len。これが 6 を超えないよう start を決める。
+  const startMax = Math.max(1, 6 - len);     // 1..startMax から始める（こたえが必ず 6 以下）
+  const start = 1 + Math.floor(Math.random()*startMax);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push({dots: start+i});
+  const answer = {dots: start+len};          // 1..6 に必ず収まる
+  // 誤答：1..6 のうち こたえ以外（重複排除は finalize 側）。隣の数を優先して紛らわしく。
+  const cand = [];
+  [answer.dots-1, answer.dots+1, answer.dots-2, answer.dots+2].forEach(d=>{
+    if (d>=1 && d<=6 && d!==answer.dots) cand.push({dots:d});
+  });
+  for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
+  return { seq, answer, distractors: cand };
+}
+
+// E) おおきさ こうご（小大小大..）
+function genSize(){
+  const all = ['⭐','❤️','🌸','🔵','🟢','🟠'];
+  const emo = pick(all);
+  const other = pick(all.filter(e=>e!==emo)); // ちがう えがら（おとり）
+  const len = 4 + (Math.random()<0.5?0:1);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push({emo, big: i%2===1}); // 小,大,小,大..
+  const big = len%2===1;
+  const answer = {emo, big};
+  // 誤答1：おなじ えがらで 反対の おおきさ／誤答2：ちがう えがらで 正しい おおきさ
+  const distractors = [{emo, big: !big}, {emo: other, big}];
+  return { seq, answer, distractors };
+}
+
+// F) むき（やじるし）回転 上→右→下→左
+function genRotate(len){
+  const start = Math.floor(Math.random()*4);
+  const seq = [];
+  for(let i=0;i<len;i++) seq.push(ARROW_TOKENS[(start+i)%4]);
+  const answer = ARROW_TOKENS[(start+len)%4];
+  return { seq, answer, distractors: ARROW_TOKENS.filter(t=>t!==answer) };
+}
+
+/* 難易度に応じて出題を選ぶ。進むほど 種類↑ 列↑ */
+function buildProblem(idx, depth){
+  depth = depth || 0;
+  let raw;
+  if (idx < 3){
+    // やさしい：AB交互（色 or 動物）、短め
+    raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 4);
+  } else if (idx < 6){
+    // 交互 or かず増加 or むき
+    const pickGen = pick(['alt','count','rotate']);
+    if (pickGen==='alt') raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([4,5]));
+    else if (pickGen==='count') raw = genCount(3);
+    else raw = genRotate(4);
+  } else if (idx < 10){
+    // ＋ABC, おおきさ, AABB, 列ちょい長く
+    const pickGen = pick(['abc','aabb','size','count','rotate','alt']);
+    if (pickGen==='abc') raw = genABC(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([5,6]));
+    else if (pickGen==='aabb') raw = genAABB(pick([COLOR_TOKENS, FRUIT_TOKENS]), pick([5,6]));
+    else if (pickGen==='size') raw = genSize();
+    else if (pickGen==='count') raw = genCount(pick([3,4]));
+    else if (pickGen==='rotate') raw = genRotate(pick([5,6]));
+    else raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 6);
+  } else {
+    // むずかしい：すべて、列さらに長く（最大7）、差を小さく
+    const pickGen = pick(['abc','aabb','size','count','rotate','alt']);
+    if (pickGen==='abc') raw = genABC(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([6,7]));
+    else if (pickGen==='aabb') raw = genAABB(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), pick([6,7]));
+    else if (pickGen==='size') raw = genSize();
+    else if (pickGen==='count') raw = genCount(pick([4,5]));
+    else if (pickGen==='rotate') raw = genRotate(pick([6,7]));
+    else raw = genAlt(pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]), 7);
+  }
+  return finalizeProblem(raw, depth);
+}
+
+/* 3択を作る：正解1＋誤答2。重複ゼロ・正解はちょうど1つ になるよう検証 */
+function finalizeProblem(raw, depth){
+  depth = depth || 0;
+  const ansKey = tokenKey(raw.answer);
+  // 誤答候補から「正解と違うキー」だけ集めて重複排除
+  const seen = new Set([ansKey]);
+  const distinct = [];
+  shuffle(raw.distractors).forEach(d=>{
+    const k = tokenKey(d);
+    if (!seen.has(k)){ seen.add(k); distinct.push(d); }
+  });
+  // 足りない場合の保険：かず問題はドット、それ以外は絵柄でうめる（種類が混ざりにくいよう）
+  let FALLBACK;
+  if (raw.answer && raw.answer.dots != null){
+    FALLBACK = [1,2,3,4,5,6].map(d=>({dots:d}));
+  } else {
+    FALLBACK = COLOR_TOKENS.concat(SHAPE_TOKENS, FRUIT_TOKENS);
+  }
+  let fi = 0;
+  while (distinct.length < 2 && fi < FALLBACK.length){
+    const d = FALLBACK[fi++]; const k = tokenKey(d);
+    if (!seen.has(k)){ seen.add(k); distinct.push(d); }
+  }
+  // それでも足りない（理論上ありえない）場合は作り直し
+  if (distinct.length < 2 && depth < 8){
+    return buildProblem(qIndex, depth+1);
+  }
+  const choices = shuffle([raw.answer, distinct[0], distinct[1]]);
+  // 検証：3択そろっていて 正解キーがちょうど1つ・重複なし
+  const keys = choices.map(tokenKey);
+  const correctCount = keys.filter(k=>k===ansKey).length;
+  const allDefined = choices.every(c=>c != null);
+  const noDup = new Set(keys).size === keys.length;
+  if (choices.length !== 3 || correctCount !== 1 || !allDefined || !noDup){
+    // 生成が崩れたら作り直し（極めて稀）。再帰の暴走を防ぐため上限つき。
+    if (depth < 8) return buildProblem(qIndex, depth+1);
+  }
+  return { seq: raw.seq, answer: raw.answer, ansKey, choices };
+}
+
+/* ---------- 描画 ---------- */
+function renderProblem(p){
+  // ならび（？を末尾に）
+  const n = p.seq.length + 1;
+  seqEl.dataset.n = Math.min(8, n);
+  seqEl.innerHTML = '';
+  p.seq.forEach((tok,i)=>{
+    const t = document.createElement('div');
+    t.className = 'tile enter d' + (Math.min(6,i+1));
+    t.appendChild(makeGlyph(tok));
+    seqEl.appendChild(t);
+  });
+  const q = document.createElement('div');
+  q.className = 'tile qmark enter d' + Math.min(6, p.seq.length+1);
+  q.textContent = '？';
+  q.id = 'qtile';
+  seqEl.appendChild(q);
+
+  // せんたくし
+  choicesEl.innerHTML = '';
+  p.choices.forEach((tok,i)=>{
+    const c = document.createElement('button');
+    c.className = 'choice enter d' + (i+1);
+    c.appendChild(makeGlyph(tok));
+    c.addEventListener('pointerdown', ()=>onPick(c, tok), {passive:true});
+    choicesEl.appendChild(c);
+  });
+  hintEl.textContent = 'つぎは なにかな？ 🤔';
+}
+
+function nextProblem(){
+  locked = false;
+  current = buildProblem(qIndex);
+  renderProblem(current);
+}
+
+/* ---------- こたえる ---------- */
+function onPick(btn, tok){
+  if (locked) return;
+  Sfx.tap();
+  if (tokenKey(tok) === current.ansKey){
+    correctAnswer(btn, tok);
+  } else {
+    wrongAnswer(btn);
+  }
+}
+
+function correctAnswer(btn, tok){
+  locked = true;
+  [...choicesEl.children].forEach(c=>c.classList.add('locked'));
+  btn.classList.add('correctpick');
+  Sfx.ding(); Sfx.success();
+  App.buzz(16);
+
+  // ？タイルを正解に差し替え
+  const q = document.getElementById('qtile');
+  if (q){
+    q.classList.add('solved','reveal');
+    q.textContent = '';
+    q.appendChild(makeGlyph(tok));
+  }
+
+  // エフェクト（押した選択肢の位置で）
+  const r = btn.getBoundingClientRect();
+  FX.sparkles(r.left+r.width/2, r.top+r.height/2, {count:12, color:'#ffd23f'});
+  FX.burst(r.left+r.width/2, r.top+r.height/2, {count:16});
+  FX.floatEmoji(r.left+r.width/2, r.top, pick(['🎉','✨','💮','🌟']));
+
+  // スコア更新
+  total++; streak++;
+  if (streak > best){ best = streak; save.bestMax('best', best); }
+  save.set('cleared', total);
+  renderStatus();
+  streakPill.classList.add('bump');
+  setTimeout(()=>streakPill.classList.remove('bump'), 220);
+
+  hintEl.textContent = pick(['せいかい！ 🎉','できた！ ✨','すごい！ 👏','ばっちり！ 🌟']);
+
+  qIndex++;
+
+  // 5もんごとに ごほうび
+  if (total % 5 === 0){
+    setTimeout(()=>milestone(), 700);
+  } else {
+    setTimeout(()=>nextProblem(), 950);
+  }
+}
+
+function wrongAnswer(btn){
+  // 減点しない・問題はそのまま。やさしく もういちど
+  Sfx.error();
+  App.buzz([20,30,20]);
+  btn.classList.add('wrong');
+  FX.shake(btn, 7, 320);
+  setTimeout(()=>btn.classList.remove('wrong'), 420);
+  streak = 0; renderStatus();
+  hintEl.textContent = 'もういちど！ 🤔';
+  App.toast('もういちど みてみよう 👀');
+}
+
+function milestone(){
+  Sfx.fanfare();
+  FX.celebrate();
+  App.showModal({
+    emoji: total>=30 ? '🏆' : total>=15 ? '🌈' : '🎉',
+    title: 'すごい！ ' + total + 'もん せいかい！',
+    text: 'れんぞく さいこう 🔥' + best + '<br>この ちょうしで つづけよう！',
+    buttons:[
+      {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
+      {label:'つぎへ ▶', cls:'btn--green', onClick:()=>{ Sfx.whoosh(); nextProblem(); }}
+    ]
+  });
+}
+
+/* スタート */
+nextProblem();
+</script>
+</body>
+</html>
