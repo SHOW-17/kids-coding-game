@@ -93,6 +93,7 @@ python3 -m http.server 9090 --bind 0.0.0.0
 - 効果音：Web Audio で生成（try/catch でガード）。
 - 永続化：`localStorage`（クリア状況・現在レベル・案内表示済みフラグ）。「🔄さいしょ」で初期化。
 - キャラ・箱は絶対配置トークン。cell サイズは画面幅から動的計算（スマホ対応）。
+- ファビコン／ホーム画面アイコン：クマ🐻＋はちみつ🍯の `icon.svg` から各サイズの PNG・ICO を生成。PWA マニフェスト（`manifest.webmanifest`）でスマホの「ホーム画面に追加」に対応（standalone 表示・名前「くまプロ」）。テーマ差し替え時は `icon.svg` を直して再変換する。
 
 詳しい設計方針・制約は [CLAUDE.md](CLAUDE.md) を参照。
 
