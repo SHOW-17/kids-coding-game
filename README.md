@@ -76,7 +76,10 @@ games/
   katachi.html          かたちづくり（タングラム＝かげあわせ方式）
   pitagora.html         ぴたごら（たまころがし＝決定論グリッド）
 assets/
-  uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット）
+  menu/                メニュー画面（index.html）の画像素材一式（WebP）。
+                       背景 bg / ロゴ logo / ユニコーン uni_* / ボタン btn_* /
+                       ゲーム看板 banner_* / カードアート card_*
+  uni/                  ユニコーン画像（blue_/green_/purple_*。ゲーム内マスコット）
   icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（効果音。Web Audio）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク）
@@ -104,13 +107,16 @@ scripts/
   `assets/bgm/<画面名>.mp3` を置けばその曲を優先再生、無ければやさしい合成ループを暫定で鳴らす。
   音源 mp3 は `.gitignore` 済み（公開リポジトリに市販曲を入れない）。詳細は [`assets/bgm/README.md`](assets/bgm/README.md)。
 - 永続化：`localStorage`（ゲーム別の名前空間。使えない環境ではメモリに自動フォールバック）。
-  アーケードの「きろくを ぜんぶ けす」で全消去。
+  メニュー左上の「せってい」（歯車）→「きろくを ぜんぶ けす」で全消去（子どもが誤操作しないよう設定内に格納）。
 - アクセシビリティ：`prefers-reduced-motion` を尊重。色だけに頼らない表現。
 - 動作確認：`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査（`scripts/test-games.js`。実行手順はファイル冒頭のコメント参照）。
 
 ### デザイン素材について
-ロゴ・ゲーム看板・背景・アイコンは CSS/SVG で「ねんど化」して実装（**絵文字は使わない**）。
-マスコットは `assets/uni/` のユニコーン画像。追加・差し替えは [Design.md](Design.md) の配役ルールに従う。
+メニュー画面（`index.html`）は、ロゴ・背景・ユニコーン・ゲーム看板・カードアート・ボタンを
+**画像素材（`assets/menu/*.webp`）** で構成し、チープ感を排した作り込みにしている。
+各ゲーム画面（`games/*.html`）のアイコン類は引き続き CSS/SVG で「ねんど化」（**絵文字は使わない**）。
+画像素材は LLM 画像生成（ChatGPT / Claude Design 等）で用意し、白背景は切り抜き → WebP 最適化して配置する運用。
+マスコットのユニコーンは [Design.md](Design.md) の配役ルール（ブルー＝主役／グリーン＝はかせ／パープル＝ごほうび）に従う。
 
 ---
 
