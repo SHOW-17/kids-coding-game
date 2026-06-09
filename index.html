@@ -11,237 +11,316 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="あそびのもり">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/arcade.css">
 <style>
-  /* ===== アーケード・トップ専用スタイル ===== */
-  body{display:flex; flex-direction:column; align-items:center;
-       padding:0 16px calc(28px + env(safe-area-inset-bottom));}
+:root{
+  --paper:#fff6e7; --paper2:#ffeccd;
+  --ink:#5b4022; --ink-soft:#8a6a44; --ink-faint:#b39a78;
+  --honey:#ffb43d; --honey-d:#f59312; --honey-l:#ffdb95;
+  --purple:#9b7cf0; --purple-d:#7b59e0; --purple-l:#cdb8ff;
+  --pink:#ff9ec4; --mint:#62cf9a; --sky:#5cc8e8;
+  --r:30px; --r-sm:20px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif; color:var(--ink);
+  background:
+    radial-gradient(120% 60% at 50% -8%, #fff9ef 0%, var(--paper) 42%, var(--paper2) 100%) fixed;
+  position:relative; overflow-x:hidden;
+  max-width:600px; margin:0 auto;
+  padding:0 18px calc(30px + env(safe-area-inset-bottom));
+}
+/* felt grain */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;}
+.screen{position:relative;z-index:1;max-width:600px;margin:0 auto;}
 
-  /* 背景の浮遊オブジェ */
-  .sky{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none;}
-  .sky .blob{position:absolute; border-radius:50%; filter:blur(6px); opacity:.5;}
-  .sky .float{position:absolute; font-size:34px; opacity:.7; animation:drift linear infinite;}
-  @keyframes drift{
-    0%{transform:translateY(0) rotate(0);}
-    50%{transform:translateY(-26px) rotate(10deg);}
-    100%{transform:translateY(0) rotate(0);}
-  }
+/* rolling clay hills behind hero */
+.hills{position:absolute;top:0;left:-18px;right:-18px;height:300px;z-index:0;overflow:hidden;pointer-events:none;}
+.hills i{position:absolute;border-radius:50%;}
+.hills .h1{width:60%;min-width:420px;height:300px;left:-12%;top:120px;background:#ffe3a8;
+  box-shadow:inset 0 8px 0 rgba(255,255,255,.55), inset 0 -22px 30px rgba(212,150,40,.25);}
+.hills .h2{width:46%;min-width:320px;height:240px;left:40%;top:170px;background:#ffd589;
+  box-shadow:inset 0 8px 0 rgba(255,255,255,.5), inset 0 -18px 24px rgba(212,150,40,.28);}
+.hills .cloud{width:120px;height:64px;background:#fffdf8;top:46px;left:8%;
+  box-shadow:34px 10px 0 -6px #fffdf8, -30px 12px 0 -4px #fffdf8, 0 12px 18px rgba(160,120,60,.12);}
+.hills .cloud.b{top:30px;right:10%;left:auto;transform:scale(.8);}
 
-  /* ヒーロー（ロゴ） */
-  .hero{width:100%; max-width:600px; text-align:center; margin-top:calc(20px + env(safe-area-inset-top));}
-  .logo{
-    font-family:'Mochiy Pop One',sans-serif;
-    font-size:clamp(34px,11vw,58px); line-height:1.05; color:var(--ink);
-    text-shadow:3px 4px 0 #fff, 6px 9px 0 rgba(138,90,60,.16);
-    letter-spacing:1px; margin:6px 0 2px;
-  }
-  .logo .em{display:inline-block; animation:bob 2.8s var(--ease) infinite;}
-  .logo .em.r{animation-delay:.5s;}
-  .tagline{font-size:clamp(13px,3.6vw,16px); color:var(--ink-soft); font-weight:800;
-    margin-bottom:6px;}
-  .tagline .chip{background:#fff; padding:3px 12px; border-radius:999px; box-shadow:var(--sh-1);
-    display:inline-block; margin-top:6px;}
+/* ===== HERO ===== */
+.hero{position:relative;text-align:center;padding-top:calc(30px + env(safe-area-inset-top));}
+.logo{
+  font-family:'Mochiy Pop One',sans-serif; font-size:clamp(46px,14vw,58px); line-height:.98;
+  color:var(--honey); letter-spacing:1px;
+  text-shadow:
+    0 2px 0 #ffe7b0, 0 4px 0 #ffd98a, 0 6px 0 #f7c469,
+    0 8px 0 #e9a948, 0 10px 0 #d9913a,
+    0 13px 14px rgba(150,90,30,.34);
+  -webkit-text-stroke:2px #fff;
+}
+.logo .l2{display:block;}
+.tagline{margin-top:14px;display:inline-flex;align-items:center;gap:7px;
+  font-weight:800;font-size:15px;color:var(--ink-soft);
+  background:#fff; padding:8px 18px;border-radius:999px;
+  box-shadow:0 5px 0 rgba(180,140,80,.18), inset 0 2px 0 #fff;}
+.tagline .star{width:16px;height:16px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  box-shadow:0 1px 0 #d9913a;}
 
-  /* ゲーム一覧 */
-  .shelf{width:100%; max-width:600px; margin-top:14px;}
-  .shelf h3{font-family:'Mochiy Pop One'; font-size:16px; color:var(--ink-soft);
-    margin:18px 6px 10px; display:flex; align-items:center; gap:8px;}
-  .shelf h3::before{content:''; flex:0 0 22px; height:4px; border-radius:9px; background:var(--honey);}
+/* hero unicorns */
+.cast{position:relative;height:200px;margin-top:6px;}
+.cast img{position:absolute;bottom:0;filter:drop-shadow(0 14px 10px rgba(120,80,30,.28));}
+.cast .blue{height:188px;left:50%;transform:translateX(-50%);z-index:3;animation:bob 3s var(--ease) infinite;}
+.cast .green{height:120px;left:14px;bottom:6px;z-index:2;animation:bobSide 3.4s var(--ease) infinite .3s;}
+.cast .purple{height:128px;right:8px;bottom:4px;z-index:2;animation:bobSide 3.2s var(--ease) infinite .6s;}
+.cast .pad{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+  width:300px;height:40px;border-radius:50%;background:rgba(190,150,90,.22);filter:blur(7px);}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-9px)}}
+@keyframes bobSide{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} .m-simon,.m-pita .ball{animation:none!important;} }
 
-  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
-  @media(max-width:380px){ .grid{gap:11px;} }
+/* ===== SECTION ===== */
+.shelf-h{display:flex;align-items:center;gap:10px;margin:24px 4px 14px;
+  font-family:'Mochiy Pop One';font-size:17px;color:var(--ink);}
+.shelf-h .dot{width:14px;height:14px;border-radius:50%;background:var(--honey);
+  box-shadow:0 2px 0 #d9913a, inset 0 2px 0 rgba(255,255,255,.6);}
+.shelf-h::after{content:"";flex:1;height:5px;border-radius:9px;
+  background:repeating-linear-gradient(90deg,var(--honey-l) 0 12px,transparent 12px 22px);opacity:.6;}
 
-  /* ゲームカード */
-  .game{
-    position:relative; border-radius:var(--r-lg); overflow:hidden;
-    background:var(--paper); box-shadow:var(--sh-2);
-    text-align:left; padding:0; display:flex; flex-direction:column;
-    transition:transform .14s var(--spring), box-shadow .14s var(--ease);
-    border:3px solid #fff;
-  }
-  .game:active{transform:translateY(4px) scale(.985); box-shadow:var(--sh-1);}
-  .game.feature{grid-column:1 / -1; flex-direction:row; align-items:stretch;}
+/* ===== CLAY CARD base ===== */
+.card{
+  position:relative;border-radius:var(--r);background:#fffdf7;border:none;
+  text-align:left;width:100%;cursor:pointer;display:block;color:inherit;font:inherit;
+  box-shadow:
+    0 16px 26px -12px rgba(150,100,40,.34),
+    0 3px 0 rgba(150,100,40,.10),
+    inset 0 3px 0 rgba(255,255,255,.9),
+    inset 0 -10px 16px rgba(190,150,90,.12);
+  transition:transform .16s var(--ease), box-shadow .16s var(--ease);
+}
+.card:active{transform:translateY(4px) scale(.985);
+  box-shadow:0 8px 16px -10px rgba(150,100,40,.34),inset 0 3px 0 rgba(255,255,255,.9),inset 0 -10px 16px rgba(190,150,90,.12);}
+.art{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.art::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(110% 80% at 50% 0,rgba(255,255,255,.5),transparent 62%);
+  pointer-events:none;}
+.art .uni{position:absolute;filter:drop-shadow(0 6px 5px rgba(80,50,10,.25));z-index:3;}
 
-  /* カード上部のアート面 */
-  .art{
-    position:relative; aspect-ratio:16/10; width:100%;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--g1); overflow:hidden;
-  }
-  .feature .art{aspect-ratio:auto; width:44%; min-width:140px; flex:0 0 44%;}
-  .art::after{content:''; position:absolute; inset:0;
-    background:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.35), transparent 60%);}
+.name{font-family:'Mochiy Pop One';color:var(--ink);line-height:1.16;}
+.desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;}
+.play{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+  font-family:'Mochiy Pop One';font-size:14px;color:#fff;
+  background:linear-gradient(180deg,var(--ac,#ff9ec4),var(--ac-d,#ec6fa0));
+  padding:8px 16px;border-radius:999px;
+  box-shadow:0 5px 0 var(--ac-sh,#cf5688), inset 0 2px 0 rgba(255,255,255,.4);}
+.play .tri{width:0;height:0;border-left:11px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent;}
+.prog{display:flex;align-items:center;gap:8px;}
+.prog .bar{flex:1;height:10px;border-radius:9px;background:#f0e2c6;overflow:hidden;
+  box-shadow:inset 0 2px 3px rgba(150,110,60,.25);}
+.prog .bar i{display:block;height:100%;border-radius:9px;
+  background:linear-gradient(90deg,var(--honey-l),var(--honey));transition:width .6s var(--ease);}
+.prog .pct{font-size:12px;font-weight:800;color:var(--ink-faint);min-width:38px;text-align:right;}
+.tagrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.tag{font-size:11.5px;font-weight:800;color:var(--ac-d);white-space:nowrap;
+  background:var(--ac-soft,#ffe3ef);padding:3px 10px;border-radius:999px;}
+.best{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
+.best .star{width:12px;height:12px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.ribbon{position:absolute;top:12px;left:-4px;z-index:5;
+  font-family:'Mochiy Pop One';font-size:11.5px;color:#fff;
+  background:linear-gradient(180deg,#ff7a8f,#ec5168);padding:5px 13px 5px 11px;
+  border-radius:6px 999px 999px 6px;box-shadow:0 5px 0 #c93b50, inset 0 2px 0 rgba(255,255,255,.35);}
 
-  /* カード下部のラベル */
-  .label{padding:11px 13px 13px; display:flex; flex-direction:column; gap:5px; flex:1;}
-  .label .name{font-family:'Mochiy Pop One'; font-size:clamp(16px,4.6vw,20px); color:var(--ink);
-    line-height:1.15;}
-  .label .desc{font-size:12.5px; color:var(--ink-soft); font-weight:700; line-height:1.45;}
-  .feature .label{justify-content:center; padding:18px 18px 18px 4px;}
-  .feature .label .name{font-size:clamp(20px,5.5vw,26px);}
-  .feature .label .desc{font-size:13.5px;}
+/* feature card */
+.feature{display:flex;gap:0;margin-bottom:14px;overflow:hidden;}
+.feature .art{flex:0 0 150px;align-self:stretch;border-radius:var(--r) 0 0 var(--r);}
+.feature .art img{width:100%;height:100%;object-fit:cover;}
+.feature .body{flex:1;padding:16px 16px 16px 15px;display:flex;flex-direction:column;gap:8px;justify-content:center;}
+.feature .name{font-size:20px;padding-right:34px;letter-spacing:-.3px;}
+.feature .crown{position:absolute;top:10px;right:12px;z-index:4;font-size:0;
+  width:34px;height:34px;border-radius:50%;background:linear-gradient(180deg,#fff,#ffe7b0);
+  box-shadow:0 4px 0 #e3b96a, inset 0 2px 0 #fff;display:flex;align-items:center;justify-content:center;}
+.feature .crown .s{width:18px;height:18px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
 
-  .meta{display:flex; align-items:center; gap:8px; margin-top:3px;}
-  .progress{flex:1; height:9px; border-radius:9px; background:#f0e3c8; overflow:hidden;}
-  .progress > i{display:block; height:100%; width:0; border-radius:9px;
-    background:linear-gradient(90deg,var(--honey-l),var(--honey)); transition:width .6s var(--spring);}
-  .pct{font-size:12px; font-weight:800; color:var(--ink-faint); min-width:34px; text-align:right;}
-  .playchip{align-self:flex-start; margin-top:6px;
-    background:var(--ac,#ff8fab); color:#fff; font-family:'Mochiy Pop One';
-    font-size:14px; padding:6px 16px; border-radius:999px; display:inline-flex; gap:6px; align-items:center;
-    box-shadow:0 4px 0 rgba(0,0,0,.12);}
+/* grid */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:360px){ .grid{gap:11px;} }
+.grid .card{display:flex;flex-direction:column;}
+.grid .art{aspect-ratio:1/.84;border-radius:var(--r) var(--r) 0 0;}
+.grid .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:7px;}
+.grid .name{font-size:18px;}
 
-  /* リボン（しんさく！等） */
-  .ribbon{position:absolute; top:10px; left:-2px; z-index:3;
-    background:var(--c-red); color:#fff; font-family:'Mochiy Pop One'; font-size:12px;
-    padding:4px 12px 4px 10px; border-radius:0 999px 999px 0;
-    box-shadow:0 4px 8px rgba(224,72,72,.4);}
+/* ===== mini illustrations (CSS, no emoji) ===== */
+.mini{position:relative;z-index:2;}
+.m-board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:78%;aspect-ratio:1;}
+.m-board i{background:rgba(255,255,255,.55);border-radius:8px;box-shadow:inset 0 2px 0 rgba(255,255,255,.7);}
+.m-board i.goal{background:linear-gradient(180deg,#ffd98a,var(--honey));}
+.m-simon{width:62%;aspect-ratio:1;border-radius:50%;display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  box-shadow:0 6px 0 rgba(120,80,140,.25);animation:spin 9s linear infinite;}
+.m-simon i{box-shadow:inset 0 3px 0 rgba(255,255,255,.4);}
+.m-simon i:nth-child(1){background:#5fcf80;border-radius:100% 0 0 0;}
+.m-simon i:nth-child(2){background:#ff6b6b;border-radius:0 100% 0 0;}
+.m-simon i:nth-child(3){background:#ffd23f;border-radius:0 0 0 100%;}
+.m-simon i:nth-child(4){background:#5cc8e8;border-radius:0 0 100% 0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.m-row{display:flex;gap:8px;align-items:center;}
+.m-row i{width:24px;height:24px;border-radius:50%;box-shadow:0 4px 0 rgba(0,0,0,.12),inset 0 2px 0 rgba(255,255,255,.5);}
+.m-row .q{background:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:'Mochiy Pop One';color:var(--sky);font-size:18px;}
+.m-tan{width:66%;aspect-ratio:1;position:relative;}
+.m-tan i{position:absolute;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12));}
+.m-tan .t1{width:0;height:0;border-left:30px solid transparent;border-right:30px solid transparent;border-bottom:46px solid #ff9f43;top:4%;left:18%;}
+.m-tan .t2{width:36px;height:36px;background:#b58cff;transform:rotate(45deg);bottom:10%;right:14%;}
+.m-tan .t3{width:0;height:0;border-left:24px solid transparent;border-right:24px solid transparent;border-top:34px solid #6ad08a;bottom:4%;left:8%;}
+.m-pita{width:78%;height:68%;position:relative;}
+.m-pita .ramp{position:absolute;width:66%;height:11px;border-radius:7px;background:#fff;
+  box-shadow:0 3px 0 rgba(0,0,0,.12);top:28%;left:0;transform:rotate(18deg);}
+.m-pita .ramp.b{top:62%;left:30%;transform:rotate(-16deg);}
+.m-pita .ball{position:absolute;width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff,#ff7a6b);top:6%;left:6%;
+  box-shadow:0 4px 6px rgba(0,0,0,.2);animation:roll 2.8s var(--ease) infinite;}
+.m-pita .flag{position:absolute;bottom:0;right:4%;width:0;height:0;
+  border-left:16px solid var(--honey);border-top:11px solid transparent;border-bottom:11px solid transparent;}
+.m-pita .flag::after{content:"";position:absolute;left:-2px;top:-2px;width:5px;height:34px;background:#caa46a;border-radius:3px;}
+@keyframes roll{0%{top:6%;left:6%}45%{top:40%;left:46%}100%{top:72%;left:72%;opacity:.4}}
 
-  /* ===== カード別 CSS アート（画像が来たら差し替え可） ===== */
-  .art .emoji-big{font-size:clamp(48px,16vw,80px); filter:drop-shadow(0 6px 6px rgba(0,0,0,.12));
-    position:relative; z-index:2;}
-  .art .emoji-sub{position:absolute; font-size:clamp(26px,8vw,40px); z-index:2;}
+/* entrance */
+.enter{opacity:0;transform:translateY(14px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.05s}.enter.d2{animation-delay:.12s}.enter.d3{animation-delay:.19s}
+.enter.d4{animation-delay:.26s}.enter.d5{animation-delay:.33s}.enter.d6{animation-delay:.40s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ .enter{opacity:1;transform:none;animation:none;} }
 
-  /* くまプロ：ミニ盤面 */
-  .mini-board{position:relative; z-index:2; display:grid; grid-template-columns:repeat(3,1fr);
-    gap:5px; width:74%; aspect-ratio:1; padding:0;}
-  .mini-board .c{background:rgba(255,255,255,.4); border-radius:7px;}
+/* footer */
+.foot{margin-top:26px;text-align:center;}
+.reset{font-weight:800;font-size:13px;color:var(--ink-faint);background:#fff;
+  border:none;padding:11px 22px;border-radius:999px;cursor:pointer;
+  box-shadow:0 4px 0 rgba(180,140,80,.18);}
+.reset:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(180,140,80,.18);}
+.credit{margin-top:12px;font-size:11px;color:var(--ink-faint);}
 
-  /* まねっこ：4色パッド */
-  .simon-mini{position:relative; z-index:2; width:64%; aspect-ratio:1; border-radius:50%;
-    display:grid; grid-template-columns:1fr 1fr; gap:6px; transform:rotate(0deg);}
-  .simon-mini > i{display:block;}
-  .simon-mini > i:nth-child(1){background:#5fcf80; border-radius:100% 0 0 0;}
-  .simon-mini > i:nth-child(2){background:#ff6b6b; border-radius:0 100% 0 0;}
-  .simon-mini > i:nth-child(3){background:#ffd23f; border-radius:0 0 0 100%;}
-  .simon-mini > i:nth-child(4){background:#5cc8e8; border-radius:0 0 100% 0;}
-
-  /* きまり：並ぶ玉 */
-  .row-mini{position:relative; z-index:2; display:flex; gap:8px; align-items:center;}
-  .row-mini > i{width:clamp(16px,5vw,26px); aspect-ratio:1; border-radius:50%; box-shadow:0 3px 0 rgba(0,0,0,.12);}
-  .row-mini .q{background:#fff; color:var(--c-blue-d); display:flex; align-items:center;
-    justify-content:center; font-family:'Mochiy Pop One'; font-size:18px; box-shadow:0 3px 0 rgba(0,0,0,.1);}
-
-  /* かたち：タングラム */
-  .tan-mini{position:relative; z-index:2; width:62%; aspect-ratio:1;}
-  .tan-mini i{position:absolute;}
-  .tan-mini .t1{width:0;height:0;border-left:34px solid transparent;border-right:34px solid transparent;
-    border-bottom:50px solid #ff9f43; top:6%; left:14%;}
-  .tan-mini .t2{width:38px;height:38px;background:#b58cff; transform:rotate(45deg); bottom:8%; right:14%;}
-  .tan-mini .t3{width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;
-    border-top:38px solid #6ad08a; bottom:6%; left:10%;}
-
-  /* ぴたごら：玉と坂 */
-  .pita-mini{position:relative; z-index:2; width:72%; height:64%;}
-  .pita-mini .ramp{position:absolute; width:70%; height:10px; border-radius:6px; background:#fff;
-    top:30%; left:0; transform:rotate(18deg); box-shadow:0 3px 0 rgba(0,0,0,.1);}
-  .pita-mini .ramp.b{top:62%; left:28%; transform:rotate(-16deg);}
-  .pita-mini .ball{position:absolute; width:22px; height:22px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#fff,#ff6b6b); top:8%; left:6%;
-    box-shadow:0 3px 6px rgba(0,0,0,.2); animation:rolldemo 2.6s var(--ease) infinite;}
-  .pita-mini .goal{position:absolute; bottom:0; right:6%; font-size:30px;}
-  @keyframes rolldemo{0%{top:8%;left:6%;}45%{top:42%;left:48%;}100%{top:74%;left:74%;opacity:.4;}}
-
-  /* フッター */
-  .foot{width:100%; max-width:600px; margin-top:26px; display:flex; justify-content:center;}
-  .reset-all{background:transparent; color:var(--ink-faint); font-weight:800; font-size:13px;
-    padding:10px 18px; border-radius:999px;}
-  .reset-all:active{background:rgba(0,0,0,.04);}
-  .credit{width:100%; text-align:center; font-size:11px; color:var(--ink-faint);
-    margin-top:6px; opacity:.8;}
+/* fallback modal (used only if shell.js App.showModal is absent) */
+.ovl{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(60,40,20,.4);backdrop-filter:blur(2px);padding:24px;}
+.ovl[hidden]{display:none;}
+.dlg{background:#fffdf7;border-radius:26px;max-width:340px;width:100%;padding:24px 22px;text-align:center;
+  box-shadow:0 24px 48px -16px rgba(120,80,30,.5),inset 0 3px 0 rgba(255,255,255,.9);}
+.dlg .ic{width:54px;height:54px;margin:0 auto 8px;border-radius:50%;
+  background:linear-gradient(180deg,#fff,#ffe7b0);box-shadow:inset 0 2px 0 #fff,0 4px 0 #e3b96a;
+  display:flex;align-items:center;justify-content:center;}
+.dlg .ic span{width:26px;height:26px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.dlg h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin-bottom:8px;}
+.dlg p{font-size:13.5px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:12px;border:none;border-radius:999px;cursor:pointer;}
+.dlg .ghost{background:#f0e6d3;color:var(--ink-soft);}
+.dlg .danger{background:linear-gradient(180deg,#ff7a8f,#ec5168);color:#fff;box-shadow:0 4px 0 #c93b50;}
 </style>
 </head>
 <body>
+<div class="screen">
+  <div class="hills" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="cloud"></i><i class="cloud b"></i></div>
 
-<div class="sky" aria-hidden="true">
-  <div class="blob" style="width:220px;height:220px;background:#ffe39a;top:-40px;left:-50px;"></div>
-  <div class="blob" style="width:180px;height:180px;background:#ffd0dd;top:30%;right:-40px;"></div>
-  <div class="blob" style="width:200px;height:200px;background:#c8eaff;bottom:-30px;left:10%;"></div>
-  <div class="float" style="left:8%;top:18%;animation-duration:7s;">🍃</div>
-  <div class="float" style="left:84%;top:12%;animation-duration:9s;animation-delay:1s;">☁️</div>
-  <div class="float" style="left:70%;top:40%;animation-duration:8s;animation-delay:.5s;">🦋</div>
-  <div class="float" style="left:16%;top:64%;animation-duration:10s;animation-delay:2s;">🍄</div>
-  <div class="float" style="left:90%;top:70%;animation-duration:7.5s;animation-delay:1.5s;">🌸</div>
-</div>
+  <header class="hero">
+    <div class="logo enter d1">あそびの<span class="l2">もり</span></div>
+    <div class="tagline enter d2"><span class="star"></span> よめなくても あそべる！</div>
+    <div class="cast enter d2">
+      <div class="pad"></div>
+      <img class="green"  src="assets/uni/green_standing.png" alt="" draggable="false">
+      <img class="purple" src="assets/uni/purple_wave.png" alt="" draggable="false">
+      <img class="blue"   src="assets/uni/blue_wave.png" alt="" draggable="false">
+    </div>
+  </header>
 
-<header class="hero enter">
-  <div class="logo"><span class="em">🐻</span> あそびの<wbr>もり <span class="em r">🍯</span></div>
-  <div class="tagline">あそびながら かしこくなる！<br>
-    <span class="chip">よめなくても だいじょうぶ 👍</span></div>
-</header>
+  <div class="shelf-h enter d3"><span class="dot"></span> あそびを えらんでね</div>
 
-<main class="shelf">
-  <h3 class="enter d1">あそびを えらんでね</h3>
+  <div id="grid-feature"></div>
   <div class="grid" id="grid"></div>
 
-  <div class="foot enter d5">
-    <button class="reset-all" id="resetAll">🔄 きろくを ぜんぶ けす</button>
+  <div class="foot enter d6">
+    <button class="reset" id="resetAll">きろくを ぜんぶ けす</button>
+    <div class="credit">あそびのもり ・ こどもの ゲームランド</div>
   </div>
-  <div class="credit">あそびのもり ・ こどもの ちいさな ゲームランド</div>
-</main>
+</div>
 
+<!-- fallback reset dialog -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <div class="ic"><span></span></div>
+    <h2>ぜんぶ けす？</h2>
+    <p>あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？</p>
+    <div class="row">
+      <button class="ghost" id="ovlNo">やめる</button>
+      <button class="danger" id="ovlYes">けす</button>
+    </div>
+  </div>
+</div>
+
+<!-- 実機リポジトリでは下記が共通基盤を読み込む。無くても画面は動作する（ガード済み） -->
 <script src="assets/audio.js"></script>
 <script src="assets/fx.js"></script>
 <script src="assets/save.js"></script>
 <script src="assets/shell.js"></script>
 <script>
-/* ===== ゲーム定義 ===== */
+/* ===== ゲーム定義（看板アートは絵文字を使わず CSS図形＋キャラ画像） ===== */
 const GAMES = [
   {
     id:'kuma', feature:true, href:'kuma-programming.html',
-    name:'くまさん プログラミング', desc:'やじるしを ならべて ゴールへ。じゅんばんに めいれいする あそび。',
-    g1:'#ffe7bd', g2:'#ffd98a', ac:'#f59312', total:19,
-    art:`<div class="mini-board">
-           <i class="c"></i><i class="c"></i><i class="c"></i>
-           <i class="c"></i><i class="c"></i><i class="c"></i>
-           <i class="c"></i><i class="c"></i><i class="c"></i>
-         </div>
-         <div class="emoji-sub" style="left:14%;top:14%;font-size:clamp(28px,9vw,44px);">🐻</div>
-         <div class="emoji-sub" style="right:14%;bottom:12%;">🍯</div>`
+    name:'プログラミング', desc:'やじるしを ならべて、<br>ゴールまで すすもう。',
+    ac:'#ffb43d', acd:'#f59312', acsh:'#d9851f', acsoft:'#ffe9c6',
+    ribbon:'いちばん にんき', crown:true, total:19,
+    artBg:'linear-gradient(160deg,#ffe7bd,#ffd589)',
+    art:`<img src="assets/uni/blue_workdesk.png" alt="" draggable="false">`
   },
   {
-    id:'manekko', href:'games/manekko.html', ribbon:'しんさく！',
+    id:'manekko', href:'games/manekko.html', ns:'manekko',
     name:'まねっこ', desc:'ひかった じゅんばんを おぼえて まねっこ。',
-    g1:'#e7d8ff', g2:'#cdb0ff', ac:'#9165e0', ns:'manekko',
-    progressKey:'best', progressLabel:v=>v>0?('さいこう '+v+'だん'):null,
-    art:`<div class="simon-mini anim-float"><i></i><i></i><i></i><i></i></div>`
+    ac:'#9b7cf0', acd:'#7b59e0', acsh:'#5f43b8', acsoft:'#ece3ff',
+    ribbon:'しんさく！', tag:'きおく力',
+    progressKey:'best', bestLabel:v=>v>0?('さいこう '+v+'だん'):null,
+    artBg:'linear-gradient(160deg,#ece1ff,#cdb8ff)',
+    art:`<div class="mini m-simon"><i></i><i></i><i></i><i></i></div>
+         <img class="uni" src="assets/uni/purple_sit.png" style="height:74px;right:-6px;bottom:-6px;" alt="" draggable="false">`
   },
   {
-    id:'kimari', href:'games/kimari.html', ribbon:'しんさく！',
-    name:'きまり あそび', desc:'ならびの つぎは なに？ きまりを みつけよう。',
-    g1:'#cfeeff', g2:'#a9ddf7', ac:'#2fa6cc', ns:'kimari',
-    progressKey:'cleared', progressLabel:v=>v>0?(v+'もん せいかい'):null,
-    art:`<div class="row-mini">
-           <i style="background:#ff6b6b"></i><i style="background:#5cc8e8"></i>
-           <i style="background:#ff6b6b"></i><i class="q">?</i>
-         </div>`
+    id:'kimari', href:'games/kimari.html', ns:'kimari',
+    name:'きまり', desc:'ならびの つぎは なに？ きまりを みつけよう。',
+    ac:'#2fa6cc', acd:'#2189ad', acsh:'#1a6c8a', acsoft:'#d7f1fb',
+    ribbon:'しんさく！', tag:'すいり力',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'もん せいかい'):null,
+    artBg:'linear-gradient(160deg,#d8f1ff,#a9ddf7)',
+    art:`<div class="mini m-row"><i style="background:#ff6b6b"></i><i style="background:#5cc8e8"></i><i style="background:#ff6b6b"></i><i class="q">?</i></div>
+         <img class="uni" src="assets/uni/green_thinking.png" style="height:80px;right:-8px;bottom:-8px;" alt="" draggable="false">`
   },
   {
-    id:'katachi', href:'games/katachi.html', ribbon:'しんさく！',
-    name:'かたち づくり', desc:'ピースを ならべて おてほんの かたちを つくろう。',
-    g1:'#d9f5e1', g2:'#b6ebc6', ac:'#46b56a', ns:'katachi',
-    progressKey:'cleared', progressLabel:v=>v>0?(v+'こ かんせい'):null,
-    art:`<div class="tan-mini anim-float"><i class="t1"></i><i class="t2"></i><i class="t3"></i></div>`
+    id:'katachi', href:'games/katachi.html', ns:'katachi',
+    name:'かたち', desc:'ピースを ならべて おてほんを つくろう。',
+    ac:'#389355', acd:'#389355', acsh:'#2c7544', acsoft:'#dcf3e3',
+    ribbon:'しんさく！', tag:'かたち力',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'こ かんせい'):null,
+    artBg:'linear-gradient(160deg,#dcf6e4,#b6ebc6)',
+    art:`<div class="mini m-tan"><i class="t1"></i><i class="t2"></i><i class="t3"></i></div>
+         <img class="uni" src="assets/uni/green_standing.png" style="height:78px;right:-8px;bottom:-6px;" alt="" draggable="false">`
   },
   {
-    id:'pitagora', href:'games/pitagora.html', ribbon:'しんさく！',
-    name:'ぴたごら', desc:'どうぐを おいて たまを ゴールへ ころがそう。',
-    g1:'#ffe2c2', g2:'#ffc98e', ac:'#e57e1c', ns:'pitagora',
-    progressKey:'cleared', progressLabel:v=>v>0?(v+'こ クリア'):null,
-    art:`<div class="pita-mini"><i class="ramp"></i><i class="ramp b"></i>
-           <i class="ball"></i><span class="goal">🍯</span></div>`
+    id:'pitagora', href:'games/pitagora.html', ns:'pitagora',
+    name:'ぴたごら', desc:'どうぐを おいて たまを ゴールへ。',
+    ac:'#e57e1c', acd:'#c96a12', acsh:'#a4540b', acsoft:'#ffe6cb',
+    ribbon:'しんさく！', tag:'くふう力',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'こ クリア'):null,
+    artBg:'linear-gradient(160deg,#ffe6c8,#ffc98e)',
+    art:`<div class="mini m-pita"><span class="ramp"></span><span class="ramp b"></span><span class="ball"></span><span class="flag"></span></div>
+         <img class="uni" src="assets/uni/blue_sit.png" style="height:72px;right:-6px;bottom:-6px;" alt="" draggable="false">`
   }
 ];
 
-/* くまゲームの進捗（独自キー）を読む
-   cleared は配列。重複が混ざっても水増しされないよう一意化して数える */
+/* くまゲームの進捗（独自キー）。重複混入でも水増ししないよう一意化して数える */
 function kumaCleared(){
   try{
     const d = JSON.parse(localStorage.getItem('kuma_prog_save_v1'));
@@ -249,65 +328,101 @@ function kumaCleared(){
     return new Set(d.cleared).size;
   }catch(e){ return 0; }
 }
+/* 各ゲームの進捗値（Save が無い環境では 0） */
+function progressOf(g){
+  if(!g.ns) return 0;
+  try{ if(window.Save && Save.game) return Save.game(g.ns).get(g.progressKey,0); }catch(e){}
+  try{ return JSON.parse(localStorage.getItem('save_'+g.ns)||'{}')[g.progressKey]||0; }catch(e){}
+  return 0;
+}
 
-/* カード生成 */
-const grid = document.getElementById('grid');
-GAMES.forEach((g,i)=>{
-  const card = App.el('button', 'game enter d'+Math.min(i+2,6) + (g.feature?' feature':''));
-  card.setAttribute('aria-label', g.name + ' であそぶ');
-  card.style.setProperty('--g1', g.g1);
+function navTo(href, g, ev){
+  try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
+  try{
+    if(window.FX&&FX.ring){ const t=ev.currentTarget.getBoundingClientRect();
+      FX.ring(t.left+t.width/2, t.top+t.height/2, {color:g.ac, vr:7, life:24}); }
+  }catch(e){}
+  if(window.App&&App.go){ try{ App.go(href); return; }catch(e){} }
+  setTimeout(()=>{ location.href = href; }, 110);
+}
+
+function makeCard(g, i){
+  const card = document.createElement('button');
+  card.className = 'card enter d'+Math.min(i+2,6) + (g.feature?' feature':'');
+  card.setAttribute('aria-label', g.name+' で あそぶ');
   card.style.setProperty('--ac', g.ac);
-  const art = `<div class="art" style="background:linear-gradient(160deg,${g.g1},${g.g2});">${g.art}</div>`;
+  card.style.setProperty('--ac-d', g.acd);
+  card.style.setProperty('--ac-sh', g.acsh);
+  card.style.setProperty('--ac-soft', g.acsoft);
 
-  // 進捗
-  let metaHtml='';
-  if(g.total){
-    const done = Math.min((g.id==='kuma') ? kumaCleared() : 0, g.total);
-    const pct = g.total>0 ? Math.min(100, Math.round(done/g.total*100)) : 0;
-    metaHtml = `<div class="meta" role="img" aria-label="${done} / ${g.total} クリア">
-        <div class="progress"><i style="width:${pct}%"></i></div>
-        <span class="pct">${done}/${g.total}</span></div>`;
-  } else if(g.ns){
-    let v=0; try{ v = Save.game(g.ns).get(g.progressKey,0); }catch(e){}
-    const label = g.progressLabel ? g.progressLabel(v) : null;
-    if(label) metaHtml = `<div class="meta"><span class="pct" style="min-width:auto;color:var(--ink-soft)">⭐ ${label}</span></div>`;
+  // 進捗 / メタ
+  let meta = '';
+  if(g.feature && g.total){
+    const done = Math.min(kumaCleared(), g.total);
+    const pct = Math.round(done/g.total*100);
+    meta = `<div class="prog" role="img" aria-label="${done} / ${g.total} クリア">
+              <div class="bar"><i style="width:${pct}%"></i></div>
+              <span class="pct">${done}/${g.total}</span></div>`;
+  } else if(g.tag){
+    const v = progressOf(g);
+    const label = g.bestLabel ? g.bestLabel(v) : null;
+    meta = `<div class="tagrow"><span class="tag">${g.tag}</span>` +
+           (label ? `<span class="best"><span class="star"></span>${label}</span>` : '') +
+           `</div>`;
   }
+
+  const playOrTag = g.feature
+    ? `<span class="play"><span class="tri"></span> あそぶ</span>`
+    : '';
 
   card.innerHTML =
     (g.ribbon?`<span class="ribbon">${g.ribbon}</span>`:'') +
-    art +
-    `<div class="label">
+    (g.crown?`<span class="crown"><span class="s"></span></span>`:'') +
+    `<div class="art" style="background:${g.artBg};">${g.art}</div>` +
+    `<div class="body">
        <div class="name">${g.name}</div>
        <div class="desc">${g.desc}</div>
-       ${metaHtml}
-       <span class="playchip">あそぶ ▶</span>
+       ${meta}
+       ${playOrTag}
      </div>`;
 
-  card.addEventListener('click', ()=>{
-    try{ Sfx.pop(); }catch(e){}
-    const r = card.getBoundingClientRect();
-    try{ FX.ring(r.left+r.width/2, r.top+r.height/2, {color:g.ac, vr:7, life:24}); }catch(e){}
-    App.go(g.href);
-  });
-  grid.appendChild(card);
+  card.addEventListener('click', (ev)=>navTo(g.href, g, ev));
+  return card;
+}
+
+const featWrap = document.getElementById('grid-feature');
+const grid = document.getElementById('grid');
+GAMES.forEach((g,i)=>{
+  const c = makeCard(g,i);
+  (g.feature ? featWrap : grid).appendChild(c);
 });
 
-/* ぜんぶ けす */
+/* ===== ぜんぶ けす ===== */
+function doReset(){
+  try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
+  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora']); }catch(e){}
+  ['manekko','kimari','katachi','pitagora'].forEach(ns=>{ try{ localStorage.removeItem('save_'+ns); }catch(e){} });
+  try{ if(window.Sfx&&Sfx.whoosh) Sfx.whoosh(); }catch(e){}
+  setTimeout(()=>location.reload(), 200);
+}
 document.getElementById('resetAll').addEventListener('click', ()=>{
-  App.showModal({
-    emoji:'🧹', title:'ぜんぶ けす？',
-    text:'あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？',
-    buttons:[
-      {label:'やめる', cls:'btn--ghost'},
-      {label:'けす', cls:'', onClick:()=>{
-        try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
-        try{ Save.resetAll(['manekko','kimari','katachi','pitagora']); }catch(e){}
-        try{ Sfx.whoosh(); }catch(e){}
-        setTimeout(()=>location.reload(), 200);
-      }}
-    ]
-  });
+  try{ if(window.Sfx&&Sfx.tap) Sfx.tap(); }catch(e){}
+  if(window.App && App.showModal){
+    App.showModal({
+      emoji:'🧹', title:'ぜんぶ けす？',
+      text:'あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？',
+      buttons:[
+        {label:'やめる', cls:'btn--ghost'},
+        {label:'けす', cls:'', onClick:doReset}
+      ]
+    });
+    return;
+  }
+  document.getElementById('ovl').hidden = false;
 });
+document.getElementById('ovlNo').addEventListener('click', ()=>{ document.getElementById('ovl').hidden = true; });
+document.getElementById('ovlYes').addEventListener('click', doReset);
+document.getElementById('ovl').addEventListener('click', (e)=>{ if(e.target.id==='ovl') e.currentTarget.hidden = true; });
 </script>
 </body>
 </html>

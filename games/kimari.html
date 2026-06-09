@@ -4,591 +4,472 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>きまり あそび — あそびのもり</title>
-<meta name="description" content="ならびの つぎは なに？ きまりを みつけて あてる あそび。ろんりてきな かんがえる ちからを そだてる。">
+<meta name="description" content="ならびの つぎは なに？ きまりを みつけて あてる あそび。">
 <meta name="theme-color" content="#2fa6cc">
-<link rel="icon" href="../favicon.ico" sizes="any">
-<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="きまり あそび">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/arcade.css">
 <style>
-  :root{
-    --accent:#5cc8e8; --accent-d:#2fa6cc; --accent-l:#cfeeff;
-    --bg-2:#dff4fc; --bg-3:#bfe6f6;
-  }
-  body{display:flex; flex-direction:column; align-items:center;
-       background:
-        radial-gradient(120% 80% at 15% -10%, #eef9ff 0%, transparent 55%),
-        radial-gradient(120% 80% at 95% 0%, #dff4fc 0%, transparent 50%),
-        linear-gradient(180deg,#dff4fc 0%, #bfe6f6 100%);}
+:root{
+  --ink:#22506b; --ink-soft:#4f7d96; --ink-faint:#8fb4c6;
+  --accent:#5cc8e8; --accent-d:#2189ad; --accent-l:#cfeeff;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --cream:#eef8fc; --paper:#ffffff;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+  background:
+    radial-gradient(120% 70% at 15% -8%, #f3fbff 0%, transparent 55%),
+    radial-gradient(120% 70% at 95% 0%, #e3f4fb 0%, transparent 50%),
+    linear-gradient(180deg,#e6f5fb 0%, #c8e9f6 100%) fixed;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 
-  .wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; flex:1; padding:0 10px 16px;}
+/* topbar */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 4px;}
+.home{flex:0 0 auto;width:50px;height:50px;border:none;cursor:pointer;border-radius:18px;background:#fff;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 rgba(33,137,173,.24), inset 0 2px 0 #fff;
+  transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(33,137,173,.24);}
+.home .ic{width:22px;height:22px;background:var(--accent-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:19px;color:var(--accent-d);text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(40,100,130,.3));}
 
-  /* 状態バー */
-  .statusbar{display:flex; gap:10px; align-items:center; justify-content:center;
-    flex-wrap:wrap; margin:6px 0 2px;}
-  .score-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
-    padding:8px 16px; border-radius:999px; font-size:17px; color:var(--accent-d);}
-  .best-pill{font-weight:800; background:#fff7; box-shadow:var(--sh-1);
-    padding:8px 14px; border-radius:999px; font-size:14px; color:var(--ink-soft);}
-  .streak-pill{font-family:'Mochiy Pop One'; background:var(--honey); color:#fff;
-    box-shadow:0 4px 0 var(--honey-d); padding:8px 16px; border-radius:999px;
-    font-size:16px; transition:transform .2s var(--spring);}
-  .streak-pill.bump{transform:scale(1.18);}
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;display:flex;flex-direction:column;
+  align-items:center;padding:0 12px 16px;}
 
-  .hint{font-weight:800; font-size:18px; color:var(--accent-d); min-height:26px;
-    text-align:center; margin:10px 0 6px;}
+.statusbar{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap;margin:6px 0 2px;}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;
+  padding:8px 15px;border-radius:999px;font-size:16px;color:var(--accent-d);
+  box-shadow:0 4px 0 rgba(33,137,173,.16), inset 0 2px 0 #fff;}
+.pill.best{font-family:'M PLUS Rounded 1c';font-weight:800;font-size:14px;color:var(--ink-soft);background:#ffffffcc;}
+.pill.streak{background:linear-gradient(180deg,#ffc659,var(--honey));color:#fff;box-shadow:0 4px 0 var(--honey-d);
+  transition:transform .2s var(--spring);}
+.pill.streak.bump{transform:scale(1.18);}
+.cstar{width:14px;height:14px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.pill.streak .cstar{background:#fff;}
+.pill.best .cstar{background:var(--honey);}
+.flame{width:13px;height:16px;background:#fff;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  clip-path:polygon(50% 0,72% 30%,68% 18%,85% 55%,80% 80%,60% 100%,40% 100%,20% 80%,30% 50%,40% 62%,38% 30%);}
 
-  /* ならび（出題列） */
-  .seq-card{width:100%; background:var(--paper); border-radius:var(--r-lg);
-    box-shadow:var(--sh-2); padding:16px 12px; margin:4px 0 10px;}
-  .seq{display:flex; gap:6px; justify-content:center; align-items:center;
-    flex-wrap:nowrap;}
-  .tile{
-    display:flex; align-items:center; justify-content:center;
-    border-radius:18px; background:var(--cream);
-    box-shadow:inset 0 -5px 0 rgba(0,0,0,.07), 0 3px 8px rgba(0,0,0,.08);
-    flex:0 0 auto;
-  }
-  /* タイルサイズはマス数で動的。狭い端末(～320px)でも 1行に収まるよう
-     「列が増えたら自動で小さく」なる上限つきの calc（min）で算出。
-     利用できる横幅 ≒ (100vw − 余白) を マス数で割る。 */
-  .tile{ --side:48px; width:var(--side); height:var(--side);
-    font-size:calc(var(--side) * 0.58); }
-  .seq[data-n="4"]{ --avail:calc((100vw - 64px) / 4); }
-  .seq[data-n="5"]{ --avail:calc((100vw - 76px) / 5); }
-  .seq[data-n="6"]{ --avail:calc((100vw - 84px) / 6); }
-  .seq[data-n="7"]{ --avail:calc((100vw - 90px) / 7); }
-  .seq[data-n="8"]{ --avail:calc((100vw - 96px) / 8); }
-  .seq[data-n="9"]{ --avail:calc((100vw - 100px) / 9); }
-  .seq[data-n="4"] .tile{ --side:min(62px, var(--avail)); }
-  .seq[data-n="5"] .tile{ --side:min(60px, var(--avail)); }
-  .seq[data-n="6"] .tile{ --side:min(54px, var(--avail)); }
-  .seq[data-n="7"] .tile{ --side:min(48px, var(--avail)); }
-  .seq[data-n="8"] .tile{ --side:min(42px, var(--avail)); }
-  .seq[data-n="9"] .tile{ --side:min(38px, var(--avail)); }
-  .glyph{line-height:1; transition:transform .25s var(--spring);}
+.hint{font-weight:800;font-size:18px;color:var(--accent-d);min-height:26px;text-align:center;margin:10px 0 6px;}
 
-  /* ？タイル（こたえる場所） */
-  .tile.qmark{background:linear-gradient(160deg,var(--accent-l),#fff);
-    box-shadow:inset 0 0 0 4px var(--accent), 0 4px 12px rgba(47,166,204,.35);
-    color:var(--accent-d); font-family:'Mochiy Pop One';
-    animation:qpulse 1.1s var(--ease) infinite;}
-  @keyframes qpulse{0%,100%{transform:scale(1); box-shadow:inset 0 0 0 4px var(--accent),0 4px 12px rgba(47,166,204,.35);}
-    50%{transform:scale(1.1); box-shadow:inset 0 0 0 5px var(--accent),0 6px 20px rgba(47,166,204,.55);}}
-  .tile.qmark.solved{animation:none; background:var(--cream);
-    box-shadow:inset 0 -5px 0 rgba(0,0,0,.07),0 3px 8px rgba(0,0,0,.08);
-    color:var(--ink);}
-  .tile.reveal .glyph{animation:flip-in .5s var(--spring);}
-  @keyframes flip-in{0%{transform:rotateY(90deg) scale(.5);}60%{transform:rotateY(0) scale(1.2);}100%{transform:scale(1);}}
+/* sequence card */
+.seq-card{width:100%;background:var(--paper);border-radius:26px;padding:18px 12px;margin:4px 0 12px;
+  box-shadow:0 14px 26px -12px rgba(40,110,140,.32), inset 0 3px 0 rgba(255,255,255,.9), 0 3px 0 rgba(40,110,140,.08);}
+.seq{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:nowrap;}
+.tile{display:flex;align-items:center;justify-content:center;border-radius:18px;background:var(--cream);flex:0 0 auto;
+  box-shadow:inset 0 -5px 0 rgba(40,110,140,.1), inset 0 3px 0 rgba(255,255,255,.8), 0 3px 7px rgba(40,110,140,.12);}
+.tile{--side:48px;width:var(--side);height:var(--side);font-size:calc(var(--side)*0.58);}
+.seq[data-n="4"]{--avail:calc((100vw - 64px)/4);}
+.seq[data-n="5"]{--avail:calc((100vw - 76px)/5);}
+.seq[data-n="6"]{--avail:calc((100vw - 84px)/6);}
+.seq[data-n="7"]{--avail:calc((100vw - 90px)/7);}
+.seq[data-n="8"]{--avail:calc((100vw - 96px)/8);}
+.seq[data-n="9"]{--avail:calc((100vw - 100px)/9);}
+.seq[data-n="4"] .tile{--side:min(62px,var(--avail));}
+.seq[data-n="5"] .tile{--side:min(60px,var(--avail));}
+.seq[data-n="6"] .tile{--side:min(54px,var(--avail));}
+.seq[data-n="7"] .tile{--side:min(48px,var(--avail));}
+.seq[data-n="8"] .tile{--side:min(42px,var(--avail));}
+.seq[data-n="9"] .tile{--side:min(38px,var(--avail));}
+.glyph{line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:transform .25s var(--spring);}
 
-  /* ドット絵（かずパターン用） */
-  .dotgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:3px;
-    width:74%; height:74%; align-items:center; justify-items:center;}
-  .seq[data-n="6"] .dotgrid,.seq[data-n="7"] .dotgrid,.seq[data-n="8"] .dotgrid,.seq[data-n="9"] .dotgrid{gap:2px;}
-  .dot{width:100%; aspect-ratio:1; border-radius:50%; background:var(--c-blue);
-    box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
-  .dot.off{background:transparent; box-shadow:none;}
+/* clay token shapes */
+.shp{display:inline-block;width:1em;height:1em;
+  box-shadow:inset 0 -0.14em 0 rgba(0,0,0,.16), inset 0 0.1em 0 rgba(255,255,255,.45);
+  filter:drop-shadow(0 0.05em 0.05em rgba(0,0,0,.18));}
+.shp.circle{border-radius:50%;width:.92em;height:.92em;}
+.shp.s-star{clip-path:polygon(50% 2%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.shp.s-diamond{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);}
+.shp.s-triangle{clip-path:polygon(50% 6%,94% 92%,6% 92%);}
+.shp.s-pentagon{clip-path:polygon(50% 0,98% 38%,80% 100%,20% 100%,2% 38%);}
+.shp.s-hexagon{clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);}
+.shp.s-plus{clip-path:polygon(36% 0,64% 0,64% 36%,100% 36%,100% 64%,64% 64%,64% 100%,36% 100%,36% 64%,0 64%,0 36%,36% 36%);}
+.shp.arrow{clip-path:polygon(50% 0,100% 52%,72% 52%,72% 100%,28% 100%,28% 52%,0 52%);width:.9em;height:.9em;}
 
-  /* やじるし（むき回転用）— 絵文字を回す */
-  .arrow{display:inline-block;}
+/* qmark tile */
+.tile.qmark{background:linear-gradient(160deg,var(--accent-l),#fff);color:var(--accent-d);font-family:'Mochiy Pop One';
+  box-shadow:inset 0 0 0 4px var(--accent), 0 4px 12px rgba(47,166,204,.35);animation:qpulse 1.1s var(--ease) infinite;}
+@keyframes qpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.tile.qmark.solved{animation:none;background:var(--cream);color:var(--ink);
+  box-shadow:inset 0 -5px 0 rgba(40,110,140,.1), inset 0 3px 0 rgba(255,255,255,.8), 0 3px 7px rgba(40,110,140,.12);}
+.tile.reveal .glyph{animation:flip-in .5s var(--spring);}
+@keyframes flip-in{0%{transform:rotateY(90deg) scale(.5);}60%{transform:rotateY(0) scale(1.2);}100%{transform:scale(1);}}
 
-  /* こたえ つなぎ */
-  .ask{font-family:'Mochiy Pop One'; font-size:20px; color:var(--accent-d);
-    text-align:center; margin:2px 0 8px;}
+/* dots */
+.dotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:74%;height:74%;align-items:center;justify-items:center;}
+.seq[data-n="6"] .dotgrid,.seq[data-n="7"] .dotgrid,.seq[data-n="8"] .dotgrid,.seq[data-n="9"] .dotgrid{gap:2px;}
+.dot{width:100%;aspect-ratio:1;border-radius:50%;background:var(--accent-d);box-shadow:inset 0 -2px 0 rgba(0,0,0,.18);}
+.dot.off{background:transparent;box-shadow:none;}
 
-  /* せんたくし */
-  .choices{display:flex; gap:14px; justify-content:center; align-items:stretch;
-    margin-top:6px; width:100%;}
-  .choice{
-    flex:1 1 0; max-width:118px; aspect-ratio:1;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--paper); border-radius:22px; font-size:44px;
-    box-shadow:0 6px 0 var(--line), 0 10px 18px rgba(120,160,180,.22);
-    transition:transform .12s var(--spring), box-shadow .12s var(--ease), filter .15s;
-    -webkit-tap-highlight-color:transparent;
-  }
-  .choice:active{transform:translateY(5px); box-shadow:0 1px 0 var(--line);}
-  .choice.wrong{animation:wrongflash .4s; }
-  @keyframes wrongflash{0%,100%{background:var(--paper);}40%{background:#ffd6d6;}}
-  .choice.correctpick{background:#d7f7e0; box-shadow:0 6px 0 var(--c-green-d),0 10px 18px rgba(120,160,180,.22);}
-  .choice.locked{pointer-events:none;}
-  .choice .glyph{line-height:1;}
-  .choice .dotgrid{width:64%; height:64%;}
+.ask{font-family:'Mochiy Pop One';font-size:18px;color:var(--accent-d);text-align:center;margin:2px 0 10px;
+  display:flex;align-items:center;gap:8px;justify-content:center;}
+.ask .ar{width:16px;height:16px;background:var(--accent-d);
+  clip-path:polygon(50% 100%,0 38%,30% 38%,30% 0,70% 0,70% 38%,100% 38%);}
 
-  /* せんたくし内の数ドットは少し小さめ */
-  .choice .dot{box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);}
+/* choices */
+.choices{display:flex;gap:14px;justify-content:center;align-items:stretch;margin-top:6px;width:100%;}
+.choice{flex:1 1 0;max-width:120px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  background:var(--paper);border:none;cursor:pointer;border-radius:24px;font-size:46px;
+  box-shadow:0 7px 0 #cfe6ef, 0 12px 20px rgba(60,130,160,.22), inset 0 2px 0 #fff;
+  transition:transform .12s var(--spring), box-shadow .12s var(--ease);}
+.choice:active{transform:translateY(5px);box-shadow:0 2px 0 #cfe6ef;}
+.choice.wrong{animation:wrongflash .4s;}
+@keyframes wrongflash{0%,100%{background:var(--paper);}40%{background:#ffd6d6;}}
+.choice.correctpick{background:#d7f7e0;box-shadow:0 7px 0 var(--green-d), 0 12px 20px rgba(60,130,160,.22), inset 0 2px 0 #fff;}
+.choice.locked{pointer-events:none;}
+.choice .glyph{line-height:1;}
+.choice .dotgrid{width:60%;height:60%;}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(8px);z-index:45;opacity:0;
+  background:#22506b;color:#fff;font-weight:800;font-size:14px;padding:10px 20px;border-radius:999px;
+  box-shadow:0 8px 18px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* modal */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(20,60,80,.4);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,#eef8fc);border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(30,90,120,.5), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:116px;margin:-24px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(40,100,130,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin:4px 0 8px;}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg p .flame{background:var(--honey);vertical-align:-2px;display:inline-block;margin:0 1px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:#dbeef6;color:var(--accent-d);box-shadow:0 4px 0 #bcdfec;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.06s}.enter.d2{animation-delay:.12s}.enter.d3{animation-delay:.18s}
+.enter.d4{animation-delay:.24s}.enter.d5{animation-delay:.30s}.enter.d6{animation-delay:.36s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ .enter{opacity:1;transform:none;animation:none;} .tile.qmark{animation:none;} }
 </style>
 </head>
 <body>
 
-<div class="topbar safe-top" id="topbar"></div>
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/green_face.png" alt="">きまり あそび</div>
+</div>
 
 <div class="wrap">
   <div class="statusbar enter">
-    <span class="score-pill" id="scorePill">⭐ 0もん</span>
-    <span class="streak-pill" id="streakPill">🔥 0</span>
-    <span class="best-pill" id="bestPill">🏆 0</span>
+    <span class="pill" id="scorePill"><span class="cstar"></span>0もん</span>
+    <span class="pill streak" id="streakPill"><span class="flame"></span>0</span>
+    <span class="pill best" id="bestPill"><span class="cstar"></span>0</span>
   </div>
 
-  <div class="hint enter d1" id="hint">つぎは なにかな？ 🤔</div>
+  <div class="hint enter d1" id="hint">つぎは なにかな？</div>
 
   <div class="seq-card enter d2">
     <div class="seq" id="seq"></div>
   </div>
 
-  <div class="ask enter d3">⬇ どれかな？ ⬇</div>
+  <div class="ask enter d3"><span class="ar"></span> どれかな？ <span class="ar"></span></div>
 
   <div class="choices enter d4" id="choices"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" id="ovlUni" src="../assets/uni/green_standing.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlNext">つぎへ</button>
+    </div>
+  </div>
 </div>
 
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
-<script src="../assets/shell.js"></script>
 <script>
-/* ====== きまり あそび（パターン推理） ====== */
-const save = Save.game('kimari');
+/* ====== きまり あそび（パターン推理）— ロジックは原版踏襲・図柄をCSS図形化 ====== */
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+const save = (window.Save&&Save.game)?Save.game('kimari'):{get:(k,d)=>d,set:()=>{},bestMax:()=>{}};
+
 const seqEl = document.getElementById('seq');
 const choicesEl = document.getElementById('choices');
 const hintEl = document.getElementById('hint');
 const scorePill = document.getElementById('scorePill');
 const streakPill = document.getElementById('streakPill');
 const bestPill = document.getElementById('bestPill');
+const toastEl = document.getElementById('toast');
 
-/* ヘッダー */
-document.getElementById('topbar').replaceWith(
-  App.topbar({ title:'きまり あそび', back:'../index.html' })
-);
-
-/* 進捗（累計せいかい数・最高れんぞく） */
 let total = save.get('cleared', 0);
 let streak = 0;
 let best = save.get('best', 0);
-let qIndex = 0;        // 出した問題数（難易度に使う）
-let current = null;    // 今の問題
+let qIndex = 0;
+let current = null;
 let locked = false;
-
 renderStatus();
 
 function renderStatus(){
-  scorePill.textContent = '⭐ ' + total + 'もん';
-  streakPill.textContent = '🔥 ' + streak;
-  bestPill.textContent = '🏆 ' + best;
+  scorePill.innerHTML = '<span class="cstar"></span>' + total + 'もん';
+  streakPill.innerHTML = '<span class="flame"></span>' + streak;
+  bestPill.innerHTML = '<span class="cstar"></span>' + best;
 }
+function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>toastEl.classList.remove('show'),1700); }
 
-/* ---------- パーツ表現（すべて絵文字・図形・ドット。文字は使わない） ---------- */
-// 色つき丸（色の交互・くりかえし用）。色だけでなく形/顔でも区別がつくよう絵文字を使う
-const COLOR_TOKENS = ['🔴','🔵','🟡','🟢','🟣','🟠'];
-const SHAPE_TOKENS = ['🐶','🐱','🐰','🐸','🐥','🐼','🦊','🐻'];
-const FRUIT_TOKENS = ['🍎','🍌','🍇','🍊','🍓','🍑'];
-// むき（回転）：上→右→下→左 のくりかえし
-const ARROW_TOKENS = ['⬆️','➡️','⬇️','⬅️'];
+/* ---------- トークン定義（すべてCSS図形・絵文字なし） ---------- */
+const CPAL = ['#ff6b6b','#5cc8e8','#ffce2e','#5fcf80','#b07bff','#ff9f43'];
+const SHAPES = ['s-star','s-diamond','s-triangle','s-pentagon','s-hexagon','s-plus'];
+const SCOL   = ['#ff7a6b','#5cc8e8','#ffd23f','#5fcf80','#b07bff','#ff9f43'];
+function colForShape(s){ return SCOL[SHAPES.indexOf(s)] || '#5cc8e8'; }
 
-/* 表示要素を作る。tokenの種類で出し分け */
+const COLOR_TOKENS = CPAL.map(c=>({c}));
+const SHAPE_TOKENS = SHAPES.map(s=>({shape:s, c:colForShape(s)}));
+const FRUIT_TOKENS = SHAPE_TOKENS;                 // 2ファミリー運用（色・形）
+const ARROW_TOKENS = [0,1,2,3].map(a=>({arrow:a}));
+
+/* 図柄を作る */
 function makeGlyph(token){
-  // ドット数（かずパターン）は {dots:n} で渡す
-  if (token && token.dots != null){
-    return makeDotGrid(token.dots);
+  if (token && token.dots != null) return makeDotGrid(token.dots);
+  const g = document.createElement('span'); g.className = 'glyph';
+  if (token && token.arrow != null){
+    const s=document.createElement('span'); s.className='shp arrow';
+    s.style.background='var(--accent-d)';
+    s.style.transform='rotate('+(token.arrow*90)+'deg)';
+    g.appendChild(s); return g;
   }
-  // 大きさ交互は {big:bool, emo:'⭐'}
-  if (token && token.emo != null){
-    const g = document.createElement('span');
-    g.className = 'glyph';
-    g.textContent = token.emo;
-    g.style.fontSize = token.big ? '1em' : '0.55em';
-    return g;
+  if (token && token.emo != null){                 // size token: emo=shape名
+    const s=document.createElement('span'); s.className='shp '+token.emo;
+    s.style.background=colForShape(token.emo);
+    s.style.width = token.big ? '1em':'0.56em';
+    s.style.height = token.big ? '1em':'0.56em';
+    g.appendChild(s); return g;
   }
-  const g = document.createElement('span');
-  g.className = 'glyph';
-  g.textContent = token;
-  return g;
+  if (token && token.shape != null){
+    const s=document.createElement('span'); s.className='shp '+token.shape;
+    s.style.background=token.c; g.appendChild(s); return g;
+  }
+  // color circle
+  const s=document.createElement('span'); s.className='shp circle';
+  s.style.background=(token&&token.c)||'#5cc8e8'; g.appendChild(s); return g;
 }
 
 function makeDotGrid(n){
-  // 1..6 のドットを 3x2 グリッドで決まった位置に置く
-  const grid = document.createElement('div');
-  grid.className = 'dotgrid';
-  // 各個数の点灯パターン（位置固定で見やすく）
-  const PATTERNS = {
-    1:[4], 2:[0,5], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8]
-  };
+  const grid = document.createElement('div'); grid.className = 'dotgrid';
+  const PATTERNS = {1:[4],2:[0,5],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
   const on = new Set(PATTERNS[n] || []);
-  for (let i=0;i<9;i++){
-    const d = document.createElement('div');
-    d.className = 'dot' + (on.has(i) ? '' : ' off');
-    grid.appendChild(d);
-  }
+  for (let i=0;i<9;i++){ const d=document.createElement('div'); d.className='dot'+(on.has(i)?'':' off'); grid.appendChild(d); }
   return grid;
 }
 
-/* tokenの「同じか」判定（選択肢の重複チェック・正解判定に使う） */
 function tokenKey(t){
   if (t && t.dots != null) return 'dots:' + t.dots;
+  if (t && t.arrow != null) return 'ar:' + t.arrow;
   if (t && t.emo != null) return 'emo:' + t.emo + ':' + (t.big?'B':'s');
-  return 'g:' + t;
+  if (t && t.shape != null) return 'sh:' + t.shape;
+  if (t && t.c != null) return 'c:' + t.c;
+  return 'g:' + JSON.stringify(t);
 }
 
-/* ---------- パターン・ジェネレータ ----------
-   各 generator は {seq:[...tokens...], answer:token, distractors:[...]} を返す。
-   seq は ？ を除いた「見える並び」。answer が正解、distractors が誤答候補（多めに）。 */
-
+/* ---------- ジェネレータ（原版そのまま） ---------- */
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-
-/* 共通：くりかえし単位 unit[] から len 個ぶんの列とこたえを作る。
-   こたえ＝列の次（位置 len）。誤答は unit 内の他要素＋tokens の他の絵柄。 */
 function fromUnit(unit, len, tokens){
   const seq = [];
   for(let i=0;i<len;i++) seq.push(unit[i%unit.length]);
   const answer = unit[len%unit.length];
-  // 紛らわしい誤答：unit 内の他のコマ（＝「同じ並びの別の位置」のもの）を最優先
   const ansKey = tokenKey(answer);
   const dist = [];
   unit.forEach(u=>{ if (tokenKey(u)!==ansKey) dist.push(u); });
   (tokens||[]).forEach(t=>dist.push(t));
   return { seq, answer, distractors: dist };
 }
-
-// A) AB くりかえし
-function genAlt(tokens, len){
-  const set = shuffle(tokens).slice(0,2);
-  return fromUnit([set[0],set[1]], len, tokens);
-}
-
-// B) AABB のくりかえし
-function genAABB(tokens, len){
-  const set = shuffle(tokens).slice(0,2);
-  return fromUnit([set[0],set[0],set[1],set[1]], len, tokens);
-}
-
-// B2) AAB のくりかえし
-function genAAB(tokens, len){
-  const set = shuffle(tokens).slice(0,2);
-  return fromUnit([set[0],set[0],set[1]], len, tokens);
-}
-
-// B3) ABB のくりかえし
-function genABB(tokens, len){
-  const set = shuffle(tokens).slice(0,2);
-  return fromUnit([set[0],set[1],set[1]], len, tokens);
-}
-
-// C) ABC くりかえし
-function genABC(tokens, len){
-  const set = shuffle(tokens).slice(0,3);
-  return fromUnit([set[0],set[1],set[2]], len, tokens);
-}
-
-// C2) ABCD くりかえし
-function genABCD(tokens, len){
-  const set = shuffle(tokens).slice(0,4);
-  return fromUnit([set[0],set[1],set[2],set[3]], len, tokens);
-}
-
-// D) かず（ドット）等差：step は +1/+2/-1。列＋こたえ が必ず 1..6 に収まる start を選ぶ。
+function genAlt(tokens, len){ const set=shuffle(tokens).slice(0,2); return fromUnit([set[0],set[1]],len,tokens); }
+function genAABB(tokens, len){ const set=shuffle(tokens).slice(0,2); return fromUnit([set[0],set[0],set[1],set[1]],len,tokens); }
+function genAAB(tokens, len){ const set=shuffle(tokens).slice(0,2); return fromUnit([set[0],set[0],set[1]],len,tokens); }
+function genABB(tokens, len){ const set=shuffle(tokens).slice(0,2); return fromUnit([set[0],set[1],set[1]],len,tokens); }
+function genABC(tokens, len){ const set=shuffle(tokens).slice(0,3); return fromUnit([set[0],set[1],set[2]],len,tokens); }
+function genABCD(tokens, len){ const set=shuffle(tokens).slice(0,4); return fromUnit([set[0],set[1],set[2],set[3]],len,tokens); }
 function genCount(len, step){
   step = step || 1;
-  // 値の系列 v(i)=start+step*i を i=0..len まで（こたえ含む len+1 個）すべて 1..6 に。
-  const lo = [], hi = [];
-  for(let i=0;i<=len;i++){ lo.push(step*i); hi.push(step*i); }
-  // start の取りうる範囲：1<=start+step*i<=6 すべて満たす
   let smin=1, smax=6;
-  for(let i=0;i<=len;i++){
-    smin = Math.max(smin, 1 - step*i);
-    smax = Math.min(smax, 6 - step*i);
-  }
-  if (smin > smax){ // 念のため：レンジが取れなければ +1 に退避
-    return genCount(Math.min(len,4), 1);
-  }
+  for(let i=0;i<=len;i++){ smin=Math.max(smin,1-step*i); smax=Math.min(smax,6-step*i); }
+  if (smin > smax){ return genCount(Math.min(len,4), 1); }
   const start = smin + Math.floor(Math.random()*(smax-smin+1));
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push({dots: start+step*i});
-  const answer = {dots: start+step*len};
-  // 誤答：隣の数を優先（紛らわしく）、続いて 1..6 の残り
-  const cand = [];
-  [answer.dots-1, answer.dots+1, answer.dots-2, answer.dots+2].forEach(d=>{
-    if (d>=1 && d<=6 && d!==answer.dots) cand.push({dots:d});
-  });
-  for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
+  const seq=[]; for(let i=0;i<len;i++) seq.push({dots:start+step*i});
+  const answer={dots:start+step*len};
+  const cand=[];
+  [answer.dots-1,answer.dots+1,answer.dots-2,answer.dots+2].forEach(d=>{ if(d>=1&&d<=6&&d!==answer.dots) cand.push({dots:d}); });
+  for(let d=1;d<=6;d++) if(d!==answer.dots) cand.push({dots:d});
   return { seq, answer, distractors: cand };
 }
-
-// D2) かず やまがた（増えて減る）：1,2,3,2,1.. のような山をくりかえす。次の値を当てる。
 function genCountMountain(){
-  const peak = 3 + Math.floor(Math.random()*2);   // 山のてっぺん 3..4（周期を短くして列に収める）
-  // 周期：1,2,..,peak,peak-1,..,2（端の1は次周期の頭と重複しないよう片側だけ）
-  const up = []; for(let v=1; v<=peak; v++) up.push(v);
-  const down = []; for(let v=peak-1; v>=2; v--) down.push(v);
-  const unit = up.concat(down).map(v=>({dots:v})); // peak3: 1,2,3,2(周期4) / peak4: 1,2,3,4,3,2(周期6)
-  const len = 6 + Math.floor(Math.random()*2);     // 見える列 6..7（山を1周以上は見せる）
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push(unit[i%unit.length]);
-  const answer = unit[len%unit.length];
-  const cand = [];
-  [answer.dots-1, answer.dots+1].forEach(d=>{ if(d>=1&&d<=6&&d!==answer.dots) cand.push({dots:d}); });
-  for(let d=1; d<=6; d++) if (d !== answer.dots) cand.push({dots:d});
+  const peak=3+Math.floor(Math.random()*2);
+  const up=[]; for(let v=1;v<=peak;v++) up.push(v);
+  const down=[]; for(let v=peak-1;v>=2;v--) down.push(v);
+  const unit=up.concat(down).map(v=>({dots:v}));
+  const len=6+Math.floor(Math.random()*2);
+  const seq=[]; for(let i=0;i<len;i++) seq.push(unit[i%unit.length]);
+  const answer=unit[len%unit.length];
+  const cand=[];
+  [answer.dots-1,answer.dots+1].forEach(d=>{ if(d>=1&&d<=6&&d!==answer.dots) cand.push({dots:d}); });
+  for(let d=1;d<=6;d++) if(d!==answer.dots) cand.push({dots:d});
   return { seq, answer, distractors: cand };
 }
-
-// E) おおきさ こうご（小大小大..）
 function genSize(){
-  const all = ['⭐','❤️','🌸','🔵','🟢','🟠'];
-  const emo = pick(all);
-  const other = pick(all.filter(e=>e!==emo)); // ちがう えがら（おとり）
-  const len = 4 + Math.floor(Math.random()*3);  // 4..6
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push({emo, big: i%2===1}); // 小,大,小,大..
-  const big = len%2===1;
-  const answer = {emo, big};
-  // 誤答1：おなじ えがらで 反対の おおきさ／誤答2：ちがう えがらで 正しい おおきさ
-  const distractors = [{emo, big: !big}, {emo: other, big}, {emo: other, big: !big}];
+  const all=SHAPES;
+  const emo=pick(all); const other=pick(all.filter(e=>e!==emo));
+  const len=4+Math.floor(Math.random()*3);
+  const seq=[]; for(let i=0;i<len;i++) seq.push({emo, big:i%2===1});
+  const big=len%2===1; const answer={emo, big};
+  const distractors=[{emo,big:!big},{emo:other,big},{emo:other,big:!big}];
   return { seq, answer, distractors };
 }
-
-// E2) 2ぞくせい どうじ：えがらが回る（A→B→C）＋ おおきさも こうご（小大小大）
 function genTwoAttr(){
-  const all = ['⭐','❤️','🌸','🔵','🟢','🟠','🍎','🐱'];
-  const set = shuffle(all).slice(0,3);           // 3つの えがらを 順ぐり
-  const len = 5 + Math.floor(Math.random()*2);   // 5..6
-  const seq = [];
-  for(let i=0;i<len;i++) seq.push({emo:set[i%3], big: i%2===1});
-  const emo = set[len%3], big = len%2===1;
-  const answer = {emo, big};
-  // 誤答：えがら合ってる/大きさ違う、えがら違う/大きさ合ってる、両方ずれ
-  const distractors = [
-    {emo, big:!big},
-    {emo:set[(len+1)%3], big},
-    {emo:set[(len+2)%3], big:!big}
-  ];
+  const set=shuffle(SHAPES).slice(0,3);
+  const len=5+Math.floor(Math.random()*2);
+  const seq=[]; for(let i=0;i<len;i++) seq.push({emo:set[i%3], big:i%2===1});
+  const emo=set[len%3], big=len%2===1; const answer={emo,big};
+  const distractors=[{emo,big:!big},{emo:set[(len+1)%3],big},{emo:set[(len+2)%3],big:!big}];
   return { seq, answer, distractors };
 }
-
-// F) むき（やじるし）回転 上→右→下→左（or 逆回転）
 function genRotate(len){
-  const start = Math.floor(Math.random()*4);
-  const dir = Math.random()<0.5 ? 1 : 3;          // +1=右回り / +3(=-1)=左回り
-  const unit = [];
-  for(let i=0;i<4;i++) unit.push(ARROW_TOKENS[(start+dir*i)%4]);
+  const start=Math.floor(Math.random()*4);
+  const dir=Math.random()<0.5?1:3;
+  const unit=[]; for(let i=0;i<4;i++) unit.push(ARROW_TOKENS[(start+dir*i)%4]);
   return fromUnit(unit, len, ARROW_TOKENS);
 }
-
-// G) とばし（A_A_A_ ）：ぐうすうの位置はいつも A で固定、きすうの位置は B→C→D と回る。
-//    例 🐶🍎🐶🍌🐶🍇 → つぎ(7番目=偶数位置)は 🐶。規則「ひとつおきに同じ」を読み取らせる。
 function genSkip(tokens, len){
-  const pool = shuffle(tokens);
-  const A = pool[0];                       // 固定で出る方
-  const others = pool.slice(1, 1+3);       // 間に回る 3つ（最低3種ある前提：各 TOKENS は6種）
-  const unit = [A, others[0], A, others[1], A, others[2]]; // 周期6：A _ A _ A _
+  const pool=shuffle(tokens);
+  const A=pool[0]; const others=pool.slice(1,1+3);
+  const unit=[A,others[0],A,others[1],A,others[2]];
   return fromUnit(unit, len, tokens);
 }
-
-/* 難易度に応じて出題を選ぶ。難易度カーブは急め：
-   さいしょの2問だけ軽いウォームアップ。そのあとは種類・列の長さ・紛らわしさを段階的に強める。
-   各 tier は使える gen と「列の長さ候補(len)」を持つ。エンドレスで、後半ほど難しくなる。 */
-const TOK = ()=>pick([COLOR_TOKENS, SHAPE_TOKENS, FRUIT_TOKENS]);
-
-// gen 名 → 実体。len を受けるものと受けないものがある。
+const TOK = ()=>pick([COLOR_TOKENS, SHAPE_TOKENS]);
 function runGen(name, len){
   switch(name){
-    case 'alt':    return genAlt(TOK(), len);
-    case 'aabb':   return genAABB(TOK(), len);
-    case 'aab':    return genAAB(TOK(), len);
-    case 'abb':    return genABB(TOK(), len);
-    case 'abc':    return genABC(TOK(), len);
-    case 'abcd':   return genABCD(TOK(), len);
-    case 'skip':   return genSkip(TOK(), len);
-    case 'rotate': return genRotate(len);
-    case 'count1': return genCount(len, 1);
-    case 'count2': return genCount(len, 2);
-    case 'countm1':return genCount(len, -1);
-    case 'mountain':return genCountMountain();
-    case 'size':   return genSize();
-    case 'twoattr':return genTwoAttr();
-    default:       return genAlt(TOK(), len);
+    case 'alt':return genAlt(TOK(),len); case 'aabb':return genAABB(TOK(),len);
+    case 'aab':return genAAB(TOK(),len); case 'abb':return genABB(TOK(),len);
+    case 'abc':return genABC(TOK(),len); case 'abcd':return genABCD(TOK(),len);
+    case 'skip':return genSkip(TOK(),len); case 'rotate':return genRotate(len);
+    case 'count1':return genCount(len,1); case 'count2':return genCount(len,2);
+    case 'countm1':return genCount(len,-1); case 'mountain':return genCountMountain();
+    case 'size':return genSize(); case 'twoattr':return genTwoAttr();
+    default:return genAlt(TOK(),len);
   }
 }
-
-// tier 定義（idx の境界・使える gen・len 候補）。あとの tier ほど難しい gen と長い len。
-const TIERS = [
-  // ウォームアップ（最初の2問）：超やさしい AB交互・短い
-  { until:2,        gens:['alt','rotate'],                                  lens:[4] },
-  // 立ち上がり：交互/くりかえし/かず増加・少し長く
-  { until:5,        gens:['alt','aabb','count1','rotate'],                  lens:[5,6] },
-  // 中盤：3種くりかえし・AAB/ABB・かず±2や-1・おおきさ
+const TIERS=[
+  { until:2,        gens:['alt','rotate'], lens:[4] },
+  { until:5,        gens:['alt','aabb','count1','rotate'], lens:[5,6] },
   { until:9,        gens:['abc','aab','abb','count1','count2','countm1','rotate','size'], lens:[6,7] },
-  // 中盤後半：ABCD・とばし・山型・2属性 が登場、列さらに長く
   { until:14,       gens:['abc','abcd','aabb','skip','count2','countm1','mountain','twoattr','size','rotate'], lens:[7,8] },
-  // 終盤（エンドレス）：難しい gen 中心・最長列・紛らわしさ最大
   { until:Infinity, gens:['abcd','skip','abc','mountain','twoattr','count2','countm1','aabb','size','rotate'], lens:[8] }
 ];
-
 function buildProblem(idx, depth){
-  depth = depth || 0;
-  const tier = TIERS.find(t=>idx < t.until) || TIERS[TIERS.length-1];
-  const name = pick(tier.gens);
-  const len = pick(tier.lens);
-  const raw = runGen(name, len);
+  depth=depth||0;
+  const tier=TIERS.find(t=>idx<t.until)||TIERS[TIERS.length-1];
+  const raw=runGen(pick(tier.gens), pick(tier.lens));
   return finalizeProblem(raw, depth);
 }
-
-/* 3択を作る：正解1＋誤答2。重複ゼロ・正解はちょうど1つ になるよう検証 */
 function finalizeProblem(raw, depth){
-  depth = depth || 0;
-  const ansKey = tokenKey(raw.answer);
-  // 誤答候補から「正解と違うキー」だけ集めて重複排除
-  const seen = new Set([ansKey]);
-  const distinct = [];
-  shuffle(raw.distractors).forEach(d=>{
-    const k = tokenKey(d);
-    if (!seen.has(k)){ seen.add(k); distinct.push(d); }
-  });
-  // 足りない場合の保険：かず問題はドット、それ以外は絵柄でうめる（種類が混ざりにくいよう）
+  depth=depth||0;
+  const ansKey=tokenKey(raw.answer);
+  const seen=new Set([ansKey]); const distinct=[];
+  shuffle(raw.distractors).forEach(d=>{ const k=tokenKey(d); if(!seen.has(k)){ seen.add(k); distinct.push(d); } });
   let FALLBACK;
-  if (raw.answer && raw.answer.dots != null){
-    FALLBACK = [1,2,3,4,5,6].map(d=>({dots:d}));
-  } else {
-    FALLBACK = COLOR_TOKENS.concat(SHAPE_TOKENS, FRUIT_TOKENS);
-  }
-  let fi = 0;
-  while (distinct.length < 2 && fi < FALLBACK.length){
-    const d = FALLBACK[fi++]; const k = tokenKey(d);
-    if (!seen.has(k)){ seen.add(k); distinct.push(d); }
-  }
-  // それでも足りない（理論上ありえない）場合は作り直し
-  if (distinct.length < 2 && depth < 8){
-    return buildProblem(qIndex, depth+1);
-  }
-  const choices = shuffle([raw.answer, distinct[0], distinct[1]]);
-  // 検証：3択そろっていて 正解キーがちょうど1つ・重複なし
-  const keys = choices.map(tokenKey);
-  const correctCount = keys.filter(k=>k===ansKey).length;
-  const allDefined = choices.every(c=>c != null);
-  const noDup = new Set(keys).size === keys.length;
-  if (choices.length !== 3 || correctCount !== 1 || !allDefined || !noDup){
-    // 生成が崩れたら作り直し（極めて稀）。再帰の暴走を防ぐため上限つき。
-    if (depth < 8) return buildProblem(qIndex, depth+1);
-  }
+  if (raw.answer && raw.answer.dots != null){ FALLBACK=[1,2,3,4,5,6].map(d=>({dots:d})); }
+  else { FALLBACK=COLOR_TOKENS.concat(SHAPE_TOKENS); }
+  let fi=0;
+  while (distinct.length<2 && fi<FALLBACK.length){ const d=FALLBACK[fi++]; const k=tokenKey(d); if(!seen.has(k)){ seen.add(k); distinct.push(d); } }
+  if (distinct.length<2 && depth<8) return buildProblem(qIndex, depth+1);
+  const choices=shuffle([raw.answer, distinct[0], distinct[1]]);
+  const keys=choices.map(tokenKey);
+  const correctCount=keys.filter(k=>k===ansKey).length;
+  const allDefined=choices.every(c=>c!=null);
+  const noDup=new Set(keys).size===keys.length;
+  if (choices.length!==3 || correctCount!==1 || !allDefined || !noDup){ if(depth<8) return buildProblem(qIndex, depth+1); }
   return { seq: raw.seq, answer: raw.answer, ansKey, choices };
 }
 
 /* ---------- 描画 ---------- */
 function renderProblem(p){
-  // ならび（？を末尾に）
-  const n = p.seq.length + 1;
-  seqEl.dataset.n = Math.min(9, n);
-  seqEl.innerHTML = '';
-  p.seq.forEach((tok,i)=>{
-    const t = document.createElement('div');
-    t.className = 'tile enter d' + (Math.min(6,i+1));
-    t.appendChild(makeGlyph(tok));
-    seqEl.appendChild(t);
-  });
-  const q = document.createElement('div');
-  q.className = 'tile qmark enter d' + Math.min(6, p.seq.length+1);
-  q.textContent = '？';
-  q.id = 'qtile';
-  seqEl.appendChild(q);
-
-  // せんたくし
-  choicesEl.innerHTML = '';
-  p.choices.forEach((tok,i)=>{
-    const c = document.createElement('button');
-    c.className = 'choice enter d' + (i+1);
-    c.appendChild(makeGlyph(tok));
-    c.addEventListener('pointerdown', ()=>onPick(c, tok), {passive:true});
-    choicesEl.appendChild(c);
-  });
-  hintEl.textContent = 'つぎは なにかな？ 🤔';
+  const n=p.seq.length+1;
+  seqEl.dataset.n=Math.min(9,n);
+  seqEl.innerHTML='';
+  p.seq.forEach((tok,i)=>{ const t=document.createElement('div'); t.className='tile enter d'+(Math.min(6,i+1)); t.appendChild(makeGlyph(tok)); seqEl.appendChild(t); });
+  const q=document.createElement('div'); q.className='tile qmark enter d'+Math.min(6,p.seq.length+1); q.textContent='？'; q.id='qtile'; seqEl.appendChild(q);
+  choicesEl.innerHTML='';
+  p.choices.forEach((tok,i)=>{ const c=document.createElement('button'); c.className='choice enter d'+(i+1); c.appendChild(makeGlyph(tok));
+    c.addEventListener('pointerdown', ()=>onPick(c, tok), {passive:true}); choicesEl.appendChild(c); });
+  hintEl.textContent='つぎは なにかな？';
 }
-
-function nextProblem(){
-  locked = false;
-  current = buildProblem(qIndex);
-  renderProblem(current);
-}
+function nextProblem(){ locked=false; current=buildProblem(qIndex); renderProblem(current); }
 
 /* ---------- こたえる ---------- */
 function onPick(btn, tok){
   if (locked) return;
-  Sfx.tap();
-  if (tokenKey(tok) === current.ansKey){
-    correctAnswer(btn, tok);
-  } else {
-    wrongAnswer(btn);
-  }
+  sfx('tap');
+  if (tokenKey(tok)===current.ansKey) correctAnswer(btn, tok); else wrongAnswer(btn);
 }
-
 function correctAnswer(btn, tok){
-  locked = true;
+  locked=true;
   [...choicesEl.children].forEach(c=>c.classList.add('locked'));
   btn.classList.add('correctpick');
-  Sfx.ding(); Sfx.success();
-  App.buzz(16);
-
-  // ？タイルを正解に差し替え
-  const q = document.getElementById('qtile');
-  if (q){
-    q.classList.add('solved','reveal');
-    q.textContent = '';
-    q.appendChild(makeGlyph(tok));
-  }
-
-  // エフェクト（押した選択肢の位置で）
-  const r = btn.getBoundingClientRect();
-  FX.sparkles(r.left+r.width/2, r.top+r.height/2, {count:12, color:'#ffd23f'});
-  FX.burst(r.left+r.width/2, r.top+r.height/2, {count:16});
-  FX.floatEmoji(r.left+r.width/2, r.top, pick(['🎉','✨','💮','🌟']));
-
-  // スコア更新
+  sfx('ding'); sfx('success'); buzz(16);
+  const q=document.getElementById('qtile');
+  if (q){ q.classList.add('solved','reveal'); q.textContent=''; q.appendChild(makeGlyph(tok)); }
+  const r=btn.getBoundingClientRect();
+  fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:12, color:'#ffd23f'});
+  fx('burst', r.left+r.width/2, r.top+r.height/2, {count:16});
   total++; streak++;
-  if (streak > best){ best = streak; save.bestMax('best', best); }
+  if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
   renderStatus();
-  streakPill.classList.add('bump');
-  setTimeout(()=>streakPill.classList.remove('bump'), 220);
-
-  hintEl.textContent = pick(['せいかい！ 🎉','できた！ ✨','すごい！ 👏','ばっちり！ 🌟']);
-
+  streakPill.classList.add('bump'); setTimeout(()=>streakPill.classList.remove('bump'),220);
+  hintEl.textContent=pick(['せいかい！','できた！','すごい！','ばっちり！']);
   qIndex++;
-
-  // 5もんごとに ごほうび
-  if (total % 5 === 0){
-    setTimeout(()=>milestone(), 700);
-  } else {
-    setTimeout(()=>nextProblem(), 950);
-  }
+  if (total%5===0) setTimeout(()=>milestone(),700); else setTimeout(()=>nextProblem(),950);
 }
-
 function wrongAnswer(btn){
-  // 減点しない・問題はそのまま。やさしく もういちど
-  Sfx.error();
-  App.buzz([20,30,20]);
-  btn.classList.add('wrong');
-  FX.shake(btn, 7, 320);
-  setTimeout(()=>btn.classList.remove('wrong'), 420);
-  streak = 0; renderStatus();
-  hintEl.textContent = 'もういちど！ 🤔';
-  App.toast('もういちど みてみよう 👀');
+  sfx('error'); buzz([20,30,20]);
+  btn.classList.add('wrong'); fx('shake', btn, 7, 320);
+  setTimeout(()=>btn.classList.remove('wrong'),420);
+  streak=0; renderStatus();
+  hintEl.textContent='もういちど！';
+  toast('もういちど みてみよう');
 }
 
+/* ---------- ごほうび ---------- */
+const ovl=document.getElementById('ovl');
 function milestone(){
-  Sfx.fanfare();
-  FX.celebrate();
-  App.showModal({
-    emoji: total>=30 ? '🏆' : total>=15 ? '🌈' : '🎉',
-    title: 'すごい！ ' + total + 'もん せいかい！',
-    text: 'れんぞく さいこう 🔥' + best + '<br>この ちょうしで つづけよう！',
-    buttons:[
-      {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
-      {label:'つぎへ ▶', cls:'btn--green', onClick:()=>{ Sfx.whoosh(); nextProblem(); }}
-    ]
-  });
+  sfx('fanfare'); fx('celebrate');
+  document.getElementById('ovlUni').src = total>=15 ? '../assets/uni/purple_wave.png' : '../assets/uni/green_standing.png';
+  document.getElementById('ovlTitle').textContent = 'すごい！ ' + total + 'もん せいかい！';
+  document.getElementById('ovlText').innerHTML = 'れんぞく さいこう <span class="flame"></span>' + best + '<br>この ちょうしで つづけよう！';
+  ovl.hidden=false; requestAnimationFrame(()=>ovl.classList.add('show'));
 }
+function closeOvl(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true,250); }
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlNext').addEventListener('click', ()=>{ sfx('whoosh'); closeOvl(); nextProblem(); });
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 
 /* スタート */
 nextProblem();
