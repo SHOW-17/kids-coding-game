@@ -5,199 +5,268 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>まねっこ — あそびのもり</title>
 <meta name="description" content="ひかった じゅんばんを おぼえて まねっこ。きおくと しゅうちゅうの あそび。">
-<meta name="theme-color" content="#9165e0">
-<link rel="icon" href="../favicon.ico" sizes="any">
-<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="まねっこ">
+<meta name="theme-color" content="#9b7cf0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/arcade.css">
 <style>
-  :root{
-    --accent:#b58cff; --accent-d:#9165e0; --accent-l:#e2d2ff;
-    --bg-2:#efe3ff; --bg-3:#dcc6ff;
-  }
-  body{display:flex; flex-direction:column; align-items:center;
-       background:
-        radial-gradient(120% 80% at 15% -10%, #f6efff 0%, transparent 55%),
-        radial-gradient(120% 80% at 95% 0%, #efe3ff 0%, transparent 50%),
-        linear-gradient(180deg,#efe3ff 0%, #dcc6ff 100%);}
+:root{
+  --ink:#4a3563; --ink-soft:#7c659a; --ink-faint:#a892c4;
+  --purple:#9b7cf0; --purple-d:#7b59e0; --purple-l:#cdb8ff;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --paper:#f6efff; --paper2:#e7d8ff;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  background:
+    radial-gradient(120% 70% at 15% -8%, #fbf7ff 0%, transparent 55%),
+    radial-gradient(120% 70% at 95% 0%, #efe3ff 0%, transparent 50%),
+    linear-gradient(180deg,#f3ecff 0%, #e3d2ff 100%) fixed;
+  overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 
-  .wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; flex:1;}
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 6px;}
+.home{flex:0 0 auto;width:50px;height:50px;border:none;cursor:pointer;border-radius:18px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(123,89,224,.22), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(123,89,224,.22);}
+.home .ic{width:22px;height:22px;border:none;}
+.home .ic{background:var(--purple-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:20px;color:var(--purple-d);
+  text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(90,60,140,.3));}
 
-  /* じょうたいバー */
-  .statusbar{display:flex; gap:10px; align-items:center; margin:6px 0 4px;}
-  .round-pill{font-family:'Mochiy Pop One'; background:#fff; box-shadow:var(--sh-1);
-    padding:8px 18px; border-radius:999px; font-size:18px; color:var(--accent-d);}
-  .best-pill{font-weight:800; background:#fff7; box-shadow:var(--sh-1);
-    padding:8px 14px; border-radius:999px; font-size:14px; color:var(--ink-soft);}
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
+  display:flex;flex-direction:column;align-items:center;padding:0 16px;}
 
-  .hint{font-weight:800; font-size:17px; color:var(--ink-soft); min-height:26px;
-    text-align:center; margin:8px 0; transition:color .2s;}
-  .hint.watch{color:var(--accent-d);}
-  .hint.your{color:var(--c-green-d);}
+.statusbar{display:flex;gap:10px;align-items:center;margin:8px 0 2px;}
+.pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 18px;border-radius:999px;font-size:18px;
+  color:var(--purple-d);box-shadow:0 4px 0 rgba(123,89,224,.18), inset 0 2px 0 #fff;}
+.best-pill{display:inline-flex;align-items:center;gap:6px;font-family:'M PLUS Rounded 1c';font-weight:800;
+  font-size:14px;color:var(--ink-soft);background:#ffffffcc;padding:9px 15px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(123,89,224,.14), inset 0 2px 0 #fff;}
+.cstar{width:14px;height:14px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
 
-  /* サイモン・ダイヤル（よこ・たて どちらでも はみでない） */
-  .dial-wrap{position:relative; width:min(86vw,72vh,400px); aspect-ratio:1; margin:6px 0 4px;}
-  .dial{position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr;
-    grid-template-rows:1fr 1fr; gap:14px; border-radius:50%;
-    padding:0; transition:transform .3s var(--spring);}
-  .pad{
-    position:relative; border:none; cursor:pointer; overflow:hidden;
-    display:flex; align-items:center; justify-content:center;
-    font-size:clamp(34px,12vw,56px);
-    box-shadow:inset 0 -8px 0 rgba(0,0,0,.18), 0 6px 14px rgba(0,0,0,.15);
-    filter:brightness(.82) saturate(.9);
-    transition:filter .12s, transform .12s var(--spring);
-    -webkit-tap-highlight-color:transparent;
-  }
-  .pad:active{transform:scale(.97);}
-  .pad.tl{border-radius:100% 18px 18px 18px;}
-  .pad.tr{border-radius:18px 100% 18px 18px;}
-  .pad.bl{border-radius:18px 18px 18px 100%;}
-  .pad.br{border-radius:18px 18px 100% 18px;}
-  .pad[data-c="0"]{background:#5fcf80;}
-  .pad[data-c="1"]{background:#ff6b6b;}
-  .pad[data-c="2"]{background:#ffce2e;}
-  .pad[data-c="3"]{background:#5cc8e8;}
-  .pad .face{filter:drop-shadow(0 2px 2px rgba(0,0,0,.18)); transition:transform .15s var(--spring);}
-  /* てんとう じょうたい */
-  .pad.lit{filter:brightness(1.35) saturate(1.2); box-shadow:inset 0 -8px 0 rgba(255,255,255,.25),
-    0 0 40px rgba(255,255,255,.7), 0 6px 14px rgba(0,0,0,.15);}
-  .pad.lit .face{transform:scale(1.25) translateY(-2px);}
-  .dial.locked .pad{cursor:default;}
+.hint{font-weight:800;font-size:17px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px 0;
+  transition:color .2s;}
+.hint.watch{color:var(--purple-d);}
+.hint.your{color:var(--green-d);}
 
-  /* ちゅうおう ハブ */
-  .hub{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:30%; aspect-ratio:1; border-radius:50%; background:var(--cream);
-    box-shadow:0 6px 0 #d9c8ee, inset 0 0 0 6px #fff;
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
-    z-index:5; font-family:'Mochiy Pop One'; color:var(--accent-d);}
-  .hub .big{font-size:clamp(28px,9vw,40px); line-height:1;}
-  .hub .lbl{font-size:11px; color:var(--ink-faint); margin-top:2px;}
+/* ===== dial ===== */
+.dial-wrap{position:relative;width:min(86vw,64vh,400px);aspect-ratio:1;margin:6px 0 2px;}
+.dial{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  gap:16px;border-radius:50%;transition:transform .3s var(--spring);}
+.pad{position:relative;border:none;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 -10px 0 rgba(0,0,0,.16), inset 0 6px 0 rgba(255,255,255,.4), 0 8px 16px rgba(80,50,120,.2);
+  filter:brightness(.86) saturate(.92);transition:filter .12s, transform .12s var(--spring);}
+.pad:active{transform:scale(.97);}
+.pad.tl{border-radius:100% 22px 22px 22px;}
+.pad.tr{border-radius:22px 100% 22px 22px;}
+.pad.bl{border-radius:22px 22px 22px 100%;}
+.pad.br{border-radius:22px 22px 100% 22px;}
+.pad[data-c="0"]{background:#5fcf80;}
+.pad[data-c="1"]{background:#ff6b6b;}
+.pad[data-c="2"]{background:#ffce2e;}
+.pad[data-c="3"]{background:#5cc8e8;}
+.pad .sym{width:34%;height:34%;background:#fff;filter:drop-shadow(0 3px 2px rgba(0,0,0,.18));
+  transition:transform .15s var(--spring);opacity:.92;}
+.pad[data-c="0"] .sym{border-radius:50%;}
+.pad[data-c="1"] .sym{clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.pad[data-c="2"] .sym{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);}
+.pad[data-c="3"] .sym{clip-path:polygon(50% 8%,92% 88%,8% 88%);}
+.pad.lit{filter:brightness(1.32) saturate(1.2);
+  box-shadow:inset 0 -10px 0 rgba(255,255,255,.3), 0 0 44px rgba(255,255,255,.75), 0 8px 16px rgba(80,50,120,.2);}
+.pad.lit .sym{transform:scale(1.3) translateY(-2px);opacity:1;}
+.pad[data-c="3"].lit .sym{transform:scale(1.3) translateY(-1px);}
+.dial.locked .pad{cursor:default;}
 
-  /* スタートがめん オーバーレイ（ダイヤルの うえに かさねる） */
-  .startcover{position:absolute; inset:0; z-index:8; border-radius:50%;
-    background:rgba(255,255,255,.55); backdrop-filter:blur(2px);
-    display:flex; align-items:center; justify-content:center;
-    transition:opacity .3s; }
-  .startcover.hide{opacity:0; pointer-events:none;}
+/* hub */
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:31%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 50% 30%,#fff,#f3ecff);z-index:5;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  box-shadow:0 7px 0 #d2bff0, inset 0 0 0 5px #fff, 0 10px 20px rgba(90,60,140,.18);
+  transition:box-shadow .25s var(--ease);}
+.hub[data-state="watch"]{box-shadow:0 7px 0 #c4a9f0, inset 0 0 0 5px #fff, 0 0 28px rgba(155,124,240,.6);}
+.hub[data-state="your"]{box-shadow:0 7px 0 #7fd49a, inset 0 0 0 5px #fff, 0 0 28px rgba(95,207,128,.55);}
+.hub[data-state="clear"]{box-shadow:0 7px 0 #ffd98a, inset 0 0 0 5px #fff, 0 0 30px rgba(255,180,61,.6);}
+.hub[data-state="over"]{box-shadow:0 7px 0 #f0b6b6, inset 0 0 0 5px #fff, 0 0 24px rgba(255,107,107,.45);}
+.hub img{width:62%;height:62%;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(90,60,140,.3));
+  transition:transform .25s var(--spring);}
+.hub[data-state="clear"] img{transform:translateY(-2px) scale(1.06);}
+.hub[data-state="over"] img{transform:rotate(-6deg) scale(.95);}
+.hub .lbl{position:absolute;bottom:14%;font-family:'Mochiy Pop One';font-size:clamp(10px,3vw,13px);
+  color:var(--purple-d);}
 
-  /* したの コントロール */
-  .controls{display:flex; gap:14px; align-items:center; justify-content:center;
-    margin-top:14px; min-height:74px; padding-bottom:env(safe-area-inset-bottom);}
-  .peek{visibility:hidden;}
-  .peek.show{visibility:visible;}
+/* start cover */
+.startcover{position:absolute;inset:0;z-index:8;border-radius:50%;
+  background:rgba(246,239,255,.6);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;transition:opacity .3s;}
+.startcover.hide{opacity:0;pointer-events:none;}
+.btn-play{width:90px;height:90px;border:none;cursor:pointer;border-radius:50%;
+  background:linear-gradient(180deg,#75e093,var(--green));
+  box-shadow:0 8px 0 var(--green-d), inset 0 3px 0 rgba(255,255,255,.5), 0 12px 22px rgba(60,140,80,.35);
+  display:flex;align-items:center;justify-content:center;transition:transform .12s var(--ease);}
+.btn-play:active{transform:translateY(4px);box-shadow:0 4px 0 var(--green-d), inset 0 3px 0 rgba(255,255,255,.5);}
+.btn-play .tri{width:0;height:0;border-left:30px solid #fff;border-top:19px solid transparent;border-bottom:19px solid transparent;margin-left:8px;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.15));}
 
-  /* せまい たんまつ（320px くらい）でも はみでない */
-  @media (max-width:360px){
-    .round-pill{font-size:16px; padding:7px 14px;}
-    .best-pill{font-size:13px; padding:7px 11px;}
-    .hint{font-size:15px;}
-    .peek{font-size:17px; padding:0 18px;}
-  }
+/* controls */
+.controls{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:18px;min-height:64px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom));}
+.peek{visibility:hidden;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  font-family:'Mochiy Pop One';font-size:15px;color:var(--purple-d);background:#fff;
+  padding:12px 22px;border-radius:999px;box-shadow:0 5px 0 rgba(123,89,224,.2), inset 0 2px 0 #fff;
+  transition:transform .12s var(--ease);}
+.peek:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(123,89,224,.2);}
+.peek.show{visibility:visible;}
+.peek .eye{width:18px;height:12px;border-radius:0 0 18px 18px/0 0 12px 12px;background:transparent;
+  border:2.5px solid var(--purple-d);border-top:none;position:relative;}
+.peek .eye::after{content:"";position:absolute;left:50%;top:1px;transform:translateX(-50%);
+  width:6px;height:6px;border-radius:50%;background:var(--purple-d);}
 
-  /* よこむき：たてに つめて ダイヤルを みせる */
-  @media (orientation:landscape) and (max-height:520px){
-    .statusbar{margin:2px 0;}
-    .hint{margin:4px 0; min-height:20px;}
-    .dial-wrap{width:min(58vh,86vw,400px); margin:2px 0;}
-    .controls{margin-top:8px; min-height:60px;}
-  }
+/* ===== result modal (clay) ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:rgba(60,40,90,.4);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,#f6efff);border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(90,50,140,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:118px;margin:-26px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(90,60,140,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:22px;color:var(--ink);margin:4px 0 8px;}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg p .cstar{display:inline-block;vertical-align:-2px;margin-right:2px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;
+  transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:#ece1ff;color:var(--purple-d);box-shadow:0 4px 0 #d2bff0;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.07s}.enter.d2{animation-delay:.14s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ .enter{opacity:1;transform:none;animation:none;} }
 </style>
 </head>
 <body>
 
-<div class="topbar safe-top" id="topbar"></div>
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.png" alt="">まねっこ</div>
+</div>
 
 <div class="wrap">
   <div class="statusbar enter">
-    <span class="round-pill" id="roundPill">だん 0</span>
-    <span class="best-pill" id="bestPill">🏆 さいこう 0</span>
+    <span class="pill" id="roundPill">だん 0</span>
+    <span class="best-pill" id="bestPill"><span class="cstar"></span>さいこう 0</span>
   </div>
 
-  <div class="hint enter d1" id="hint">みどりの ▶ で スタート！</div>
+  <div class="hint enter d1" id="hint">まんなかを おして スタート！</div>
 
   <div class="dial-wrap enter d2">
     <div class="dial locked" id="dial">
-      <button class="pad tl" data-c="0" aria-label="かえる"><span class="face">🐸</span></button>
-      <button class="pad tr" data-c="1" aria-label="きつね"><span class="face">🦊</span></button>
-      <button class="pad bl" data-c="3" aria-label="いるか"><span class="face">🐬</span></button>
-      <button class="pad br" data-c="2" aria-label="ひよこ"><span class="face">🐤</span></button>
+      <button class="pad tl" data-c="0" aria-label="みどり"><span class="sym"></span></button>
+      <button class="pad tr" data-c="1" aria-label="あか"><span class="sym"></span></button>
+      <button class="pad bl" data-c="3" aria-label="あお"><span class="sym"></span></button>
+      <button class="pad br" data-c="2" aria-label="きいろ"><span class="sym"></span></button>
     </div>
-    <div class="hub" id="hub"><div class="big" id="hubBig">🎵</div><div class="lbl" id="hubLbl">まねっこ</div></div>
+    <div class="hub" id="hub" data-state="idle">
+      <img src="../assets/uni/purple_face.png" alt="">
+      <div class="lbl" id="hubLbl">まねっこ</div>
+    </div>
     <div class="startcover" id="startcover">
-      <button class="btn-play" id="startBtn" aria-label="スタート">▶</button>
+      <button class="btn-play" id="startBtn" aria-label="スタート"><span class="tri"></span></button>
     </div>
   </div>
 
   <div class="controls">
-    <button class="btn btn--ghost peek" id="peekBtn">👀 もういちど みる</button>
+    <button class="peek" id="peekBtn"><span class="eye"></span> もういちど みる</button>
+  </div>
+</div>
+
+<!-- result modal -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlRetry">もう いちど</button>
+    </div>
   </div>
 </div>
 
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
-<script src="../assets/shell.js"></script>
 <script>
-/* ====== まねっこ（サイモン） ====== */
-const save = Save.game('manekko');
+/* ====== まねっこ（サイモン）— ロジックは原版を踏襲 ====== */
+function S(){ return (window.Save&&Save.game)?Save.game('manekko'):{get:(k,d)=>d,set:()=>{}}; }
+const save = S();
 const dial = document.getElementById('dial');
-const pads = [...dial.querySelectorAll('.pad')]
-  .sort((a,b)=>(+a.dataset.c)-(+b.dataset.c)); // index = データの いろ ばんごう
+const pads = [...dial.querySelectorAll('.pad')].sort((a,b)=>(+a.dataset.c)-(+b.dataset.c));
 const hint = document.getElementById('hint');
 const roundPill = document.getElementById('roundPill');
 const bestPill = document.getElementById('bestPill');
-const hubBig = document.getElementById('hubBig');
+const hub = document.getElementById('hub');
 const hubLbl = document.getElementById('hubLbl');
+const hubImg = hub.querySelector('img');
 const startcover = document.getElementById('startcover');
 const peekBtn = document.getElementById('peekBtn');
 
-// パッドごとの おと（やさしい アルペジオ）
-const TONES = [329.63, 415.30, 493.88, 587.33]; // みどり・あか・きいろ・あお
+const TONES = [329.63, 415.30, 493.88, 587.33];
 let best = save.get('best', 0);
-let bestAtStart = best;          // この あそびを はじめる まえの さいこう（おいわい はんてい よう）
+let bestAtStart = best;
 let seq = [], inputPtr = 0, phase = 'idle', acceptInput = false;
-let starting = false;            // たじゅう スタート ぼうし
-let runId = 0;                   // さいせい・にゅうりょくの せだい（とちゅうで やりなおしても まざらない）
+let starting = false, runId = 0;
 renderBest();
 
-/* ヘッダー */
-document.getElementById('topbar').replaceWith(
-  App.topbar({ title:'まねっこ', back:'../index.html' })
-);
+/* helpers (Sfx/FX/buzz guarded) */
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
 
-function renderBest(){ bestPill.textContent = '🏆 さいこう ' + best; }
+function renderBest(){ bestPill.innerHTML = '<span class="cstar"></span>さいこう ' + best; }
 function setRound(n){ roundPill.textContent = 'だん ' + n; }
+function setHub(state,label){ hub.dataset.state = state; if(label!=null) hubLbl.textContent = label; }
 function rand4(){ return Math.floor(Math.random()*4); }
 function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* パッドを ひからせて ならす */
 async function light(i, dur){
   const pad = pads[i];
   pad.classList.add('lit');
-  Sfx.note(TONES[i], (dur||320)/1000 + 0.05, 'sine');
-  App.buzz(14);
+  sfx('note', TONES[i], (dur||320)/1000 + 0.05, 'sine');
+  buzz(14);
   const r = pad.getBoundingClientRect();
-  try{ FX.ring(r.left+r.width/2, r.top+r.height/2, {color:'#fff', vr:6, life:18, lw:5}); }catch(e){}
+  fx('ring', r.left+r.width/2, r.top+r.height/2, {color:'#fff', vr:6, life:18, lw:5});
   await wait(dur||320);
   pad.classList.remove('lit');
 }
 
-/* おてほん シーケンス さいせい */
 async function playSequence(){
   const my = runId;
   phase = 'show'; acceptInput = false; dial.classList.add('locked');
   peekBtn.classList.remove('show');
-  hint.textContent = 'よく みてね 👀'; hint.className = 'hint watch';
-  hubBig.textContent = '👀'; hubLbl.textContent = 'みほん';
+  hint.textContent = 'よく みてね'; hint.className = 'hint watch';
+  setHub('watch','みほん');
   await wait(620);
-  if(my !== runId) return;                       // とちゅうで やりなおされたら ちゅうし
-  // だんが ふえるほど すこし はやく（したかぎり あり・きつすぎない ひかえめ）
+  if(my !== runId) return;
   const dur = Math.max(340, 560 - seq.length*12);
   const gap = Math.max(150, 260 - seq.length*5);
   for(const i of seq){
@@ -207,28 +276,25 @@ async function playSequence(){
     await wait(gap);
   }
   if(my !== runId) return;
-  // プレイヤーの ばん
   phase = 'input'; inputPtr = 0; acceptInput = true; dial.classList.remove('locked');
   hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className = 'hint your';
-  hubBig.textContent = '🖐️'; hubLbl.textContent = 'どうぞ';
+  setHub('your','どうぞ');
   peekBtn.classList.add('show');
 }
 
-/* つぎの だんへ */
 async function nextRound(){
   seq.push(rand4());
   setRound(seq.length);
   await playSequence();
 }
 
-/* ゲーム かいし */
 async function startGame(){
-  if(starting) return;                 // たじゅう スタート ぼうし（れんだ・モーダル）
-  if(phase==='show' || phase==='input') return; // あそんで いる さいちゅうは むし
+  if(starting) return;
+  if(phase==='show' || phase==='input') return;
   starting = true;
-  runId++;                             // あたらしい あそびの せだい
-  Sfx.tap();
-  bestAtStart = best;                  // この あそびの まえの さいこうを ひかえる
+  runId++;
+  sfx('tap');
+  bestAtStart = best;
   startcover.classList.add('hide');
   seq = []; inputPtr = 0; setRound(0);
   await wait(280);
@@ -236,7 +302,6 @@ async function startGame(){
   await nextRound();
 }
 
-/* パッド おした とき */
 pads.forEach((pad,i)=>{
   pad.addEventListener('pointerdown', ()=>{
     if(!acceptInput || phase!=='input') return;
@@ -244,89 +309,69 @@ pads.forEach((pad,i)=>{
     const expected = seq[inputPtr];
     if(i === expected){
       inputPtr++;
-      if(inputPtr === seq.length){
-        // この だん クリア
-        acceptInput = false;
-        roundClear();
-      }
-    } else {
-      gameOver();
-    }
+      if(inputPtr === seq.length){ acceptInput = false; roundClear(); }
+    } else { gameOver(); }
   });
 });
 
-/* だんクリアの えんしゅつ → つぎへ */
 async function roundClear(){
   const my = runId;
-  phase = 'clear';                 // つぎの だんが はじまる まで にゅうりょく・のぞき むこう
+  phase = 'clear';
   peekBtn.classList.remove('show');
-  hint.textContent = 'せいかい！ ✨'; hint.className = 'hint your';
-  hubBig.textContent = '🎉';
-  Sfx.ding();
+  hint.textContent = 'せいかい！'; hint.className = 'hint your';
+  setHub('clear','やったね');
+  sfx('ding');
   const r = dial.getBoundingClientRect();
-  FX.sparkles(r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
-  // ベスト こうしん チェック
-  if(seq.length > best){
-    best = seq.length; save.set('best', best); renderBest();
-  }
+  fx('sparkles', r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
+  if(seq.length > best){ best = seq.length; save.set('best', best); renderBest(); }
   await wait(720);
-  if(my !== runId) return;          // とちゅうで やりなおされたら つぎへ いかない
+  if(my !== runId) return;
   await nextRound();
 }
 
-/* ゲームオーバー（やさしく） */
 function gameOver(){
   acceptInput = false; phase = 'over';
   dial.classList.add('locked');
-  Sfx.error(); App.buzz([30,40,30]);
-  FX.shake(document.querySelector('.dial-wrap'), 9, 360);
-  // なんだんまで できたか = ちょくぜんに クリアした だんすう = seq.length-1
+  sfx('error'); buzz([30,40,30]);
+  fx('shake', document.querySelector('.dial-wrap'), 9, 360);
   const done = seq.length - 1;
-  hubBig.textContent = '🙈'; hubLbl.textContent = 'おしい';
+  setHub('over','おしい');
   hint.textContent = 'おしい！ もう いちど やってみよう'; hint.className = 'hint';
-  // じこ さいこう = この あそびの まえの きろくを こえた とき だけ おいわい
   const isBest = (done > bestAtStart && done > 0);
   setTimeout(()=>{
-    App.showModal({
-      emoji: done>=8 ? '🏆' : done>=4 ? '🌟' : '🐻',
+    showResult({
+      win: done>0,
       title: done>0 ? (done + 'だん まで できたね！') : 'ドンマイ！',
-      text: isBest ? 'じこ さいこう きろく！ すごい！'
-                   : ('🏆 さいこうは ' + best + 'だん。<br>つぎは こえられるかな？'),
-      buttons:[
-        {label:'🏠 おうち', cls:'btn--ghost', onClick:()=>App.go('../index.html')},
-        {label:'もう いちど ▶', cls:'btn--green', onClick:()=>{ resetIdle(); startGame(); }}
-      ]
+      html: isBest ? 'じこ さいこう きろく！ すごい！'
+                   : ('<span class="cstar"></span>さいこうは ' + best + 'だん。<br>つぎは こえられるかな？')
     });
-    if(isBest){ Sfx.fanfare(); FX.celebrate(); }
+    if(isBest){ sfx('fanfare'); fx('celebrate'); }
   }, 700);
 }
 
 function resetIdle(){
-  runId++;                         // のこって いる さいせいを むこうに する
+  runId++;
   phase='idle'; seq=[]; inputPtr=0; acceptInput=false;
   dial.classList.add('locked');
   pads.forEach(p=>p.classList.remove('lit'));
   peekBtn.classList.remove('show');
   startcover.classList.remove('hide');
-  hubBig.textContent='🎵'; hubLbl.textContent='まねっこ';
-  hint.textContent='みどりの ▶ で スタート！'; hint.className='hint';
+  setHub('idle','まねっこ');
+  hint.textContent='まんなかを おして スタート！'; hint.className='hint';
   setRound(0);
 }
 
-/* もういちど みる（やさしい ヒント・なんども OK） */
-peekBtn.addEventListener('click', ()=>{
-  if(phase!=='input') return;
-  Sfx.tap();
-  replayCurrent();
-});
+/* peek */
+peekBtn.addEventListener('click', ()=>{ if(phase!=='input') return; sfx('tap'); replayCurrent(); });
 let peeking = false;
 async function replayCurrent(){
-  if(peeking) return;                 // のぞき なおしの れんだ ぼうし
+  if(peeking) return;
   peeking = true;
   const my = runId;
   acceptInput = false; dial.classList.add('locked');
   peekBtn.classList.remove('show');
-  hint.textContent = 'もういちど みてね 👀'; hint.className='hint watch';
+  hint.textContent = 'もういちど みてね'; hint.className='hint watch';
+  setHub('watch','みほん');
   await wait(420);
   const dur = Math.max(340, 560 - seq.length*12);
   for(const i of seq){
@@ -338,10 +383,25 @@ async function replayCurrent(){
   peeking = false;
   if(my !== runId || phase!=='input') return;
   hint.textContent = 'おなじ じゅんばんで まねっこ！'; hint.className='hint your';
+  setHub('your','どうぞ');
   acceptInput = true; dial.classList.remove('locked'); peekBtn.classList.add('show');
 }
 
+/* result modal */
+const ovl = document.getElementById('ovl');
+function showResult({win,title,html}){
+  document.getElementById('ovlUni').src = win ? '../assets/uni/purple_wave.png' : '../assets/uni/blue_thinking.png';
+  document.getElementById('ovlTitle').textContent = title;
+  document.getElementById('ovlText').innerHTML = html;
+  ovl.hidden = false;
+  requestAnimationFrame(()=>ovl.classList.add('show'));
+}
+function hideResult(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlRetry').addEventListener('click', ()=>{ sfx('tap'); hideResult(); resetIdle(); startGame(); });
+
 document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 </script>
 </body>
 </html>
