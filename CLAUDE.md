@@ -42,7 +42,8 @@
 
 ### ファイル構成
 ```
-index.html              アーケード選択画面（オープニング／PWAのホーム。ルート唯一のHTML）
+index.html              アーケード選択画面（オープニング／PWAのホーム）
+room.html               わたしの おへや（ごほうび画面。どんぐりくじ・きせかえ・かぐ）
 Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体・必読）
 manifest.webmanifest    PWAマニフェスト
 games/
@@ -57,6 +58,7 @@ assets/
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
   save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
+  rewards.js            ごほうび管理（どんぐり集計・くじ抽選・所持/装備。グローバル Rewards。index と room で共有）
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
   bgm.js                共通BGM（画面ごとにループ再生。グローバル Bgm。右上に音符トグルを自動設置）
   bgm/                  BGM音源置き場（mp3。.gitignore済み＝公開リポジトリに入れない）
@@ -102,6 +104,26 @@ scripts/
 - **かたちづくりは回転なしの「かげあわせ」方式**：完成形の各ピースの薄い影を最初から表示し、対応ピースを近づけるとスナップ。1対1対応なので必ず解け、回転ロジックのバグを避ける。
 - **ぴたごらは物理を使わず決定論グリッドsim**：玉は1マスずつ落下、坂(╱╲)で斜めにずれる、壁/枠で停止＝失敗（やさしく自動リスタート・置いた坂は残す＝デバッグ）。レベルは必ず解の存在を確認してから追加（プログラミングの BFS 確認と同じ思想。`scripts/` のレベル検証も活用）。
 - **きまりは出題ジェネレータ＋検証**：「3択・正解ちょうど1つ・重複なし」を生成後に必ず検証。文字（数字以外）は使わず絵文字・図形・ドットで表現。
+
+### ごほうびシステム（わたしの おへや＝room.html）
+全ゲーム横断の継続動機。**ゲーム側のコードには一切手を入れず**、既存セーブから通貨を集計する設計（最小構成）。
+
+- **どんぐり（横断通貨）＝全ゲームのがんばり合計**。`assets/rewards.js`（グローバル `Rewards`）が集計：
+  programming のクリア数（`kuma_prog_save_v1.cleared` 一意化）＋ manekko `best` ＋ kimari `best` ＋
+  katachi/pitagora `cleared`。`Rewards.earned()`。**減らない**（失敗しても損しない＝叱らない方針）。
+- **収支**：`balance() = earned() - spent()`。`spent`・所持 `owned`・装備 `wear` は **room 名前空間**
+  （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
+- **どんぐりくじ**：1回 `Rewards.PRICE`（=4）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。
+  着せ替え系（hat/face/neck）は当選時に自動装備、かぐ（room）は部屋に並ぶ。全部そろうと `allCollected()`。
+- **ごほうび図鑑** = `Rewards.ITEMS`（`{id,cat,name}`）。**見た目は room.html 側の `accInner(id)`／`FURNI[id]`
+  が CSS図形で描画**（rewards.js はデータとロジックのみ＝関心の分離）。新ごほうびは ITEMS に1行足し、
+  room.html に描画を1つ足すだけで増やせる。
+- **アバター＝自分のユニコーン**（`assets/uni/blue_standing.png`）に acc を絶対配置で重ねる方式。
+  新キャラは作らずマスコットを流用＝世界観を崩さない。重ね順は くび→かお→あたま。
+- **index 連携**：ホームに「わたしの おへや」入口。`Rewards.balance()` を表示し、`Rewards.canDraw()` なら
+  「！」バッジ。index も `rewards.js` を読み込む（save.js の後）。
+- **文字を読ませない**：くじは大きなどんぐり（たまご役）が割れて品物が飛び出す演出＋効果音だけで伝わる。
+- room.html は新ゲームと同じく `audio.js / fx.js / save.js`（＋ `rewards.js` / `bgm.js`）を読み込み、UIは自前インライン。
 
 ### 新ゲームを追加する手順
 1. `games/新ゲーム.html` を作る。**必ず `audio.js / fx.js / save.js` を読み込み（Sfx/FX/Save）、manekko.html を品質・構成の参照基準にする。**

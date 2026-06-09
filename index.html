@@ -74,6 +74,44 @@ body{
 @keyframes bobSide{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} }
 
+/* ===== おへや 入口 ===== */
+.room-entry{position:relative;display:flex;align-items:center;gap:13px;width:100%;
+  margin:16px 0 2px;border:none;cursor:pointer;text-align:left;color:inherit;font:inherit;
+  background:linear-gradient(180deg,#fff3da,#ffe6bf);border-radius:24px;padding:13px 16px;
+  box-shadow:0 14px 24px -12px rgba(120,75,20,.5),0 3px 0 rgba(120,80,30,.12),
+    inset 0 3px 0 rgba(255,255,255,.9),inset 0 -8px 14px rgba(190,150,90,.14);
+  transition:transform .16s var(--ease),box-shadow .16s var(--ease);}
+.room-entry:active{transform:translateY(4px) scale(.99);
+  box-shadow:0 7px 14px -10px rgba(120,75,20,.5),inset 0 3px 0 rgba(255,255,255,.9);}
+.room-entry .door{flex:0 0 auto;width:52px;height:54px;position:relative;}
+.room-entry .door .roof{position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:0;height:0;border-left:28px solid transparent;border-right:28px solid transparent;
+  border-bottom:18px solid #d98a4e;filter:drop-shadow(0 2px 0 #b56a30);}
+.room-entry .door .wall{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:42px;height:38px;background:linear-gradient(180deg,#ffd89a,#f5b96a);border-radius:7px 7px 5px 5px;
+  box-shadow:inset 0 2px 0 #fff7;}
+.room-entry .door .wall::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:16px;height:22px;background:#9a6420;border-radius:8px 8px 0 0;}
+.room-entry .txt{flex:1;min-width:0;}
+.room-entry .txt b{display:block;font-family:'Mochiy Pop One';font-size:16px;color:var(--ink);}
+.room-entry .txt span{font-size:12px;font-weight:800;color:var(--ink-soft);}
+.room-entry .count{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
+  font-family:'Mochiy Pop One';font-size:16px;color:#9a6420;
+  background:#fffdf7;padding:7px 13px 7px 9px;border-radius:999px;box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(150,100,40,.18);}
+.room-entry .acorn{position:relative;width:20px;height:22px;display:inline-block;}
+.room-entry .acorn .cap{position:absolute;top:0;left:0;width:20px;height:10px;border-radius:10px 10px 4px 4px;
+  background:linear-gradient(180deg,#a9712f,#7d4f17);}
+.room-entry .acorn .nut{position:absolute;bottom:0;left:2px;width:16px;height:14px;
+  border-radius:8px 8px 8px 8px/6px 6px 11px 11px;background:linear-gradient(180deg,#e6b25a,#cf8b2c);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.4);}
+.room-entry .bell{position:absolute;top:-7px;right:-6px;min-width:26px;height:26px;padding:0 6px;
+  border-radius:999px;background:linear-gradient(180deg,#ff7a8f,#ec5168);color:#fff;
+  font-family:'Mochiy Pop One';font-size:15px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 #c93b50;animation:bell 1s ease-in-out infinite;}
+@keyframes bell{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.room-entry .bell[hidden]{display:none;}
+@media (prefers-reduced-motion: reduce){ .room-entry .bell{animation:none;} }
+
 /* ===== SECTION HEADER ===== */
 .shelf-h{display:inline-flex;align-items:center;gap:9px;margin:18px auto 14px;
   font-family:'Mochiy Pop One';font-size:16px;color:var(--ink);
@@ -202,6 +240,13 @@ body{
     </div>
   </header>
 
+  <button class="room-entry enter d3" id="roomEntry" aria-label="わたしの おへや へ いく">
+    <span class="door"><span class="roof"></span><span class="wall"></span></span>
+    <span class="txt"><b>わたしの おへや</b><span id="roomSub">どんぐりを ためて くじを ひこう</span></span>
+    <span class="count"><span class="acorn"><span class="cap"></span><span class="nut"></span></span><span id="roomCount">0</span></span>
+    <span class="bell" id="roomBell" hidden>!</span>
+  </button>
+
   <div class="shelf-wrap"><div class="shelf-h enter d3"><span class="dot"></span> あそびを えらんでね</div></div>
 
   <div id="grid-feature"></div>
@@ -242,6 +287,7 @@ body{
 <script src="assets/audio.js"></script>
 <script src="assets/fx.js"></script>
 <script src="assets/save.js"></script>
+<script src="assets/rewards.js"></script>
 <script src="assets/shell.js"></script>
 <script src="assets/bgm.js"></script>
 <script>
@@ -399,6 +445,29 @@ GAMES.forEach((g,i)=>{
   (g.feature ? featWrap : grid).appendChild(c);
 });
 
+/* ===== おへや 入口（どんぐり残数・くじ通知） ===== */
+(function(){
+  const entry = document.getElementById('roomEntry');
+  if(!entry || !window.Rewards) return;
+  try{
+    document.getElementById('roomCount').textContent = Rewards.balance();
+    const canDraw = Rewards.canDraw();
+    const bell = document.getElementById('roomBell');
+    bell.hidden = !canDraw;
+    document.getElementById('roomSub').textContent =
+      Rewards.allCollected() ? 'ごほうびを ぜんぶ あつめたよ！'
+      : canDraw ? 'くじが ひけるよ！みに いこう'
+      : 'どんぐりを ためて くじを ひこう';
+  }catch(e){}
+  entry.addEventListener('click', (ev)=>{
+    try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
+    try{ if(window.FX&&FX.ring){ const t=ev.currentTarget.getBoundingClientRect();
+      FX.ring(t.left+t.width/2, t.top+t.height/2, {color:'#c0832f', vr:7, life:24}); } }catch(e){}
+    if(window.App&&App.go){ try{ App.go('room.html'); return; }catch(e){} }
+    setTimeout(()=>{ location.href='room.html'; }, 110);
+  });
+})();
+
 /* ===== せってい / ぜんぶ けす ===== */
 const ovlSet = document.getElementById('ovlSet');
 const ovl = document.getElementById('ovl');
@@ -411,8 +480,8 @@ ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true
 
 function doReset(){
   try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
-  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora']); }catch(e){}
-  ['manekko','kimari','katachi','pitagora'].forEach(ns=>{ try{ localStorage.removeItem('save_'+ns); }catch(e){} });
+  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','room']); }catch(e){}
+  ['manekko','kimari','katachi','pitagora','room'].forEach(ns=>{ try{ localStorage.removeItem('save_'+ns); }catch(e){} });
   sfx('whoosh');
   setTimeout(()=>location.reload(), 200);
 }
