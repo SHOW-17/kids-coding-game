@@ -63,6 +63,13 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .flame{width:13px;height:16px;background:#fff;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
   clip-path:polygon(50% 0,72% 30%,68% 18%,85% 55%,80% 80%,60% 100%,40% 100%,20% 80%,30% 50%,40% 62%,38% 30%);}
 
+/* むずかしさ えらび */
+.diffbar{display:flex;gap:8px;justify-content:center;margin:6px 0 0;flex-wrap:wrap;}
+.diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--accent-d);background:#fff;border:none;cursor:pointer;
+  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(33,137,173,.16), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(33,137,173,.16);}
+.diff.sel{background:linear-gradient(180deg,#76d3ee,var(--accent));color:#fff;box-shadow:0 4px 0 var(--accent-d);}
+
 .hint{font-weight:800;font-size:18px;color:var(--accent-d);min-height:26px;text-align:center;margin:10px 0 6px;}
 
 /* sequence card */
@@ -179,6 +186,12 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <span class="pill best" id="bestPill"><span class="cstar"></span>0</span>
   </div>
 
+  <div class="diffbar enter d1" id="diffbar">
+    <button class="diff" data-d="easy">やさしい</button>
+    <button class="diff sel" data-d="normal">ふつう</button>
+    <button class="diff" data-d="hard">むずかしい</button>
+  </div>
+
   <div class="hint enter d1" id="hint">つぎは なにかな？</div>
 
   <div class="seq-card enter d2">
@@ -222,6 +235,8 @@ const streakPill = document.getElementById('streakPill');
 const bestPill = document.getElementById('bestPill');
 const toastEl = document.getElementById('toast');
 
+let diff = save.get('diff', 'normal');
+if(!['easy','normal','hard'].includes(diff)) diff = 'normal';
 let total = save.get('cleared', 0);
 let streak = 0;
 let best = save.get('best', 0);
@@ -386,9 +401,14 @@ const TIERS=[
   { until:14,       gens:['abc','abcd','aabb','skip','count2','countm1','mountain','twoattr','size','rotate'], lens:[7,8] },
   { until:Infinity, gens:['abcd','skip','abc','mountain','twoattr','count2','countm1','aabb','size','rotate'], lens:[8] }
 ];
+function tierFor(idx){
+  if(diff==='easy') return TIERS[ idx<2 ? 0 : 1 ];   // やさしい：むずかしくならない
+  const e = idx + (diff==='hard' ? 14 : 0);            // むずかしい：はじめから むずかしいきまり
+  return TIERS.find(t=>e<t.until)||TIERS[TIERS.length-1];
+}
 function buildProblem(idx, depth){
   depth=depth||0;
-  const tier=TIERS.find(t=>idx<t.until)||TIERS[TIERS.length-1];
+  const tier=tierFor(idx);
   const raw=runGen(pick(tier.gens), pick(tier.lens));
   return finalizeProblem(raw, depth);
 }
@@ -473,6 +493,15 @@ function closeOvl(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=tru
 document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 document.getElementById('ovlNext').addEventListener('click', ()=>{ sfx('whoosh'); closeOvl(); nextProblem(); });
 document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+/* むずかしさ えらび */
+const diffBtns = [...document.querySelectorAll('.diff')];
+diffBtns.forEach(b=>b.classList.toggle('sel', b.dataset.d===diff));
+diffBtns.forEach(b=>b.addEventListener('click', ()=>{
+  diff = b.dataset.d; save.set('diff', diff); sfx('tap');
+  diffBtns.forEach(x=>x.classList.toggle('sel', x===b));
+  streak = 0; renderStatus(); nextProblem();
+}));
 
 /* スタート */
 nextProblem();

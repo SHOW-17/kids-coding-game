@@ -48,6 +48,7 @@
   .pstar{width:11px;height:11px;background:#e7d4b0;
     clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
   .pstar.on{background:var(--honey);box-shadow:0 0 5px rgba(255,180,61,.7);}
+  .pstar.cur{outline:2px solid var(--honey-d);outline-offset:2px;}
   .reset{border:none;background:#f3e2c2;color:#a87b4a;font-weight:800;border-radius:999px;
     padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;box-shadow:0 3px 0 #e3cfa6;}
   .reset:active{transform:translateY(2px);box-shadow:0 1px 0 #e3cfa6;}
@@ -58,6 +59,14 @@
   .home .ic{width:22px;height:22px;background:var(--honey-d);
     -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
             mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .lvnav{border:none;background:#fff;border-radius:12px;width:40px;height:40px;min-width:40px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #ecd9b5, inset 0 2px 0 #fff;transition:transform .1s;}
+  .lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 #ecd9b5;}
+  .lvnav:disabled{opacity:.32;cursor:default;}
+  .lvnav .tri{width:0;height:0;border-style:solid;}
+  .lvnav .tri.l{border-width:8px 12px 8px 0;border-color:transparent var(--honey-d) transparent transparent;}
+  .lvnav .tri.r{border-width:8px 0 8px 12px;border-color:transparent transparent transparent var(--honey-d);}
+  .stars .pstar{cursor:pointer;}
 
   #stage{position:relative;z-index:1;}
   #board{position:relative;display:grid;gap:var(--gap);padding:12px;
@@ -244,7 +253,9 @@
 
   <div class="levelbar">
     <a class="home" href="../index.html" aria-label="おうちへ もどる"><span class="ic"></span></a>
+    <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
     <span class="lv" id="lvText">レベル 1</span>
+    <button class="lvnav" id="nextLv" aria-label="つぎの レベル"><span class="tri r"></span></button>
     <span class="stars" id="stars"></span>
     <button class="reset" id="resetBtn">さいしょ</button>
   </div>
@@ -443,7 +454,7 @@ function buildLevel(){
   collected=new Set(); gatesOpen=false;
   pos={...L.start}; placeBear(false); makeBoxes(L);
   $('lvText').textContent='レベル '+(lvIndex+1);
-  renderStars(); renderPad(); renderBudget();
+  renderStars(); renderPad(); renderBudget(); updateNav();
   const num=lvIndex+1;
   if(INTRO[num] && !announced.has(num)){
     announced.add(num); save();
@@ -558,8 +569,16 @@ function updateLoopBtn(){
 
 function renderStars(){
   const e=$('stars'); let h='';
-  for(let i=0;i<LEVELS.length;i++) h+= '<span class="pstar'+(cleared.has(i)?' on':'')+'"></span>';
+  for(let i=0;i<LEVELS.length;i++) h+= '<span class="pstar'+(cleared.has(i)?' on':'')+(i===lvIndex?' cur':'')+'" data-i="'+i+'" aria-label="レベル '+(i+1)+'へ"></span>';
   e.innerHTML=h;
+}
+function updateNav(){ const p=$('prevLv'),n=$('nextLv'); if(p)p.disabled=lvIndex<=0; if(n)n.disabled=lvIndex>=LEVELS.length-1; }
+function jumpTo(idx){
+  if(running) return;
+  idx=Math.max(0,Math.min(idx,LEVELS.length-1));
+  if(idx===lvIndex) return;
+  lvIndex=idx; program=[]; activeLoop=null;
+  beep(560,0.05); renderProgram(); setButtons(false); save(); buildLevel();
 }
 
 let actx;
@@ -682,6 +701,9 @@ $('clearBtn').addEventListener('click',clearP);
 $('playBtn').addEventListener('click',run);
 $('loopBtn').addEventListener('click',toggleLoop);
 $('resetBtn').addEventListener('click',resetSave);
+$('prevLv').addEventListener('click',()=>jumpTo(lvIndex-1));
+$('nextLv').addEventListener('click',()=>jumpTo(lvIndex+1));
+$('stars').addEventListener('click',e=>{ const s=e.target.closest('.pstar'); if(s) jumpTo(+s.dataset.i); });
 $('cardBtn').addEventListener('click',()=>{ const cb=cardCb; cardCb=null; if(cb) cb(); });
 let rsz; window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(buildLevel,150);});
 

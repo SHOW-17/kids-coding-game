@@ -43,6 +43,14 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
           mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
 .ttl{font-family:'Mochiy Pop One';font-size:18px;color:var(--accent-d);text-shadow:0 2px 0 #fff;}
 .ttl .uni{height:32px;vertical-align:-8px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(40,110,60,.3));}
+.lvnav{border:none;background:#fff;border-radius:14px;width:42px;height:42px;min-width:42px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(58,158,92,.2), inset 0 2px 0 #fff;transition:transform .1s;}
+.lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(58,158,92,.2);}
+.lvnav:disabled{opacity:.34;cursor:default;}
+.lvnav .tri{width:0;height:0;border-style:solid;}
+.lvnav .tri.l{border-width:8px 12px 8px 0;border-color:transparent var(--accent-d) transparent transparent;}
+.lvnav .tri.r{border-width:8px 0 8px 12px;border-color:transparent transparent transparent var(--accent-d);}
+.dots .d{cursor:pointer;}
 
 .wrap{position:relative;z-index:1;width:100%;max-width:460px;flex:1;display:flex;flex-direction:column;align-items:center;padding:0 12px 10px;}
 
@@ -136,7 +144,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="wrap">
   <div class="statusbar enter">
+    <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
     <span class="pill" id="lvPill">レベル 1</span>
+    <button class="lvnav" id="nextLv" aria-label="つぎの レベル"><span class="tri r"></span></button>
     <span class="pill left" id="leftPill"><span class="piece-ic"></span><span id="leftN">2</span></span>
     <span class="namepill" id="namePill">やま</span>
   </div>
@@ -310,9 +320,11 @@ const hint=document.getElementById('hint');
 const dotsEl=document.getElementById('dots');
 const hintBtn=document.getElementById('hintBtn');
 const resetBtn=document.getElementById('resetBtn');
+const prevLv=document.getElementById('prevLv');
+const nextLv=document.getElementById('nextLv');
 
 let cleared = save.get('cleared', 0);
-let lvIndex = Math.min(cleared, LEVELS.length-1);
+let lvIndex = Math.min(Math.max(save.get('current', Math.min(cleared, LEVELS.length-1)),0), LEVELS.length-1);
 let cur = null;
 let boardPx = 300;
 let trayH = 110;
@@ -324,7 +336,15 @@ let winning = false;
 function u2bx(u){ return u/100 * boardPx; }
 function renderDots(){
   dotsEl.innerHTML='';
-  for(let i=0;i<LEVELS.length;i++){ const d=el('span','d'); if(i<cleared) d.classList.add('on'); if(i===lvIndex) d.classList.add('cur'); dotsEl.appendChild(d); }
+  for(let i=0;i<LEVELS.length;i++){ const d=el('span','d'); d.dataset.i=i; d.setAttribute('aria-label','レベル '+(i+1)+'へ');
+    if(i<cleared) d.classList.add('on'); if(i===lvIndex) d.classList.add('cur'); dotsEl.appendChild(d); }
+}
+function updateNav(){ prevLv.disabled=lvIndex<=0; nextLv.disabled=lvIndex>=LEVELS.length-1; }
+function jumpTo(idx){
+  if(winning || dragging) return;
+  idx=Math.max(0,Math.min(idx,LEVELS.length-1));
+  if(idx===lvIndex) return;
+  lvIndex=idx; sfx('tap'); save.set('current', lvIndex); loadLevel();
 }
 function calcSizes(){
   const maxW = Math.min(window.innerWidth-28, 432);
@@ -336,7 +356,7 @@ function loadLevel(){
   cur = LEVELS[lvIndex];
   placedCount = 0; pieceEls = []; dragging = null; winning = false;
   lvPill.textContent = 'レベル ' + (lvIndex+1);
-  renderDots();
+  renderDots(); updateNav(); save.set('current', lvIndex);
   leftN.textContent = cur.pieces.length;
   hint.textContent = 'ピースを かげに はめてね';
   motifEl.textContent = cur.motif;
@@ -520,6 +540,9 @@ hintBtn.addEventListener('click', ()=>{
     setTimeout(()=>{ cur.targets.forEach(t=>{ if(!t._filled) t._shadow.classList.remove('hi'); }); }, 2000); }
 });
 resetBtn.addEventListener('click', ()=>{ sfx('tap'); loadLevel(); });
+prevLv.addEventListener('click', ()=>jumpTo(lvIndex-1));
+nextLv.addEventListener('click', ()=>jumpTo(lvIndex+1));
+dotsEl.addEventListener('click', e=>{ const d=e.target.closest('.d'); if(d) jumpTo(+d.dataset.i); });
 document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 
 let rzTimer=null;

@@ -63,6 +63,13 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .cstar{width:14px;height:14px;background:var(--honey);
   clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
 
+/* むずかしさ えらび */
+.diffbar{display:flex;gap:8px;justify-content:center;margin:8px 0 0;}
+.diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--purple-d);background:#fff;border:none;cursor:pointer;
+  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(123,89,224,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(123,89,224,.18);}
+.diff.sel{background:linear-gradient(180deg,#b39bff,var(--purple));color:#fff;box-shadow:0 4px 0 var(--purple-d);}
+
 .hint{font-weight:800;font-size:17px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px 0;
   transition:color .2s;}
 .hint.watch{color:var(--purple-d);}
@@ -179,6 +186,12 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <span class="best-pill" id="bestPill"><span class="cstar"></span>さいこう 0</span>
   </div>
 
+  <div class="diffbar enter d1" id="diffbar">
+    <button class="diff" data-d="slow">ゆっくり</button>
+    <button class="diff sel" data-d="normal">ふつう</button>
+    <button class="diff" data-d="fast">はやい</button>
+  </div>
+
   <div class="hint enter d1" id="hint">まんなかを おして スタート！</div>
 
   <div class="dial-wrap enter d2">
@@ -234,6 +247,9 @@ const startcover = document.getElementById('startcover');
 const peekBtn = document.getElementById('peekBtn');
 
 const TONES = [329.63, 415.30, 493.88, 587.33];
+const SPEED_MULT = {slow:1.4, normal:1, fast:0.7};
+let speed = save.get('speed', 'normal');
+if(!(speed in SPEED_MULT)) speed = 'normal';
 let best = save.get('best', 0);
 let bestAtStart = best;
 let seq = [], inputPtr = 0, phase = 'idle', acceptInput = false;
@@ -270,8 +286,9 @@ async function playSequence(){
   setHub('watch','みほん');
   await wait(620);
   if(my !== runId) return;
-  const dur = Math.max(340, 560 - seq.length*12);
-  const gap = Math.max(150, 260 - seq.length*5);
+  const m = SPEED_MULT[speed];
+  const dur = Math.round(Math.max(340, 560 - seq.length*12) * m);
+  const gap = Math.round(Math.max(150, 260 - seq.length*5) * m);
   for(const i of seq){
     if(my !== runId) return;
     await light(i, dur);
@@ -376,12 +393,13 @@ async function replayCurrent(){
   hint.textContent = 'もういちど みてね'; hint.className='hint watch';
   setHub('watch','みほん');
   await wait(420);
-  const dur = Math.max(340, 560 - seq.length*12);
+  const m = SPEED_MULT[speed];
+  const dur = Math.round(Math.max(340, 560 - seq.length*12) * m);
   for(const i of seq){
     if(my !== runId || phase!=='input'){ peeking=false; return; }
     await light(i, dur);
     if(my !== runId || phase!=='input'){ peeking=false; return; }
-    await wait(160);
+    await wait(Math.round(160*m));
   }
   peeking = false;
   if(my !== runId || phase!=='input') return;
@@ -405,6 +423,15 @@ document.getElementById('ovlRetry').addEventListener('click', ()=>{ sfx('tap'); 
 
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+/* むずかしさ（はやさ）えらび */
+const diffBtns = [...document.querySelectorAll('.diff')];
+diffBtns.forEach(b=>b.classList.toggle('sel', b.dataset.d===speed));
+diffBtns.forEach(b=>b.addEventListener('click', ()=>{
+  speed = b.dataset.d; save.set('speed', speed); sfx('tap');
+  diffBtns.forEach(x=>x.classList.toggle('sel', x===b));
+  resetIdle();
+}));
 </script>
 </body>
 </html>

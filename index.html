@@ -294,7 +294,7 @@ const GAMES = [
     name:'きまり', desc:'ならびの つぎは なに？ きまりを みつけよう。',
     ac:'#2fa6cc', acd:'#2189ad', acsh:'#1a6c8a', acsoft:'#d7f1fb',
     ribbon:'しんさく！', tag:'すいり力',
-    progressKey:'cleared', bestLabel:v=>v>0?(v+'もん せいかい'):null,
+    progressKey:'best', bestLabel:v=>v>0?('れんぞく '+v+'もん'):null,
     artBg:'linear-gradient(160deg,#d8f1ff,#a9ddf7)',
     art:`<div class="mini m-row"><i style="background:#ff6b6b"></i><i style="background:#5cc8e8"></i><i style="background:#ff6b6b"></i><i class="q">?</i></div>
          <img class="uni" src="assets/uni/green_thinking.png" style="height:80px;right:-8px;bottom:-8px;" alt="" draggable="false">`
@@ -329,6 +329,15 @@ function kumaCleared(){
     return new Set(d.cleared).size;
   }catch(e){ return 0; }
 }
+/* クリアした いちばん たかい レベル（自由移動で とびとびクリアも あるため） */
+function kumaBestLevel(){
+  try{
+    const d = JSON.parse(localStorage.getItem('kuma_prog_save_v1'));
+    if(!d || !Array.isArray(d.cleared) || !d.cleared.length) return 0;
+    const ns = d.cleared.map(Number).filter(n=>!isNaN(n));
+    return ns.length ? Math.max(...ns)+1 : 0;
+  }catch(e){ return 0; }
+}
 /* 各ゲームの進捗値（Save が無い環境では 0） */
 function progressOf(g){
   if(!g.ns) return 0;
@@ -361,9 +370,11 @@ function makeCard(g, i){
   if(g.feature && g.total){
     const done = Math.min(kumaCleared(), g.total);
     const pct = Math.round(done/g.total*100);
+    const bl = Math.min(kumaBestLevel(), g.total);
     meta = `<div class="prog" role="img" aria-label="${done} / ${g.total} クリア">
               <div class="bar"><i style="width:${pct}%"></i></div>
-              <span class="pct">${done}/${g.total}</span></div>`;
+              <span class="pct">${done}/${g.total}</span></div>` +
+           (bl>0 ? `<div class="tagrow"><span class="best"><span class="star"></span>さいこう レベル${bl}</span></div>` : '');
   } else if(g.tag){
     const v = progressOf(g);
     const label = g.bestLabel ? g.bestLabel(v) : null;
