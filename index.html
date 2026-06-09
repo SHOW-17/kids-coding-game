@@ -102,9 +102,10 @@ body{
   background:radial-gradient(120% 70% at 50% 0,rgba(255,255,255,.35),transparent 60%);
   pointer-events:none;}
 
-/* game-name banner sticker（grid＝アートの左下に重ねる） */
-.banner{position:absolute;z-index:4;top:auto;bottom:-18px;left:-2px;height:36px;width:auto;max-width:96%;
-  filter:drop-shadow(0 5px 6px rgba(60,40,10,.4));transform:rotate(-2deg);}
+/* game-name banner sticker（本文先頭にブロック配置。見切れない） */
+.banner{position:relative;z-index:4;display:block;height:38px;width:auto;max-width:100%;
+  filter:drop-shadow(0 5px 6px rgba(60,40,10,.4));transform:rotate(-1.5deg);
+  transform-origin:left center;}
 
 .desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;}
 .play{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
@@ -134,9 +135,7 @@ body{
 .feature{display:flex;align-items:stretch;margin-bottom:14px;overflow:hidden;min-height:182px;}
 .feature .body{flex:1;min-width:0;padding:16px 12px 16px 18px;display:flex;flex-direction:column;gap:9px;justify-content:center;}
 .feature .art{flex:0 0 44%;align-self:stretch;border-radius:0 var(--r) var(--r) 0;}
-/* feature の看板は見切れないよう本文の先頭にブロックで置く */
-.feature .banner{position:static;display:block;height:40px;max-width:100%;
-  margin:0 0 2px -2px;transform:rotate(-1.5deg);}
+.feature .banner{height:40px;margin:0 0 2px -2px;}
 .feature .desc{padding-right:4px;}
 
 /* grid: scene top, text bottom */
@@ -144,7 +143,9 @@ body{
 @media(max-width:360px){ .grid{gap:11px;} }
 .grid .card{display:flex;flex-direction:column;}
 .grid .art{aspect-ratio:4/3;border-radius:var(--r) var(--r) 0 0;}
-.grid .body{padding:28px 13px 14px;display:flex;flex-direction:column;gap:7px;}
+.grid .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:7px;}
+/* 看板はアート下端に少し重ねる（上にはみ出す＝本文ボックスは clip しないので見える） */
+.grid .banner{height:34px;margin:-28px 0 6px -2px;transform:rotate(-2deg);}
 
 /* entrance */
 .enter{opacity:0;transform:translateY(14px);animation:rise .5s var(--ease) forwards;}
@@ -372,13 +373,13 @@ function makeCard(g, i){
          ${ribbon}
        </div>`;
   } else {
-    // art 上（看板はアート左下に重ねる） / body 下
+    // art 上 / body 下（看板は本文先頭にブロック配置＝アート下端に重ねつつ見切れない）
     card.innerHTML =
       `<div class="art">
          <img class="scene" src="${g.scene}" alt="" draggable="false">
-         ${bannerImg}
        </div>` +
       `<div class="body">
+         ${bannerImg}
          <div class="desc">${g.desc}</div>
          ${meta}
        </div>`;
