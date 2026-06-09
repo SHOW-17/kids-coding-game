@@ -144,15 +144,16 @@ box-shadow:
 ## 9. ファイル構成
 
 ```
-index.html                 ← トップ（あそびのもり）
-kuma-programming.html      ← プログラミング（自己完結／assets JS不要）
+index.html                 ← トップ（あそびのもり。ルート唯一のHTML）
 games/
+  programming.html         ← プログラミング（自己完結／assets JS不要）
   manekko.html             ← まねっこ
   kimari.html              ← きまり
   katachi.html             ← かたち
   pitagora.html            ← ぴたごら
 assets/
   uni/                     ← ユニコーン画像（blue_/green_/purple_*）
+  icons/                   ← ファビコン・PWA・apple-touch アイコン一式
   audio.js fx.js save.js shell.js  ← 共通基盤（実機は本物、プレビューは軽量フォールバック）
 ```
 

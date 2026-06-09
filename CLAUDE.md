@@ -42,24 +42,30 @@
 
 ### ファイル構成
 ```
-index.html              アーケード選択画面（オープニング／PWAのホーム）
-kuma-programming.html    プログラミング（第1弾。🏠でindexへ戻る。assets JS 不要の自己完結）
+index.html              アーケード選択画面（オープニング／PWAのホーム。ルート唯一のHTML）
 Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体・必読）
+manifest.webmanifest    PWAマニフェスト
 games/
+  programming.html      プログラミング（第1弾。🏠でindexへ戻る。assets JS 不要の自己完結）
   manekko.html          まねっこ（サイモン）
   kimari.html           きまりあそび（パターン推理）
   katachi.html          かたちづくり（タングラム＝かげあわせ方式）
   pitagora.html         ぴたごら（たまころがし＝決定論グリッドsim）
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）
+  icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
   save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
+scripts/
+  test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
 ```
 ※ `index.html` はもうシンボリックリンクではなく実体（アーケード）。各ゲームは個別HTML。
 ※ 見た目のルール（ねんどカード・カラー・タイポ）は各HTMLにインラインで持つ。共通定義は Design.md 参照。
-※ `kuma-programming.html` のファイル名は保存キー `kuma_prog_save_v1` の互換維持のため変更しない（中身はリデザイン済み）。
+※ プログラミングの保存キーは `kuma_prog_save_v1`（JS内の定数で、ファイル名・パスに依存しない）。
+  旧 `kuma-programming.html` から `games/programming.html` へ移動・改名済みだが、localStorage は
+  オリジン単位のため保存データはそのまま引き継がれる。保存キー自体は互換のため変更しない。
 
 ### 共通基盤の使い方（新ゲームは必ずこれに乗せる＝統一感とプロ品質の担保）
 - **Sfx**（audio.js）：`Sfx.tap()/pop()/step()/ding()/success()/fanfare()/error()/whoosh()/sparkle()/note(freq)`。操作ごとに必ず鳴らす。
@@ -90,7 +96,7 @@ assets/
 1. `games/新ゲーム.html` を作る。**必ず共通基盤（assets/*）に乗せ、manekko.html を品質の参照基準にする。**
 2. `index.html` の `GAMES` 配列にカードを足す（href・名前ひらがな・アクセント色・看板アート・進捗キー）。
 3. ゲーム内に `App.topbar({back:'../index.html'})` で🏠戻る導線。進捗は規定キーで保存。
-4. ヘッドレス確認（`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査。`/tmp/test-games.js` 参照）。
+4. ヘッドレス確認（`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査。`scripts/test-games.js` 参照。新ゲーム追加時は PAGES 配列にも足す）。
 5. 動作OKなら README も更新。
 
 ---
@@ -197,7 +203,7 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
 
 ## 技術メモ
 
-- 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`kuma-programming.html` と `games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
+- 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
 - フォント: Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 状態管理はメモリ内。永続化は `localStorage`（try/catchでガード済み）。
   - 注意：Claude.aiのプレビューiframe等では `localStorage` が保存されないことがある。実機ブラウザでは正常動作。
