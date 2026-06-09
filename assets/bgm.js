@@ -36,6 +36,15 @@
     catch (e) { return 'bgm/' + track + '.mp3'; }
   }
 
+  /* mp3 の探索順を返す。
+     1) 画面別 <track>.mp3（あれば最優先）
+     2) 共通 _default.mp3（全画面で同じ曲を流したいとき。1ファイル置けばOK）
+     どちらも無ければ合成BGMへフォールバックする。 */
+  var SHARED = '_default';
+  function mp3candidates(track) {
+    return track === SHARED ? [mp3url(SHARED)] : [mp3url(track), mp3url(SHARED)];
+  }
+
   /* ---- ON/OFF 永続化（全画面共通キー）---- */
   var KEY = 'amori_bgm_on';
   var enabled = true;
@@ -236,7 +245,6 @@
     }
     if (audioEl) {
       usingMp3 = true;
-      audioEl.src = mp3url(curTrack);
       audioEl.volume = 0;
       var fadeIn = function () {
         var step = function () {
@@ -249,26 +257,33 @@
         step();
       };
       audioEl.oncanplay = null;
-      var fellBack = false;
-      var onErr = function () {
-        // mp3 が無い／読めない／再生開始に失敗 → 合成へフォールバック。
-        // 二重呼び出しガード（onerror と play().catch の両方から来うる）。
-        if (fellBack) return;
-        fellBack = true;
-        usingMp3 = false;
-        try { audioEl.pause(); } catch (e) {}
-        synth.start(curTrack);
+      // 候補 mp3 を順に試し、すべて読めなければ合成へフォールバック。
+      var cands = mp3candidates(curTrack);
+      var ci = 0, done = false, attempt = 0;
+      // 同じ候補について onerror と play().catch が両方来ても、次候補へは1回だけ進む。
+      var failCurrent = function (a) {
+        if (done || a !== attempt) return;   // 既に解決済み／別試行のイベントは無視
+        attempt++;
+        tryNext();
       };
-      audioEl.onerror = onErr;
-      var p = audioEl.play();
-      if (p && p.then) {
-        p.then(fadeIn).catch(function () {
-          // 再生開始に失敗（mp3 不在・未対応・自動再生拒否など）。
-          // audioEl.error の有無に依存せず、必ず合成へフォールバックする。
-          // ※ ここで諦めると started=true のまま永久に無音になるため。
-          onErr();
-        });
-      } else { fadeIn(); }
+      function tryNext() {
+        if (done) return;
+        if (ci >= cands.length) {            // mp3 が一つも無い → 合成へ
+          done = true; usingMp3 = false;
+          try { audioEl.pause(); } catch (e) {}
+          synth.start(curTrack);
+          return;
+        }
+        var a = attempt;
+        audioEl.onerror = function () { failCurrent(a); };  // 読み込み失敗 → 次候補
+        audioEl.src = cands[ci++];
+        var p = audioEl.play();
+        if (p && p.then) {
+          p.then(function () { if (a === attempt) { done = true; fadeIn(); } })
+           .catch(function () { failCurrent(a); });   // この候補は不可 → 次の候補へ
+        } else { done = true; fadeIn(); }
+      }
+      tryNext();
     } else {
       synth.start(curTrack);
     }
