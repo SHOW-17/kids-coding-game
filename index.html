@@ -41,16 +41,17 @@ body{
     rgba(255,250,236,.28) 46%, rgba(255,247,230,.5) 74%, rgba(255,245,226,.62) 100%);}
 .screen{position:relative;z-index:1;max-width:600px;margin:0 auto;}
 
-/* ===== TOP BAR ===== */
-.topbar{position:relative;z-index:6;display:flex;justify-content:flex-start;align-items:center;
-  min-height:54px;padding-top:calc(env(safe-area-inset-top) + 10px);}
-.iconbtn{border:none;background:none;cursor:pointer;padding:0;line-height:0;
-  transition:transform .14s var(--ease);filter:drop-shadow(0 6px 7px rgba(80,55,15,.32));}
+/* ===== SETTINGS BUTTON（右上のBGM音符と同じく fixed で追従。こちらは左上） ===== */
+.iconbtn{position:fixed;z-index:9999;
+  top:calc(8px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  border:none;background:none;cursor:pointer;padding:0;line-height:0;
+  transition:transform .14s var(--ease);filter:drop-shadow(0 5px 6px rgba(80,55,15,.32));}
 .iconbtn img{width:50px;height:50px;display:block;}
 .iconbtn:active{transform:translateY(3px) scale(.94);}
 
 /* ===== HERO ===== */
-.hero{position:relative;text-align:center;margin-top:2px;}
+.hero{position:relative;text-align:center;padding-top:calc(58px + env(safe-area-inset-top));}
 .logo-img{display:block;margin:0 auto;width:min(74%,392px);height:auto;
   filter:drop-shadow(0 10px 12px rgba(90,55,15,.35));}
 .tagline{margin-top:2px;display:inline-flex;align-items:center;gap:7px;
@@ -67,8 +68,8 @@ body{
 .cast .blue{height:178px;left:50%;transform:translateX(-50%);z-index:3;animation:bob 3s var(--ease) infinite;}
 .cast .green{height:120px;left:6%;bottom:4px;z-index:2;animation:bobSide 3.4s var(--ease) infinite .3s;}
 .cast .purple{height:122px;right:5%;bottom:2px;z-index:2;animation:bobSide 3.2s var(--ease) infinite .6s;}
-.cast .pad{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
-  width:74%;max-width:330px;height:34px;border-radius:50%;background:rgba(110,80,40,.22);filter:blur(8px);}
+.cast .pad{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:38%;max-width:170px;height:20px;border-radius:50%;background:rgba(110,80,40,.18);filter:blur(7px);}
 @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-9px)}}
 @keyframes bobSide{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} }
@@ -101,8 +102,8 @@ body{
   background:radial-gradient(120% 70% at 50% 0,rgba(255,255,255,.35),transparent 60%);
   pointer-events:none;}
 
-/* game-name banner sticker on each card */
-.banner{position:absolute;z-index:4;top:10px;left:-3px;height:38px;width:auto;
+/* game-name banner sticker（grid＝アートの左下に重ねる） */
+.banner{position:absolute;z-index:4;top:auto;bottom:-18px;left:-2px;height:36px;width:auto;max-width:96%;
   filter:drop-shadow(0 5px 6px rgba(60,40,10,.4));transform:rotate(-2deg);}
 
 .desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;}
@@ -130,10 +131,12 @@ body{
   border-radius:999px 6px 6px 999px;box-shadow:0 5px 0 #c8491f, inset 0 2px 0 rgba(255,255,255,.35);}
 
 /* feature card: text left, scene right */
-.feature{display:flex;align-items:stretch;margin-bottom:14px;overflow:hidden;min-height:172px;}
-.feature .body{flex:1;padding:18px 14px 18px 18px;display:flex;flex-direction:column;gap:9px;justify-content:center;}
-.feature .art{flex:0 0 45%;align-self:stretch;border-radius:0 var(--r) var(--r) 0;}
-.feature .banner{height:42px;}
+.feature{display:flex;align-items:stretch;margin-bottom:14px;overflow:hidden;min-height:182px;}
+.feature .body{flex:1;min-width:0;padding:16px 12px 16px 18px;display:flex;flex-direction:column;gap:9px;justify-content:center;}
+.feature .art{flex:0 0 44%;align-self:stretch;border-radius:0 var(--r) var(--r) 0;}
+/* feature の看板は見切れないよう本文の先頭にブロックで置く */
+.feature .banner{position:static;display:block;height:40px;max-width:100%;
+  margin:0 0 2px -2px;transform:rotate(-1.5deg);}
 .feature .desc{padding-right:4px;}
 
 /* grid: scene top, text bottom */
@@ -141,8 +144,7 @@ body{
 @media(max-width:360px){ .grid{gap:11px;} }
 .grid .card{display:flex;flex-direction:column;}
 .grid .art{aspect-ratio:4/3;border-radius:var(--r) var(--r) 0 0;}
-.grid .body{padding:30px 13px 14px;display:flex;flex-direction:column;gap:7px;}
-.grid .banner{top:auto;bottom:-19px;height:34px;}
+.grid .body{padding:28px 13px 14px;display:flex;flex-direction:column;gap:7px;}
 
 /* entrance */
 .enter{opacity:0;transform:translateY(14px);animation:rise .5s var(--ease) forwards;}
@@ -181,11 +183,9 @@ body{
 <div class="scrim" aria-hidden="true"></div>
 <div class="screen">
 
-  <div class="topbar enter d1">
-    <button class="iconbtn" id="btnSettings" aria-label="せってい">
-      <img src="assets/menu/btn_settings.webp" alt="" draggable="false">
-    </button>
-  </div>
+  <button class="iconbtn enter d1" id="btnSettings" aria-label="せってい">
+    <img src="assets/menu/btn_settings.webp" alt="" draggable="false">
+  </button>
 
   <header class="hero">
     <img class="logo-img enter d1" src="assets/menu/logo.webp" alt="あそびのもり" draggable="false">
@@ -355,19 +355,34 @@ function makeCard(g, i){
     ? `<span class="play"><span class="tri"></span> あそぶ</span>`
     : '';
 
-  const art = `<div class="art">
-      <img class="scene" src="${g.scene}" alt="" draggable="false">
-      <img class="banner" src="${g.banner}" alt="${g.name}" draggable="false">
-      ${g.ribbon?`<span class="ribbon">${g.ribbon}</span>`:''}
-    </div>`;
-  const body = `<div class="body">
-       <div class="desc">${g.desc}</div>
-       ${meta}
-       ${playOrTag}
-     </div>`;
+  const bannerImg = `<img class="banner" src="${g.banner}" alt="${g.name}" draggable="false">`;
+  const ribbon = g.ribbon ? `<span class="ribbon">${g.ribbon}</span>` : '';
 
-  // feature: body 左 / art 右　　grid: art 上 / body 下
-  card.innerHTML = g.feature ? (body + art) : (art + body);
+  if(g.feature){
+    // body 左（看板は本文の先頭にブロック配置＝見切れない） / art 右（ribbon は右上）
+    card.innerHTML =
+      `<div class="body">
+         ${bannerImg}
+         <div class="desc">${g.desc}</div>
+         ${meta}
+         ${playOrTag}
+       </div>` +
+      `<div class="art">
+         <img class="scene" src="${g.scene}" alt="" draggable="false">
+         ${ribbon}
+       </div>`;
+  } else {
+    // art 上（看板はアート左下に重ねる） / body 下
+    card.innerHTML =
+      `<div class="art">
+         <img class="scene" src="${g.scene}" alt="" draggable="false">
+         ${bannerImg}
+       </div>` +
+      `<div class="body">
+         <div class="desc">${g.desc}</div>
+         ${meta}
+       </div>`;
+  }
 
   card.addEventListener('click', (ev)=>navTo(g.href, g, ev));
   return card;

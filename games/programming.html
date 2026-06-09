@@ -52,9 +52,12 @@
   .reset{border:none;background:#f3e2c2;color:#a87b4a;font-weight:800;border-radius:999px;
     padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;box-shadow:0 3px 0 #e3cfa6;}
   .reset:active{transform:translateY(2px);box-shadow:0 1px 0 #e3cfa6;}
-  .home{border:none;background:#fff;color:var(--honey-d);font-weight:800;border-radius:14px;
-    width:44px;height:44px;min-width:44px;cursor:pointer;font-family:inherit;text-decoration:none;
-    box-shadow:0 4px 0 #ecd9b5, inset 0 2px 0 #fff;display:flex;align-items:center;justify-content:center;}
+  /* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+  .home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+    left:calc(10px + env(safe-area-inset-left));
+    border:none;background:#fff;color:var(--honey-d);font-weight:800;border-radius:16px;
+    width:46px;height:46px;min-width:46px;cursor:pointer;font-family:inherit;text-decoration:none;
+    box-shadow:0 5px 0 #ecd9b5, inset 0 2px 0 #fff;display:flex;align-items:center;justify-content:center;}
   .home:active{transform:translateY(2px);box-shadow:0 2px 0 #ecd9b5;}
   .home .ic{width:22px;height:22px;background:var(--honey-d);
     -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
@@ -248,11 +251,11 @@
 </style>
 </head>
 <body>
+  <a class="home" href="../index.html" aria-label="おうちへ もどる"><span class="ic"></span></a>
   <h1><img class="h1uni" src="../assets/uni/blue_standing.png" alt="">プログラミング</h1>
   <div class="sub">めいれいを ならべて ともだちの ところまで いこう！</div>
 
   <div class="levelbar">
-    <a class="home" href="../index.html" aria-label="おうちへ もどる"><span class="ic"></span></a>
     <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
     <span class="lv" id="lvText">レベル 1</span>
     <button class="lvnav" id="nextLv" aria-label="つぎの レベル"><span class="tri r"></span></button>

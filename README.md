@@ -103,6 +103,8 @@ scripts/
 - バニラJS／ビルド不要。共通基盤（`assets/*`）の上に各ゲームを単一HTMLで実装。
 - フォント：Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 効果音：Web Audio で生成（音声ファイル不要、try/catch でガード）。
+- 画面の四隅UIは全画面で統一：**左上にホーム/せってい、右上にBGMトグル**（いずれも `position:fixed` でスクロール追従）。
+  各ゲーム画面は左上に「おうちへ もどる」ホームボタンを固定（メニューへ戻る）。
 - BGM：画面ごとに割り当ててループ再生（`assets/bgm.js`）。右上の音符ボタンで ON/OFF（全画面共通で保存）。
   `assets/bgm/<画面名>.mp3` を置けばその曲を優先再生、無ければやさしい合成ループを暫定で鳴らす。
   音源 mp3 は `.gitignore` 済み（公開リポジトリに市販曲を入れない）。詳細は [`assets/bgm/README.md`](assets/bgm/README.md)。
