@@ -249,8 +249,12 @@
         step();
       };
       audioEl.oncanplay = null;
+      var fellBack = false;
       var onErr = function () {
-        // mp3 が無い／読めない → 合成にフォールバック
+        // mp3 が無い／読めない／再生開始に失敗 → 合成へフォールバック。
+        // 二重呼び出しガード（onerror と play().catch の両方から来うる）。
+        if (fellBack) return;
+        fellBack = true;
         usingMp3 = false;
         try { audioEl.pause(); } catch (e) {}
         synth.start(curTrack);
@@ -259,9 +263,10 @@
       var p = audioEl.play();
       if (p && p.then) {
         p.then(fadeIn).catch(function () {
-          // 自動再生拒否や src 不正。src不正は onerror が拾う。
-          // ここに来るのは主に「ユーザー操作前」。次の操作で再試行されるよう started を戻す。
-          if (usingMp3 && audioEl && audioEl.error) onErr();
+          // 再生開始に失敗（mp3 不在・未対応・自動再生拒否など）。
+          // audioEl.error の有無に依存せず、必ず合成へフォールバックする。
+          // ※ ここで諦めると started=true のまま永久に無音になるため。
+          onErr();
         });
       } else { fadeIn(); }
     } else {
@@ -275,8 +280,14 @@
     synth.stop();
   }
 
-  /* 自動再生制限：最初のユーザー操作で開始 */
+  /* 自動再生制限：最初のユーザー操作で開始
+     ※ ここで AudioContext を「ユーザー操作の瞬間」に必ず起こしておく。
+        こうしないと、mp3 が無くて合成へフォールバックするとき（onerror は
+        非同期＝操作の瞬間を外れる）に AudioContext が suspended のままになり、
+        合成BGMが永久に鳴らない。 */
   function kick() {
+    var c = ensureCtx();
+    if (c && c.state === 'suspended') { try { c.resume(); } catch (e) {} }
     if (enabled && curTrack && !started) startPlayback();
   }
   ['pointerdown', 'touchstart', 'keydown'].forEach(function (ev) {
