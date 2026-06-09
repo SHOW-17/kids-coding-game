@@ -60,6 +60,8 @@ assets/
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
   bgm.js                共通BGM（画面ごとにループ再生。グローバル Bgm。右上に音符トグルを自動設置）
   bgm/                  BGM音源置き場（mp3。.gitignore済み＝公開リポジトリに入れない）
+                        優先順位：<画面名>.mp3 → _default.mp3（全画面共通）→ 合成ループ。
+                        全画面同じ曲なら _default.mp3 を1つ置くだけ。
 scripts/
   test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
 ```
