@@ -188,6 +188,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
+<script src="../assets/bgm.js"></script>
 <script>
 /* ====== かたちづくり（かげあわせ・タングラム）— ロジックは原版踏襲 ====== */
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
@@ -552,5 +553,6 @@ window.addEventListener('orientationchange', onResize, {passive:true});
 
 loadLevel();
 </script>
+<script>Bgm.play('katachi');</script>
 </body>
 </html>

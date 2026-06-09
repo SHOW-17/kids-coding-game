@@ -78,10 +78,12 @@ games/
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット）
   icons/               ファビコン・PWA・apple-touch アイコン一式
-  audio.js              共通サウンド（Web Audio）
+  audio.js              共通サウンド（効果音。Web Audio）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク）
   save.js               共通セーブ（ゲーム別 localStorage）
   shell.js              共通UI（ヘッダー・トースト・モーダル・画面遷移）
+  bgm.js                共通BGM（画面ごとにループ再生。mp3優先・無ければ合成）
+  bgm/                  BGM音源置き場（mp3。.gitignore 済み＝公開しない）
 scripts/
   test-games.js         ヘッドレス・スモークテスト
 ```
@@ -98,6 +100,9 @@ scripts/
 - バニラJS／ビルド不要。共通基盤（`assets/*`）の上に各ゲームを単一HTMLで実装。
 - フォント：Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 効果音：Web Audio で生成（音声ファイル不要、try/catch でガード）。
+- BGM：画面ごとに割り当ててループ再生（`assets/bgm.js`）。右上の音符ボタンで ON/OFF（全画面共通で保存）。
+  `assets/bgm/<画面名>.mp3` を置けばその曲を優先再生、無ければやさしい合成ループを暫定で鳴らす。
+  音源 mp3 は `.gitignore` 済み（公開リポジトリに市販曲を入れない）。詳細は [`assets/bgm/README.md`](assets/bgm/README.md)。
 - 永続化：`localStorage`（ゲーム別の名前空間。使えない環境ではメモリに自動フォールバック）。
   アーケードの「きろくを ぜんぶ けす」で全消去。
 - アクセシビリティ：`prefers-reduced-motion` を尊重。色だけに頼らない表現。

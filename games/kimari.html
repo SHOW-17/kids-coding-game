@@ -220,6 +220,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
+<script src="../assets/bgm.js"></script>
 <script>
 /* ====== きまり あそび（パターン推理）— ロジックは原版踏襲・図柄をCSS図形化 ====== */
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
@@ -506,5 +507,6 @@ diffBtns.forEach(b=>b.addEventListener('click', ()=>{
 /* スタート */
 nextProblem();
 </script>
+<script>Bgm.play('kimari');</script>
 </body>
 </html>
