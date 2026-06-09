@@ -20,6 +20,7 @@ const puppeteer = require('puppeteer-core');
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:9123';
 const PAGES = [
   { name: 'index',       url: BASE + '/index.html' },
+  { name: 'room',        url: BASE + '/room.html' },
   { name: 'programming', url: BASE + '/games/programming.html' },
   { name: 'manekko',     url: BASE + '/games/manekko.html' },
   { name: 'kimari',      url: BASE + '/games/kimari.html' },
