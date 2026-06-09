@@ -81,7 +81,7 @@ scripts/
 - フォント：Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 効果音：Web Audio で生成（音声ファイル不要、try/catch でガード）。
 - 永続化：`localStorage`（ゲーム別の名前空間。使えない環境ではメモリに自動フォールバック）。
-  アーケードの「🔄 きろくを ぜんぶ けす」で全消去。
+  アーケードの「きろくを ぜんぶ けす」で全消去。
 - アクセシビリティ：`prefers-reduced-motion` を尊重。色だけに頼らない表現。
 - 動作確認：`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査（`scripts/test-games.js`。実行手順はファイル冒頭のコメント参照）。
 

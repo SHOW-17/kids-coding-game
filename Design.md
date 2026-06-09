@@ -161,9 +161,10 @@ assets/
 - `Sfx`：`tap/pop/step/ding/note/success/fanfare/error/whoosh/sparkle`
 - `FX`：`ring/burst/sparkles/confetti(celebrate)/shake`
 - `Save.game(ns)`：`get/set/bestMax/bestMin`、`Save.resetAll([ns…])`
-- `App`：`go(href)/toast/el`（任意で `showModal`）
+- `App`（shell.js）：`go(href)/toast/showModal/el` — **現状は index.html 専用**。
+  各ゲームは shell.js を読み込まず、トップバー・結果モーダル・トーストをテーマに合わせて**自前実装**する。
 
-> ゲーム側は `try/catch` でガードして呼ぶ（基盤が無くても落ちない）。
+> ゲーム側は `Sfx/FX/Save` を `try/catch` でガードして呼ぶ（基盤が無くても落ちない）。
 
 ---
 
