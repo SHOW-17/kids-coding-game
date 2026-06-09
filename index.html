@@ -268,6 +268,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="assets/fx.js"></script>
 <script src="assets/save.js"></script>
 <script src="assets/shell.js"></script>
+<script src="assets/bgm.js"></script>
 <script>
 /* ===== ゲーム定義（看板アートは絵文字を使わず CSS図形＋キャラ画像） ===== */
 const GAMES = [
@@ -428,5 +429,6 @@ document.getElementById('ovlNo').addEventListener('click', ()=>{ document.getEle
 document.getElementById('ovlYes').addEventListener('click', doReset);
 document.getElementById('ovl').addEventListener('click', (e)=>{ if(e.target.id==='ovl') e.currentTarget.hidden = true; });
 </script>
+<script>Bgm.play('home');</script>
 </body>
 </html>

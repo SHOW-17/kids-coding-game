@@ -58,6 +58,8 @@ assets/
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
   save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
+  bgm.js                共通BGM（画面ごとにループ再生。グローバル Bgm。右上に音符トグルを自動設置）
+  bgm/                  BGM音源置き場（mp3。.gitignore済み＝公開リポジトリに入れない）
 scripts/
   test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
 ```
@@ -72,7 +74,8 @@ scripts/
 - **FX**（fx.js）：`FX.confetti()/burst(x,y)/sparkles(x,y)/ring(x,y)/floatEmoji(x,y,text)/shake(el)/celebrate()`。
 - **Save**（save.js）：`const save = Save.game('ゲーム名'); save.get(k,def); save.set(k,v); save.bestMax/bestMin(k,v)`。localStorage不可環境はメモリに自動フォールバック。
 - 上記 **Sfx/FX/Save の3本は新ゲームで必須**（manekko/kimari/katachi/pitagora が踏襲）。
-  ※ **プログラミング（programming.html）だけは歴史的経緯で assets JS を一切読み込まない完全自己完結**（独自の beep/confetti/toast/localStorage を内蔵）＝例外。新ゲームは self-contained にせず3本に乗せること。
+  ※ **プログラミング（programming.html）だけは歴史的経緯で効果音/セーブ系の assets JS を読み込まない完全自己完結**（独自の beep/confetti/toast/localStorage を内蔵）＝例外。新ゲームは self-contained にせず3本に乗せること。
+  ※ ただし **BGM は全画面共通方針のため、programming.html も `bgm.js` だけは例外的に末尾で読み込み** `Bgm.play('programming')` する。
 - **App**（shell.js）：`App.go(href)`／`App.toast(msg)`／`App.showModal({...})`／`App.el()` など。**現状は index.html 専用**。
   各ゲームは shell.js を読み込まず、**topbar・結果モーダル・トーストをテーマに合わせて自前実装**している
   （色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先した結果）。新ゲームもこの方式に倣う
