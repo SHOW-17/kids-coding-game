@@ -41,31 +41,37 @@ python3 -m http.server 9090 --bind 0.0.0.0
 # → http://<サーバーのIP>:9090/
 ```
 
-`index.html` がアーケード（オープニング）。各ゲームは `kuma-programming.html` と `games/*.html`。
+`index.html` がアーケード（オープニング）。各ゲームは `games/*.html`。
 
 ---
 
 ## ファイル構成
 
 ```
-index.html              アーケード選択画面（オープニング／PWAのホーム）
-kuma-programming.html    プログラミング（🏠でアーケードへ戻る。assets JS 不要の自己完結）
+index.html              アーケード選択画面（オープニング／PWAのホーム。ルート唯一のHTML）
 Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体）
+manifest.webmanifest    PWAマニフェスト
 games/
+  programming.html      プログラミング（🏠でアーケードへ戻る。assets JS 不要の自己完結）
   manekko.html          まねっこ（サイモン）
   kimari.html           きまりあそび（パターン推理）
   katachi.html          かたちづくり（タングラム＝かげあわせ方式）
   pitagora.html         ぴたごら（たまころがし＝決定論グリッド）
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット）
+  icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（Web Audio）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク）
   save.js               共通セーブ（ゲーム別 localStorage）
   shell.js              共通UI（ヘッダー・トースト・モーダル・画面遷移）
+scripts/
+  test-games.js         ヘッドレス・スモークテスト
 ```
 
 > スタイルは各HTMLに**インライン**で持つ（共通の見た目ルールは [Design.md](Design.md)）。
-> ※ `kuma-programming.html` というファイル名は保存キー互換のため維持（中身・テーマは「ねんどの森」に刷新済み）。
+> ※ プログラミングの保存キー `kuma_prog_save_v1` はJS内の定数（ファイル名・パスに依存しない）。
+>   旧 `kuma-programming.html` から `games/programming.html` へ移動・改名したが、保存データは
+>   localStorage がオリジン単位のため引き継がれる。
 
 ---
 
@@ -75,9 +81,9 @@ assets/
 - フォント：Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 効果音：Web Audio で生成（音声ファイル不要、try/catch でガード）。
 - 永続化：`localStorage`（ゲーム別の名前空間。使えない環境ではメモリに自動フォールバック）。
-  アーケードの「🔄 きろくを ぜんぶ けす」で全消去。
+  アーケードの「きろくを ぜんぶ けす」で全消去。
 - アクセシビリティ：`prefers-reduced-motion` を尊重。色だけに頼らない表現。
-- 動作確認：`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査（`/tmp/test-games.js`）。
+- 動作確認：`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査（`scripts/test-games.js`。実行手順はファイル冒頭のコメント参照）。
 
 ### デザイン素材について
 ロゴ・ゲーム看板・背景・アイコンは CSS/SVG で「ねんど化」して実装（**絵文字は使わない**）。

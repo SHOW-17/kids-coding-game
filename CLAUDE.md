@@ -42,35 +42,47 @@
 
 ### ファイル構成
 ```
-index.html              アーケード選択画面（オープニング／PWAのホーム）
-kuma-programming.html    プログラミング（第1弾。🏠でindexへ戻る。assets JS 不要の自己完結）
+index.html              アーケード選択画面（オープニング／PWAのホーム。ルート唯一のHTML）
 Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体・必読）
+manifest.webmanifest    PWAマニフェスト
 games/
+  programming.html      プログラミング（第1弾。🏠でindexへ戻る。assets JS 不要の自己完結）
   manekko.html          まねっこ（サイモン）
   kimari.html           きまりあそび（パターン推理）
   katachi.html          かたちづくり（タングラム＝かげあわせ方式）
   pitagora.html         ぴたごら（たまころがし＝決定論グリッドsim）
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）
+  icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
   save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
+scripts/
+  test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
 ```
 ※ `index.html` はもうシンボリックリンクではなく実体（アーケード）。各ゲームは個別HTML。
 ※ 見た目のルール（ねんどカード・カラー・タイポ）は各HTMLにインラインで持つ。共通定義は Design.md 参照。
-※ `kuma-programming.html` のファイル名は保存キー `kuma_prog_save_v1` の互換維持のため変更しない（中身はリデザイン済み）。
+※ プログラミングの保存キーは `kuma_prog_save_v1`（JS内の定数で、ファイル名・パスに依存しない）。
+  旧 `kuma-programming.html` から `games/programming.html` へ移動・改名済みだが、localStorage は
+  オリジン単位のため保存データはそのまま引き継がれる。保存キー自体は互換のため変更しない。
 
-### 共通基盤の使い方（新ゲームは必ずこれに乗せる＝統一感とプロ品質の担保）
+### 共通基盤の使い方（新ゲームは Sfx/FX/Save に必ず乗せる＝統一感とプロ品質の担保）
 - **Sfx**（audio.js）：`Sfx.tap()/pop()/step()/ding()/success()/fanfare()/error()/whoosh()/sparkle()/note(freq)`。操作ごとに必ず鳴らす。
 - **FX**（fx.js）：`FX.confetti()/burst(x,y)/sparkles(x,y)/ring(x,y)/floatEmoji(x,y,text)/shake(el)/celebrate()`。
 - **Save**（save.js）：`const save = Save.game('ゲーム名'); save.get(k,def); save.set(k,v); save.bestMax/bestMin(k,v)`。localStorage不可環境はメモリに自動フォールバック。
-- **App**（shell.js）：`App.topbar({title, back:'../index.html'})`／`App.toast(msg)`／`App.showModal({emoji,title,text,buttons:[{label,cls,onClick}]})`／`App.go(href)`／`App.buzz()`／`App.el()`。
+- 上記 **Sfx/FX/Save の3本は新ゲームで必須**（manekko/kimari/katachi/pitagora が踏襲）。
+  ※ **プログラミング（programming.html）だけは歴史的経緯で assets JS を一切読み込まない完全自己完結**（独自の beep/confetti/toast/localStorage を内蔵）＝例外。新ゲームは self-contained にせず3本に乗せること。
+- **App**（shell.js）：`App.go(href)`／`App.toast(msg)`／`App.showModal({...})`／`App.el()` など。**現状は index.html 専用**。
+  各ゲームは shell.js を読み込まず、**topbar・結果モーダル・トーストをテーマに合わせて自前実装**している
+  （色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先した結果）。新ゲームもこの方式に倣う
+  ＝ `audio.js / fx.js / save.js` の3本だけ読み込み、UI ガワは各HTMLにインライン。`App.showModal` は絵文字を
+  渡せる API だが「絵文字を使わない」方針のため使わない。
 - 見た目は `:root` で `--accent / --accent-d / --accent-l` をゲームごとに上書きし、背景グラデも合わせる。入場は `.enter .d1..d6`。
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** カードに進捗を出すため、各ゲームは規定キーを保存すること：
   - manekko → `Save.game('manekko').set('best', 最高だん数)`
   - kimari / katachi / pitagora → `Save.game('ns').set('cleared', クリア/正解 数)`
-  - くまゲームは独自キー `kuma_prog_save_v1`（`{cleared:[...]}`）。index.html はこれも読む。
+  - プログラミングは独自キー `kuma_prog_save_v1`（`{cleared:[...]}`。キー名は互換のため kuma_ のまま）。index.html はこれも読む。
 
 ### ゲーム一覧と知育のねらい
 | ゲーム | 仕組み | 育てる力 | アクセント色 |
@@ -83,14 +95,14 @@ assets/
 
 ### 実装メモ（落とし穴回避）
 - **かたちづくりは回転なしの「かげあわせ」方式**：完成形の各ピースの薄い影を最初から表示し、対応ピースを近づけるとスナップ。1対1対応なので必ず解け、回転ロジックのバグを避ける。
-- **ぴたごらは物理を使わず決定論グリッドsim**：玉は1マスずつ落下、坂(╱╲)で斜めにずれる、壁/枠で停止＝失敗（やさしく自動リスタート・置いた坂は残す＝デバッグ）。レベルは必ず解の存在を確認してから追加（クマゲームのBFS確認と同じ思想）。
+- **ぴたごらは物理を使わず決定論グリッドsim**：玉は1マスずつ落下、坂(╱╲)で斜めにずれる、壁/枠で停止＝失敗（やさしく自動リスタート・置いた坂は残す＝デバッグ）。レベルは必ず解の存在を確認してから追加（プログラミングの BFS 確認と同じ思想。`scripts/` のレベル検証も活用）。
 - **きまりは出題ジェネレータ＋検証**：「3択・正解ちょうど1つ・重複なし」を生成後に必ず検証。文字（数字以外）は使わず絵文字・図形・ドットで表現。
 
 ### 新ゲームを追加する手順
-1. `games/新ゲーム.html` を作る。**必ず共通基盤（assets/*）に乗せ、manekko.html を品質の参照基準にする。**
+1. `games/新ゲーム.html` を作る。**必ず `audio.js / fx.js / save.js` を読み込み（Sfx/FX/Save）、manekko.html を品質・構成の参照基準にする。**
 2. `index.html` の `GAMES` 配列にカードを足す（href・名前ひらがな・アクセント色・看板アート・進捗キー）。
-3. ゲーム内に `App.topbar({back:'../index.html'})` で🏠戻る導線。進捗は規定キーで保存。
-4. ヘッドレス確認（`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査。`/tmp/test-games.js` 参照）。
+3. ゲーム内に自前の topbar（CSS mask の家アイコン。manekko/kimari 等を踏襲）で `../index.html` へ戻る導線。進捗は規定キーで保存。
+4. ヘッドレス確認（`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査。`scripts/test-games.js` 参照。新ゲーム追加時は PAGES 配列にも足す）。
 5. 動作OKなら README も更新。
 
 ---
@@ -186,7 +198,7 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
 ## 実装済みの機能
 
 - **自動リスタート**：壁・枠・押せない箱にぶつかったら自動でスタート地点へ。命令はそのまま残す（直して再実行＝デバッグ練習）。
-- **オートセーブ**：クリア状況・現在レベル・解禁した案内を `localStorage` に保存。続きから遊べる。「🔄さいしょ」で初期化。
+- **オートセーブ**：クリア状況・現在レベル・解禁した案内を `localStorage` に保存。続きから遊べる。「さいしょ」ボタンで初期化。
 - **段階的解禁**：上記スケジュールどおりに命令を1つずつ解放。
 - **レベルアップ案内**：新命令・新しい仕掛け・最終ステージで案内カードを表示。
 - **ブロック制限カウンタ**：制限つきレベルで残ブロック数を表示。
@@ -197,7 +209,7 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
 
 ## 技術メモ
 
-- 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`kuma-programming.html` と `games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
+- 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
 - フォント: Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
 - 状態管理はメモリ内。永続化は `localStorage`（try/catchでガード済み）。
   - 注意：Claude.aiのプレビューiframe等では `localStorage` が保存されないことがある。実機ブラウザでは正常動作。
@@ -208,7 +220,7 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
   - ループの中身は移動のみ（ネストなし）。
   - 実行時は flatten してから1ステップずつ動かす。
 - 仕掛けの実行時状態：`collected`（拾ったいちご）／`gatesOpen`（とびら開閉）／`boxPos`・`boxEls`（箱の現在位置とDOM）。run開始時に全リセット。
-- 箱はクマと同じく絶対配置トークン。押下判定は「進む先が箱なら、その先が空きかを見て一緒に動かす」。
+- 箱はプレイヤー（コード上の `#bear` トークン）と同じく絶対配置トークン。押下判定は「進む先が箱なら、その先が空きかを見て一緒に動かす」。
 
 ---
 
@@ -217,7 +229,7 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
 - **ネストループ**：くりかえしの中にくりかえし（既存ループの自然な発展）。
 - **おえかき（タートルグラフィックス）**：進むと線を引き、お手本の形をなぞる。ループの威力が映える。
 - **マイコマンド（関数）**：自作の命令列を登録して1ブロックで呼び出す＝抽象化・再利用。ループの先の概念。※対象年齢↑のため、やるなら「はかせコース」として隔離し、先に確認。
-- **キャラクター選択／差し替え**（テーマのデータ化が前提。🐻🍯🪨や色を1か所に集約するリファクタが先）。
+- **キャラクター選択／差し替え**（テーマのデータ化が前提。キャラ画像・色・名前（コード上の `#bear` 等の旧称含む）を1か所に集約するリファクタが先）。
 - レベルエディタ（親・先生がマップを自作）。
 - 音声読み上げ（未就学児対応）。
 - レベルデータの外部JSON化。

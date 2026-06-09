@@ -6,10 +6,11 @@
 <title>あそびのもり</title>
 <meta name="description" content="あそびながら かしこくなる。よめなくても あそべる ちいさな こどもの ゲームランド。">
 <meta name="theme-color" content="#ffb43d">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -271,7 +272,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ===== ゲーム定義（看板アートは絵文字を使わず CSS図形＋キャラ画像） ===== */
 const GAMES = [
   {
-    id:'kuma', feature:true, href:'kuma-programming.html',
+    id:'kuma', feature:true, href:'games/programming.html',
     name:'プログラミング', desc:'やじるしを ならべて、<br>ゴールまで すすもう。',
     ac:'#ffb43d', acd:'#f59312', acsh:'#d9851f', acsoft:'#ffe9c6',
     ribbon:'いちばん にんき', crown:true, total:19,
@@ -405,19 +406,11 @@ function doReset(){
   try{ if(window.Sfx&&Sfx.whoosh) Sfx.whoosh(); }catch(e){}
   setTimeout(()=>location.reload(), 200);
 }
+/* 確認ダイアログは常にテーマ済みの .ovl/.dlg を使う
+   （shell.js の App.showModal は .overlay/.modal/.btn 用CSSを必要とし、
+     このページには定義が無いため崩れる。絵文字も使わない方針） */
 document.getElementById('resetAll').addEventListener('click', ()=>{
   try{ if(window.Sfx&&Sfx.tap) Sfx.tap(); }catch(e){}
-  if(window.App && App.showModal){
-    App.showModal({
-      emoji:'🧹', title:'ぜんぶ けす？',
-      text:'あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？',
-      buttons:[
-        {label:'やめる', cls:'btn--ghost'},
-        {label:'けす', cls:'', onClick:doReset}
-      ]
-    });
-    return;
-  }
   document.getElementById('ovl').hidden = false;
 });
 document.getElementById('ovlNo').addEventListener('click', ()=>{ document.getElementById('ovl').hidden = true; });

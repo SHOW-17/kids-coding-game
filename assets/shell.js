@@ -30,6 +30,22 @@
     toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms || 2200);
   }
 
+  /* ---- CSSマスクのアイコン（絵文字は使わない方針：Design.md §5） ----
+     外部CSSに依存しないよう、必要なスタイルはインラインで自己完結させる */
+  var ICON_PATHS = {
+    home: "M12 3 2 12h3v8h5v-5h4v5h5v-8h3z",
+    sound: "M3 9v6h4l5 5V4L7 9zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z",
+    muted: "M3 9v6h4l5 5V4L7 9zm18.3-1.3-1.4-1.4L17 9.2 14.1 6.3l-1.4 1.4L15.6 10.6l-2.9 2.9 1.4 1.4 2.9-2.9 2.9 2.9 1.4-1.4-2.9-2.9z"
+  };
+  function maskIcon(name) {
+    var span = el('span');
+    var svg = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='" +
+      ICON_PATHS[name] + "'/%3E%3C/svg%3E\") center/contain no-repeat";
+    span.style.cssText = 'display:inline-block;width:22px;height:22px;background:currentColor;' +
+      '-webkit-mask:' + svg + ';mask:' + svg + ';';
+    return span;
+  }
+
   /* ---- ミュートボタン（状態はlocalStorageへ） ---- */
   function muteButton() {
     var btn = el('button', 'icon-btn');
@@ -37,7 +53,10 @@
     var saved = false;
     try { saved = global.Save && Save.game('app').get('muted', false); } catch (e) {}
     if (global.Sfx) Sfx.setMuted(saved);
-    function render() { btn.textContent = (global.Sfx && Sfx.muted) ? '🔇' : '🔊'; }
+    function render() {
+      btn.innerHTML = '';
+      btn.appendChild(maskIcon((global.Sfx && Sfx.muted) ? 'muted' : 'sound'));
+    }
     render();
     btn.addEventListener('click', function () {
       var m = global.Sfx ? Sfx.toggleMute() : false;
@@ -52,7 +71,7 @@
   function backButton(href) {
     var btn = el('button', 'icon-btn');
     btn.setAttribute('aria-label', 'もどる');
-    btn.textContent = '🏠';
+    btn.appendChild(maskIcon('home'));
     btn.addEventListener('click', function () { go(href || '../index.html'); });
     return btn;
   }
