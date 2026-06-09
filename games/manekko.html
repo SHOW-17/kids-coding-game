@@ -37,8 +37,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 /* ===== topbar ===== */
 .topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
-  padding:calc(12px + env(safe-area-inset-top)) 16px 6px;}
-.home{flex:0 0 auto;width:50px;height:50px;border:none;cursor:pointer;border-radius:18px;background:#fff;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 6px 72px;}
+/* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 5px 0 rgba(123,89,224,.22), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
 .home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(123,89,224,.22);}

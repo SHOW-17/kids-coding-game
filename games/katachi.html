@@ -33,8 +33,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 
 .topbar{position:relative;z-index:3;width:100%;max-width:480px;display:flex;align-items:center;gap:10px;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 2px;}
-.home{flex:0 0 auto;width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 2px 70px;}
+/* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
   display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 rgba(58,158,92,.26), inset 0 2px 0 #fff;
   transition:transform .12s var(--ease);}
 .home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(58,158,92,.26);}

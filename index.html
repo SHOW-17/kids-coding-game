@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>あそびのもり</title>
 <meta name="description" content="あそびながら かしこくなる。よめなくても あそべる ちいさな こどもの ゲームランド。">
-<meta name="theme-color" content="#ffb43d">
+<meta name="theme-color" content="#9fd16a">
 <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
@@ -17,178 +17,138 @@
 <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#fff6e7; --paper2:#ffeccd;
-  --ink:#5b4022; --ink-soft:#8a6a44; --ink-faint:#b39a78;
+  --paper:#fff7ea; --paper2:#ffeccd;
+  --ink:#5b4022; --ink-soft:#7c5d39; --ink-faint:#a98c66;
   --honey:#ffb43d; --honey-d:#f59312; --honey-l:#ffdb95;
-  --purple:#9b7cf0; --purple-d:#7b59e0; --purple-l:#cdb8ff;
-  --pink:#ff9ec4; --mint:#62cf9a; --sky:#5cc8e8;
   --r:30px; --r-sm:20px;
   --ease:cubic-bezier(.22,1,.36,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{ -webkit-text-size-adjust:100%; }
+html{ -webkit-text-size-adjust:100%;
+  min-height:100%;
+  background:#cdeab2 url("assets/menu/bg.webp") center top / cover no-repeat fixed;
+}
 body{
   font-family:'M PLUS Rounded 1c',sans-serif; color:var(--ink);
-  background:
-    radial-gradient(120% 60% at 50% -8%, #fff9ef 0%, var(--paper) 42%, var(--paper2) 100%) fixed;
-  position:relative; overflow-x:hidden;
+  position:relative; overflow-x:hidden; background:transparent;
   max-width:600px; margin:0 auto;
-  padding:0 18px calc(30px + env(safe-area-inset-bottom));
+  padding:0 16px calc(26px + env(safe-area-inset-bottom));
 }
-/* felt grain */
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  mix-blend-mode:multiply;}
+/* readability scrim: clear sky up top, soft cream wash lower down so cards/text pop */
+.scrim{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(255,253,245,0) 0%, rgba(255,253,245,0) 22%,
+    rgba(255,250,236,.28) 46%, rgba(255,247,230,.5) 74%, rgba(255,245,226,.62) 100%);}
 .screen{position:relative;z-index:1;max-width:600px;margin:0 auto;}
 
-/* rolling clay hills behind hero */
-.hills{position:absolute;top:0;left:-18px;right:-18px;height:300px;z-index:0;overflow:hidden;pointer-events:none;}
-.hills i{position:absolute;border-radius:50%;}
-.hills .h1{width:60%;min-width:420px;height:300px;left:-12%;top:120px;background:#ffe3a8;
-  box-shadow:inset 0 8px 0 rgba(255,255,255,.55), inset 0 -22px 30px rgba(212,150,40,.25);}
-.hills .h2{width:46%;min-width:320px;height:240px;left:40%;top:170px;background:#ffd589;
-  box-shadow:inset 0 8px 0 rgba(255,255,255,.5), inset 0 -18px 24px rgba(212,150,40,.28);}
-.hills .cloud{width:120px;height:64px;background:#fffdf8;top:46px;left:8%;
-  box-shadow:34px 10px 0 -6px #fffdf8, -30px 12px 0 -4px #fffdf8, 0 12px 18px rgba(160,120,60,.12);}
-.hills .cloud.b{top:30px;right:10%;left:auto;transform:scale(.8);}
+/* ===== SETTINGS BUTTON（右上のBGM音符と同じく fixed で追従。こちらは左上） ===== */
+.iconbtn{position:fixed;z-index:9999;
+  top:calc(8px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  border:none;background:none;cursor:pointer;padding:0;line-height:0;
+  transition:transform .14s var(--ease);filter:drop-shadow(0 5px 6px rgba(80,55,15,.32));}
+.iconbtn img{width:50px;height:50px;display:block;}
+.iconbtn:active{transform:translateY(3px) scale(.94);}
 
 /* ===== HERO ===== */
-.hero{position:relative;text-align:center;padding-top:calc(30px + env(safe-area-inset-top));}
-.logo{
-  font-family:'Mochiy Pop One',sans-serif; font-size:clamp(46px,14vw,58px); line-height:.98;
-  color:var(--honey); letter-spacing:1px;
-  text-shadow:
-    0 2px 0 #ffe7b0, 0 4px 0 #ffd98a, 0 6px 0 #f7c469,
-    0 8px 0 #e9a948, 0 10px 0 #d9913a,
-    0 13px 14px rgba(150,90,30,.34);
-  -webkit-text-stroke:2px #fff;
-}
-.logo .l2{display:block;}
-.tagline{margin-top:14px;display:inline-flex;align-items:center;gap:7px;
-  font-weight:800;font-size:15px;color:var(--ink-soft);
-  background:#fff; padding:8px 18px;border-radius:999px;
-  box-shadow:0 5px 0 rgba(180,140,80,.18), inset 0 2px 0 #fff;}
-.tagline .star{width:16px;height:16px;background:var(--honey);
+.hero{position:relative;text-align:center;padding-top:calc(58px + env(safe-area-inset-top));}
+.logo-img{display:block;margin:0 auto;width:min(74%,392px);height:auto;
+  filter:drop-shadow(0 10px 12px rgba(90,55,15,.35));}
+.tagline{margin-top:2px;display:inline-flex;align-items:center;gap:7px;
+  font-weight:800;font-size:14.5px;color:var(--ink-soft);
+  background:rgba(255,255,255,.94); padding:7px 18px;border-radius:999px;
+  box-shadow:0 5px 0 rgba(150,110,60,.18), inset 0 2px 0 #fff;}
+.tagline .star{width:15px;height:15px;background:var(--honey);
   clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
   box-shadow:0 1px 0 #d9913a;}
 
-/* hero unicorns */
-.cast{position:relative;height:200px;margin-top:6px;}
-.cast img{position:absolute;bottom:0;filter:drop-shadow(0 14px 10px rgba(120,80,30,.28));}
-.cast .blue{height:188px;left:50%;transform:translateX(-50%);z-index:3;animation:bob 3s var(--ease) infinite;}
-.cast .green{height:120px;left:14px;bottom:6px;z-index:2;animation:bobSide 3.4s var(--ease) infinite .3s;}
-.cast .purple{height:128px;right:8px;bottom:4px;z-index:2;animation:bobSide 3.2s var(--ease) infinite .6s;}
-.cast .pad{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
-  width:300px;height:40px;border-radius:50%;background:rgba(190,150,90,.22);filter:blur(7px);}
+/* hero unicorns standing on the path */
+.cast{position:relative;height:182px;margin-top:8px;}
+.cast img{position:absolute;bottom:0;filter:drop-shadow(0 12px 8px rgba(90,55,15,.32));}
+.cast .blue{height:178px;left:50%;transform:translateX(-50%);z-index:3;animation:bob 3s var(--ease) infinite;}
+.cast .green{height:120px;left:6%;bottom:4px;z-index:2;animation:bobSide 3.4s var(--ease) infinite .3s;}
+.cast .purple{height:122px;right:5%;bottom:2px;z-index:2;animation:bobSide 3.2s var(--ease) infinite .6s;}
+.cast .pad{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:38%;max-width:170px;height:20px;border-radius:50%;background:rgba(110,80,40,.18);filter:blur(7px);}
 @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-9px)}}
 @keyframes bobSide{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} .m-simon,.m-pita .ball{animation:none!important;} }
+@media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} }
 
-/* ===== SECTION ===== */
-.shelf-h{display:flex;align-items:center;gap:10px;margin:24px 4px 14px;
-  font-family:'Mochiy Pop One';font-size:17px;color:var(--ink);}
-.shelf-h .dot{width:14px;height:14px;border-radius:50%;background:var(--honey);
+/* ===== SECTION HEADER ===== */
+.shelf-h{display:inline-flex;align-items:center;gap:9px;margin:18px auto 14px;
+  font-family:'Mochiy Pop One';font-size:16px;color:var(--ink);
+  background:rgba(255,255,255,.9);padding:8px 18px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(150,110,60,.16), inset 0 2px 0 #fff;}
+.shelf-wrap{text-align:center;}
+.shelf-h .dot{width:13px;height:13px;border-radius:50%;background:var(--honey);
   box-shadow:0 2px 0 #d9913a, inset 0 2px 0 rgba(255,255,255,.6);}
-.shelf-h::after{content:"";flex:1;height:5px;border-radius:9px;
-  background:repeating-linear-gradient(90deg,var(--honey-l) 0 12px,transparent 12px 22px);opacity:.6;}
 
-/* ===== CLAY CARD base ===== */
+/* ===== CLAY CARD ===== */
 .card{
   position:relative;border-radius:var(--r);background:#fffdf7;border:none;
   text-align:left;width:100%;cursor:pointer;display:block;color:inherit;font:inherit;
   box-shadow:
-    0 16px 26px -12px rgba(150,100,40,.34),
-    0 3px 0 rgba(150,100,40,.10),
-    inset 0 3px 0 rgba(255,255,255,.9),
+    0 18px 30px -14px rgba(90,55,15,.5),
+    0 3px 0 rgba(120,80,30,.12),
+    inset 0 3px 0 rgba(255,255,255,.95),
     inset 0 -10px 16px rgba(190,150,90,.12);
   transition:transform .16s var(--ease), box-shadow .16s var(--ease);
 }
 .card:active{transform:translateY(4px) scale(.985);
-  box-shadow:0 8px 16px -10px rgba(150,100,40,.34),inset 0 3px 0 rgba(255,255,255,.9),inset 0 -10px 16px rgba(190,150,90,.12);}
-.art{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.art::after{content:"";position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(110% 80% at 50% 0,rgba(255,255,255,.5),transparent 62%);
+  box-shadow:0 9px 16px -10px rgba(90,55,15,.5),inset 0 3px 0 rgba(255,255,255,.95),inset 0 -10px 16px rgba(190,150,90,.12);}
+.art{position:relative;overflow:hidden;background:#f3ead7;}
+.art img.scene{width:100%;height:100%;object-fit:cover;display:block;}
+.art::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(120% 70% at 50% 0,rgba(255,255,255,.35),transparent 60%);
   pointer-events:none;}
-.art .uni{position:absolute;filter:drop-shadow(0 6px 5px rgba(80,50,10,.25));z-index:3;}
 
-.name{font-family:'Mochiy Pop One';color:var(--ink);line-height:1.16;}
+/* game-name banner sticker（本文先頭にブロック配置。見切れない）
+   ※ width/height:auto＋max-* で常にアスペクト比を保つ＝絶対に横へ伸び縮みさせない。
+     max-width:100% で画面幅が狭くても比率を保ったままカード内に必ず収める。 */
+.banner{position:relative;z-index:4;display:block;align-self:flex-start;
+  width:auto;height:auto;max-width:100%;max-height:38px;
+  filter:drop-shadow(0 5px 6px rgba(60,40,10,.4));transform:rotate(-1.5deg);
+  transform-origin:left center;}
+
 .desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;}
 .play{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
-  font-family:'Mochiy Pop One';font-size:14px;color:#fff;
-  background:linear-gradient(180deg,var(--ac,#ff9ec4),var(--ac-d,#ec6fa0));
-  padding:8px 16px;border-radius:999px;
-  box-shadow:0 5px 0 var(--ac-sh,#cf5688), inset 0 2px 0 rgba(255,255,255,.4);}
+  font-family:'Mochiy Pop One';font-size:14.5px;color:#fff;
+  background:linear-gradient(180deg,var(--ac,#ffb43d),var(--ac-d,#f59312));
+  padding:9px 18px;border-radius:999px;
+  box-shadow:0 5px 0 var(--ac-sh,#d9851f), inset 0 2px 0 rgba(255,255,255,.45);}
 .play .tri{width:0;height:0;border-left:11px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent;}
 .prog{display:flex;align-items:center;gap:8px;}
-.prog .bar{flex:1;height:10px;border-radius:9px;background:#f0e2c6;overflow:hidden;
+.prog .bar{flex:1;height:11px;border-radius:9px;background:#f0e2c6;overflow:hidden;
   box-shadow:inset 0 2px 3px rgba(150,110,60,.25);}
 .prog .bar i{display:block;height:100%;border-radius:9px;
   background:linear-gradient(90deg,var(--honey-l),var(--honey));transition:width .6s var(--ease);}
-.prog .pct{font-size:12px;font-weight:800;color:var(--ink-faint);min-width:38px;text-align:right;}
+.prog .pct{font-size:12px;font-weight:800;color:var(--ink-faint);min-width:40px;text-align:right;}
 .tagrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .tag{font-size:11.5px;font-weight:800;color:var(--ac-d);white-space:nowrap;
-  background:var(--ac-soft,#ffe3ef);padding:3px 10px;border-radius:999px;}
+  background:var(--ac-soft,#ffe9c6);padding:3px 11px;border-radius:999px;}
 .best{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--ink-soft);white-space:nowrap;}
 .best .star{width:12px;height:12px;background:var(--honey);
   clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
-.ribbon{position:absolute;top:12px;left:-4px;z-index:5;
+.ribbon{position:absolute;top:12px;right:-4px;z-index:5;
   font-family:'Mochiy Pop One';font-size:11.5px;color:#fff;
-  background:linear-gradient(180deg,#ff7a8f,#ec5168);padding:5px 13px 5px 11px;
-  border-radius:6px 999px 999px 6px;box-shadow:0 5px 0 #c93b50, inset 0 2px 0 rgba(255,255,255,.35);}
+  background:linear-gradient(180deg,#ff8a5c,#ee5f33);padding:5px 12px;
+  border-radius:999px 6px 6px 999px;box-shadow:0 5px 0 #c8491f, inset 0 2px 0 rgba(255,255,255,.35);}
 
-/* feature card */
-.feature{display:flex;gap:0;margin-bottom:14px;overflow:hidden;}
-.feature .art{flex:0 0 150px;align-self:stretch;border-radius:var(--r) 0 0 var(--r);}
-.feature .art img{width:100%;height:100%;object-fit:cover;}
-.feature .body{flex:1;padding:16px 16px 16px 15px;display:flex;flex-direction:column;gap:8px;justify-content:center;}
-.feature .name{font-size:20px;padding-right:34px;letter-spacing:-.3px;}
-.feature .crown{position:absolute;top:10px;right:12px;z-index:4;font-size:0;
-  width:34px;height:34px;border-radius:50%;background:linear-gradient(180deg,#fff,#ffe7b0);
-  box-shadow:0 4px 0 #e3b96a, inset 0 2px 0 #fff;display:flex;align-items:center;justify-content:center;}
-.feature .crown .s{width:18px;height:18px;background:var(--honey);
-  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+/* feature card: text left, scene right */
+.feature{display:flex;align-items:stretch;margin-bottom:14px;overflow:hidden;min-height:182px;}
+.feature .body{flex:1;min-width:0;padding:16px 12px 16px 18px;display:flex;flex-direction:column;gap:9px;justify-content:center;}
+.feature .art{flex:0 0 44%;align-self:stretch;border-radius:0 var(--r) var(--r) 0;}
+.feature .banner{max-height:40px;margin:0 0 2px -2px;}
+.feature .desc{padding-right:4px;}
 
-/* grid */
+/* grid: scene top, text bottom */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:360px){ .grid{gap:11px;} }
 .grid .card{display:flex;flex-direction:column;}
-.grid .art{aspect-ratio:1/.84;border-radius:var(--r) var(--r) 0 0;}
+.grid .art{aspect-ratio:4/3;border-radius:var(--r) var(--r) 0 0;}
 .grid .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:7px;}
-.grid .name{font-size:18px;}
-
-/* ===== mini illustrations (CSS, no emoji) ===== */
-.mini{position:relative;z-index:2;}
-.m-board{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:78%;aspect-ratio:1;}
-.m-board i{background:rgba(255,255,255,.55);border-radius:8px;box-shadow:inset 0 2px 0 rgba(255,255,255,.7);}
-.m-board i.goal{background:linear-gradient(180deg,#ffd98a,var(--honey));}
-.m-simon{width:62%;aspect-ratio:1;border-radius:50%;display:grid;grid-template-columns:1fr 1fr;gap:6px;
-  box-shadow:0 6px 0 rgba(120,80,140,.25);animation:spin 9s linear infinite;}
-.m-simon i{box-shadow:inset 0 3px 0 rgba(255,255,255,.4);}
-.m-simon i:nth-child(1){background:#5fcf80;border-radius:100% 0 0 0;}
-.m-simon i:nth-child(2){background:#ff6b6b;border-radius:0 100% 0 0;}
-.m-simon i:nth-child(3){background:#ffd23f;border-radius:0 0 0 100%;}
-.m-simon i:nth-child(4){background:#5cc8e8;border-radius:0 0 100% 0;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.m-row{display:flex;gap:8px;align-items:center;}
-.m-row i{width:24px;height:24px;border-radius:50%;box-shadow:0 4px 0 rgba(0,0,0,.12),inset 0 2px 0 rgba(255,255,255,.5);}
-.m-row .q{background:#fff;display:flex;align-items:center;justify-content:center;
-  font-family:'Mochiy Pop One';color:var(--sky);font-size:18px;}
-.m-tan{width:66%;aspect-ratio:1;position:relative;}
-.m-tan i{position:absolute;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12));}
-.m-tan .t1{width:0;height:0;border-left:30px solid transparent;border-right:30px solid transparent;border-bottom:46px solid #ff9f43;top:4%;left:18%;}
-.m-tan .t2{width:36px;height:36px;background:#b58cff;transform:rotate(45deg);bottom:10%;right:14%;}
-.m-tan .t3{width:0;height:0;border-left:24px solid transparent;border-right:24px solid transparent;border-top:34px solid #6ad08a;bottom:4%;left:8%;}
-.m-pita{width:78%;height:68%;position:relative;}
-.m-pita .ramp{position:absolute;width:66%;height:11px;border-radius:7px;background:#fff;
-  box-shadow:0 3px 0 rgba(0,0,0,.12);top:28%;left:0;transform:rotate(18deg);}
-.m-pita .ramp.b{top:62%;left:30%;transform:rotate(16deg);}
-.m-pita .ball{position:absolute;width:22px;height:22px;border-radius:50%;
-  background:radial-gradient(circle at 34% 30%,#fff,#ff7a6b);top:6%;left:6%;
-  box-shadow:0 4px 6px rgba(0,0,0,.2);animation:roll 2.8s var(--ease) infinite;}
-.m-pita .flag{position:absolute;bottom:0;right:4%;width:0;height:0;
-  border-left:16px solid var(--honey);border-top:11px solid transparent;border-bottom:11px solid transparent;}
-.m-pita .flag::after{content:"";position:absolute;left:-2px;top:-2px;width:5px;height:34px;background:#caa46a;border-radius:3px;}
-@keyframes roll{0%{top:6%;left:6%}45%{top:40%;left:46%}100%{top:72%;left:72%;opacity:.4}}
+/* 看板はアート下端に少し重ねる（上にはみ出す＝本文ボックスは clip しないので見える） */
+.grid .banner{max-height:34px;margin:-26px 0 6px -2px;transform:rotate(-2deg);}
 
 /* entrance */
 .enter{opacity:0;transform:translateY(14px);animation:rise .5s var(--ease) forwards;}
@@ -198,62 +158,77 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 @media (prefers-reduced-motion: reduce){ .enter{opacity:1;transform:none;animation:none;} }
 
 /* footer */
-.foot{margin-top:26px;text-align:center;}
-.reset{font-weight:800;font-size:13px;color:var(--ink-faint);background:#fff;
-  border:none;padding:11px 22px;border-radius:999px;cursor:pointer;
-  box-shadow:0 4px 0 rgba(180,140,80,.18);}
-.reset:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(180,140,80,.18);}
-.credit{margin-top:12px;font-size:11px;color:var(--ink-faint);}
+.foot{margin-top:24px;text-align:center;}
+.credit{font-size:11px;color:var(--ink-soft);font-weight:700;
+  background:rgba(255,255,255,.55);display:inline-block;padding:5px 14px;border-radius:999px;}
 
-/* fallback modal (used only if shell.js App.showModal is absent) */
+/* ===== dialogs ===== */
 .ovl{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
-  background:rgba(60,40,20,.4);backdrop-filter:blur(2px);padding:24px;}
+  background:rgba(50,35,15,.46);backdrop-filter:blur(2px);padding:24px;}
 .ovl[hidden]{display:none;}
-.dlg{background:#fffdf7;border-radius:26px;max-width:340px;width:100%;padding:24px 22px;text-align:center;
-  box-shadow:0 24px 48px -16px rgba(120,80,30,.5),inset 0 3px 0 rgba(255,255,255,.9);}
-.dlg .ic{width:54px;height:54px;margin:0 auto 8px;border-radius:50%;
-  background:linear-gradient(180deg,#fff,#ffe7b0);box-shadow:inset 0 2px 0 #fff,0 4px 0 #e3b96a;
-  display:flex;align-items:center;justify-content:center;}
-.dlg .ic span{width:26px;height:26px;background:var(--honey);
-  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.dlg{background:#fffdf7;border-radius:28px;max-width:340px;width:100%;padding:24px 22px;text-align:center;
+  box-shadow:0 26px 50px -16px rgba(90,55,15,.6),inset 0 3px 0 rgba(255,255,255,.95);
+  animation:pop .28s var(--ease);}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.dlg .ic{width:60px;height:60px;margin:0 auto 10px;}
+.dlg .ic img{width:100%;height:100%;}
 .dlg h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin-bottom:8px;}
 .dlg p{font-size:13.5px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg .col{display:flex;flex-direction:column;gap:10px;}
 .dlg .row{display:flex;gap:10px;}
-.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:12px;border:none;border-radius:999px;cursor:pointer;}
-.dlg .ghost{background:#f0e6d3;color:var(--ink-soft);}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;}
+.dlg .ghost{background:#f0e6d3;color:var(--ink-soft);box-shadow:0 4px 0 rgba(150,110,60,.18);}
+.dlg .ghost:active,.dlg .danger:active,.dlg .go:active{transform:translateY(2px);}
 .dlg .danger{background:linear-gradient(180deg,#ff7a8f,#ec5168);color:#fff;box-shadow:0 4px 0 #c93b50;}
+.dlg .go{background:linear-gradient(180deg,var(--honey),var(--honey-d));color:#fff;box-shadow:0 4px 0 #d9851f;}
 </style>
 </head>
 <body>
+<div class="scrim" aria-hidden="true"></div>
 <div class="screen">
-  <div class="hills" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="cloud"></i><i class="cloud b"></i></div>
+
+  <button class="iconbtn enter d1" id="btnSettings" aria-label="せってい">
+    <img src="assets/menu/btn_settings.webp" alt="" draggable="false">
+  </button>
 
   <header class="hero">
-    <div class="logo enter d1">あそびの<span class="l2">もり</span></div>
+    <img class="logo-img enter d1" src="assets/menu/logo.webp" alt="あそびのもり" draggable="false">
     <div class="tagline enter d2"><span class="star"></span> よめなくても あそべる！</div>
     <div class="cast enter d2">
       <div class="pad"></div>
-      <img class="green"  src="assets/uni/green_standing.png" alt="" draggable="false">
-      <img class="purple" src="assets/uni/purple_wave.png" alt="" draggable="false">
-      <img class="blue"   src="assets/uni/blue_wave.png" alt="" draggable="false">
+      <img class="green"  src="assets/menu/uni_green.webp"  alt="" draggable="false">
+      <img class="purple" src="assets/menu/uni_purple.webp" alt="" draggable="false">
+      <img class="blue"   src="assets/menu/uni_blue.webp"   alt="" draggable="false">
     </div>
   </header>
 
-  <div class="shelf-h enter d3"><span class="dot"></span> あそびを えらんでね</div>
+  <div class="shelf-wrap"><div class="shelf-h enter d3"><span class="dot"></span> あそびを えらんでね</div></div>
 
   <div id="grid-feature"></div>
   <div class="grid" id="grid"></div>
 
   <div class="foot enter d6">
-    <button class="reset" id="resetAll">きろくを ぜんぶ けす</button>
     <div class="credit">あそびのもり ・ こどもの ゲームランド</div>
   </div>
 </div>
 
-<!-- fallback reset dialog -->
+<!-- settings sheet -->
+<div class="ovl" id="ovlSet" hidden>
+  <div class="dlg">
+    <div class="ic"><img src="assets/menu/btn_settings.webp" alt=""></div>
+    <h2>せってい</h2>
+    <p>おうちの ひとが つかう ボタンだよ。</p>
+    <div class="col">
+      <button class="danger" id="setReset">きろくを ぜんぶ けす</button>
+      <button class="ghost" id="setClose">とじる</button>
+    </div>
+  </div>
+</div>
+
+<!-- reset confirm -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <div class="ic"><span></span></div>
+    <div class="ic"><img src="assets/menu/btn_book.webp" alt=""></div>
     <h2>ぜんぶ けす？</h2>
     <p>あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？</p>
     <div class="row">
@@ -270,55 +245,51 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="assets/shell.js"></script>
 <script src="assets/bgm.js"></script>
 <script>
-/* ===== ゲーム定義（看板アートは絵文字を使わず CSS図形＋キャラ画像） ===== */
+/* ===== ゲーム定義（看板・カードは画像素材を使用） ===== */
 const GAMES = [
   {
     id:'kuma', feature:true, href:'games/programming.html',
     name:'プログラミング', desc:'やじるしを ならべて、<br>ゴールまで すすもう。',
     ac:'#ffb43d', acd:'#f59312', acsh:'#d9851f', acsoft:'#ffe9c6',
-    ribbon:'いちばん にんき', crown:true, total:19,
-    artBg:'linear-gradient(160deg,#ffe7bd,#ffd589)',
-    art:`<img src="assets/uni/blue_workdesk.png" alt="" draggable="false">`
+    ribbon:'にんき No.1', total:19,
+    banner:'assets/menu/banner_programming.webp',
+    scene:'assets/menu/card_programming.webp'
   },
   {
     id:'manekko', href:'games/manekko.html', ns:'manekko',
-    name:'まねっこ', desc:'ひかった じゅんばんを おぼえて まねっこ。',
+    name:'まねっこ', desc:'ひかった じゅんばんを<br>おぼえて まねっこ。',
     ac:'#9b7cf0', acd:'#7b59e0', acsh:'#5f43b8', acsoft:'#ece3ff',
-    ribbon:'しんさく！', tag:'きおく力',
+    tag:'きおく力',
     progressKey:'best', bestLabel:v=>v>0?('さいこう '+v+'だん'):null,
-    artBg:'linear-gradient(160deg,#ece1ff,#cdb8ff)',
-    art:`<div class="mini m-simon"><i></i><i></i><i></i><i></i></div>
-         <img class="uni" src="assets/uni/purple_sit.png" style="height:74px;right:-6px;bottom:-6px;" alt="" draggable="false">`
+    banner:'assets/menu/banner_manekko.webp',
+    scene:'assets/menu/card_manekko.webp'
   },
   {
     id:'kimari', href:'games/kimari.html', ns:'kimari',
-    name:'きまり', desc:'ならびの つぎは なに？ きまりを みつけよう。',
+    name:'きまり', desc:'ならびの つぎは なに？<br>きまりを みつけよう。',
     ac:'#2fa6cc', acd:'#2189ad', acsh:'#1a6c8a', acsoft:'#d7f1fb',
-    ribbon:'しんさく！', tag:'すいり力',
+    tag:'すいり力',
     progressKey:'best', bestLabel:v=>v>0?('れんぞく '+v+'もん'):null,
-    artBg:'linear-gradient(160deg,#d8f1ff,#a9ddf7)',
-    art:`<div class="mini m-row"><i style="background:#ff6b6b"></i><i style="background:#5cc8e8"></i><i style="background:#ff6b6b"></i><i class="q">?</i></div>
-         <img class="uni" src="assets/uni/green_thinking.png" style="height:80px;right:-8px;bottom:-8px;" alt="" draggable="false">`
+    banner:'assets/menu/banner_kimari.webp',
+    scene:'assets/menu/card_kimari.webp'
   },
   {
     id:'katachi', href:'games/katachi.html', ns:'katachi',
-    name:'かたち', desc:'ピースを ならべて おてほんを つくろう。',
+    name:'かたち', desc:'ピースを ならべて<br>おてほんを つくろう。',
     ac:'#389355', acd:'#389355', acsh:'#2c7544', acsoft:'#dcf3e3',
-    ribbon:'しんさく！', tag:'かたち力',
+    tag:'かたち力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'こ かんせい'):null,
-    artBg:'linear-gradient(160deg,#dcf6e4,#b6ebc6)',
-    art:`<div class="mini m-tan"><i class="t1"></i><i class="t2"></i><i class="t3"></i></div>
-         <img class="uni" src="assets/uni/green_standing.png" style="height:78px;right:-8px;bottom:-6px;" alt="" draggable="false">`
+    banner:'assets/menu/banner_katachi.webp',
+    scene:'assets/menu/card_katachi.webp'
   },
   {
     id:'pitagora', href:'games/pitagora.html', ns:'pitagora',
-    name:'ぴたごら', desc:'どうぐを おいて たまを ゴールへ。',
+    name:'ぴたごら', desc:'どうぐを おいて<br>たまを ゴールへ。',
     ac:'#e57e1c', acd:'#c96a12', acsh:'#a4540b', acsoft:'#ffe6cb',
-    ribbon:'しんさく！', tag:'くふう力',
+    tag:'くふう力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'こ クリア'):null,
-    artBg:'linear-gradient(160deg,#ffe6c8,#ffc98e)',
-    art:`<div class="mini m-pita"><span class="ramp"></span><span class="ramp b"></span><span class="ball"></span><span class="flag"></span></div>
-         <img class="uni" src="assets/uni/blue_sit.png" style="height:72px;right:-6px;bottom:-6px;" alt="" draggable="false">`
+    banner:'assets/menu/banner_pitagora.webp',
+    scene:'assets/menu/card_pitagora.webp'
   }
 ];
 
@@ -388,16 +359,34 @@ function makeCard(g, i){
     ? `<span class="play"><span class="tri"></span> あそぶ</span>`
     : '';
 
-  card.innerHTML =
-    (g.ribbon?`<span class="ribbon">${g.ribbon}</span>`:'') +
-    (g.crown?`<span class="crown"><span class="s"></span></span>`:'') +
-    `<div class="art" style="background:${g.artBg};">${g.art}</div>` +
-    `<div class="body">
-       <div class="name">${g.name}</div>
-       <div class="desc">${g.desc}</div>
-       ${meta}
-       ${playOrTag}
-     </div>`;
+  const bannerImg = `<img class="banner" src="${g.banner}" alt="${g.name}" draggable="false">`;
+  const ribbon = g.ribbon ? `<span class="ribbon">${g.ribbon}</span>` : '';
+
+  if(g.feature){
+    // body 左（看板は本文の先頭にブロック配置＝見切れない） / art 右（ribbon は右上）
+    card.innerHTML =
+      `<div class="body">
+         ${bannerImg}
+         <div class="desc">${g.desc}</div>
+         ${meta}
+         ${playOrTag}
+       </div>` +
+      `<div class="art">
+         <img class="scene" src="${g.scene}" alt="" draggable="false">
+         ${ribbon}
+       </div>`;
+  } else {
+    // art 上 / body 下（看板は本文先頭にブロック配置＝アート下端に重ねつつ見切れない）
+    card.innerHTML =
+      `<div class="art">
+         <img class="scene" src="${g.scene}" alt="" draggable="false">
+       </div>` +
+      `<div class="body">
+         ${bannerImg}
+         <div class="desc">${g.desc}</div>
+         ${meta}
+       </div>`;
+  }
 
   card.addEventListener('click', (ev)=>navTo(g.href, g, ev));
   return card;
@@ -410,24 +399,26 @@ GAMES.forEach((g,i)=>{
   (g.feature ? featWrap : grid).appendChild(c);
 });
 
-/* ===== ぜんぶ けす ===== */
+/* ===== せってい / ぜんぶ けす ===== */
+const ovlSet = document.getElementById('ovlSet');
+const ovl = document.getElementById('ovl');
+function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
+
+document.getElementById('btnSettings').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = false; });
+document.getElementById('setClose').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = true; });
+document.getElementById('setReset').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = true; ovl.hidden = false; });
+ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true; });
+
 function doReset(){
   try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
   try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora']); }catch(e){}
   ['manekko','kimari','katachi','pitagora'].forEach(ns=>{ try{ localStorage.removeItem('save_'+ns); }catch(e){} });
-  try{ if(window.Sfx&&Sfx.whoosh) Sfx.whoosh(); }catch(e){}
+  sfx('whoosh');
   setTimeout(()=>location.reload(), 200);
 }
-/* 確認ダイアログは常にテーマ済みの .ovl/.dlg を使う
-   （shell.js の App.showModal は .overlay/.modal/.btn 用CSSを必要とし、
-     このページには定義が無いため崩れる。絵文字も使わない方針） */
-document.getElementById('resetAll').addEventListener('click', ()=>{
-  try{ if(window.Sfx&&Sfx.tap) Sfx.tap(); }catch(e){}
-  document.getElementById('ovl').hidden = false;
-});
-document.getElementById('ovlNo').addEventListener('click', ()=>{ document.getElementById('ovl').hidden = true; });
+document.getElementById('ovlNo').addEventListener('click', ()=>{ sfx('tap'); ovl.hidden = true; });
 document.getElementById('ovlYes').addEventListener('click', doReset);
-document.getElementById('ovl').addEventListener('click', (e)=>{ if(e.target.id==='ovl') e.currentTarget.hidden = true; });
+ovl.addEventListener('click', e=>{ if(e.target===ovl) ovl.hidden = true; });
 </script>
 <script>Bgm.play('home');</script>
 </body>
