@@ -4,45 +4,49 @@
       <stop offset="0" stop-color="#ffe7b0"/>
       <stop offset="1" stop-color="#ffb43d"/>
     </linearGradient>
-    <radialGradient id="face" cx="0.5" cy="0.42" r="0.62">
-      <stop offset="0" stop-color="#b07a4f"/>
-      <stop offset="1" stop-color="#8a5a3c"/>
-    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fd1f3"/>
+      <stop offset="1" stop-color="#41a9e6"/>
+    </linearGradient>
+    <linearGradient id="horn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cfe8f6"/>
+    </linearGradient>
   </defs>
 
-  <!-- background -->
+  <!-- background badge -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="372" r="150" fill="#ffffff" opacity="0.25"/>
+  <circle cx="256" cy="372" r="158" fill="#ffffff" opacity="0.22"/>
+
+  <!-- mane (back) -->
+  <path d="M150 250 q-44 14 -36 78 q34 -20 52 -14 q-26 26 -10 64 q34 -28 56 -22 Z" fill="#2f8fd0"/>
+  <path d="M362 250 q44 14 36 78 q-34 -20 -52 -14 q26 26 10 64 q-34 -28 -56 -22 Z" fill="#2f8fd0"/>
 
   <!-- ears -->
-  <circle cx="150" cy="172" r="58" fill="#8a5a3c"/>
-  <circle cx="362" cy="172" r="58" fill="#8a5a3c"/>
-  <circle cx="150" cy="172" r="30" fill="#caa078"/>
-  <circle cx="362" cy="172" r="30" fill="#caa078"/>
+  <path d="M176 196 l30 -54 l34 48 Z" fill="url(#body)"/>
+  <path d="M336 196 l-30 -54 l-34 48 Z" fill="url(#body)"/>
+
+  <!-- horn -->
+  <path d="M256 92 l26 86 h-52 Z" fill="url(#horn)" stroke="#bcd9ea" stroke-width="5"/>
+  <path d="M243 150 l26 0 M238 122 l34 0 M249 96 l14 0" stroke="#9cc6df" stroke-width="6" stroke-linecap="round"/>
 
   <!-- head -->
-  <circle cx="256" cy="262" r="138" fill="url(#face)"/>
+  <ellipse cx="256" cy="288" rx="148" ry="138" fill="url(#body)"/>
 
   <!-- muzzle -->
-  <ellipse cx="256" cy="306" rx="84" ry="70" fill="#f3e0c2"/>
+  <ellipse cx="256" cy="332" rx="92" ry="74" fill="#eaf6fd"/>
 
   <!-- eyes -->
-  <circle cx="200" cy="248" r="17" fill="#3a2415"/>
-  <circle cx="312" cy="248" r="17" fill="#3a2415"/>
-  <circle cx="206" cy="242" r="5" fill="#fff"/>
-  <circle cx="318" cy="242" r="5" fill="#fff"/>
+  <ellipse cx="198" cy="282" rx="20" ry="24" fill="#243a47"/>
+  <ellipse cx="314" cy="282" rx="20" ry="24" fill="#243a47"/>
+  <circle cx="205" cy="274" r="6" fill="#fff"/>
+  <circle cx="321" cy="274" r="6" fill="#fff"/>
 
-  <!-- nose + mouth -->
-  <ellipse cx="256" cy="296" rx="24" ry="18" fill="#3a2415"/>
-  <path d="M256 314 v18 M256 332 q-26 22 -52 6 M256 332 q26 22 52 6" stroke="#7a5436" stroke-width="9" stroke-linecap="round" fill="none"/>
+  <!-- nose + smile -->
+  <ellipse cx="256" cy="322" rx="15" ry="10" fill="#7fb6d6"/>
+  <path d="M218 348 q38 34 76 0" stroke="#3f7ea0" stroke-width="10" stroke-linecap="round" fill="none"/>
 
   <!-- cheeks -->
-  <circle cx="158" cy="300" r="22" fill="#ff9bb0" opacity="0.7"/>
-  <circle cx="354" cy="300" r="22" fill="#ff9bb0" opacity="0.7"/>
-
-  <!-- honey drop -->
-  <g transform="translate(386 360)">
-    <path d="M0 -34 C26 0 30 22 8 38 C-14 52 -34 30 -26 6 C-22 -8 -8 -22 0 -34 Z" fill="#ffcf4a" stroke="#f59312" stroke-width="6"/>
-    <ellipse cx="-8" cy="6" rx="7" ry="11" fill="#fff4cf" opacity="0.8"/>
-  </g>
+  <circle cx="168" cy="328" r="22" fill="#ff9bb0" opacity="0.7"/>
+  <circle cx="344" cy="328" r="22" fill="#ff9bb0" opacity="0.7"/>
 </svg>
