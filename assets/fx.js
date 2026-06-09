@@ -66,9 +66,7 @@
 
   function start() { clampParticles(); if (!running) { running = true; requestAnimationFrame(loop); } }
 
-  function rnd(a, b) { return a + (b - a) * fakeRandom(); }
-  // Math.random() はこの環境のスクリプトでは可。ブラウザでは普通に使える
-  function fakeRandom() { return Math.random(); }
+  function rnd(a, b) { return a + (b - a) * Math.random(); }
 
   var CONFETTI_COLORS =
     ['#ff6b9d', '#ffd23f', '#5cc8e8', '#6ad08a', '#b58cff', '#ff9f43', '#ff5e7e'];

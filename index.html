@@ -405,19 +405,11 @@ function doReset(){
   try{ if(window.Sfx&&Sfx.whoosh) Sfx.whoosh(); }catch(e){}
   setTimeout(()=>location.reload(), 200);
 }
+/* 確認ダイアログは常にテーマ済みの .ovl/.dlg を使う
+   （shell.js の App.showModal は .overlay/.modal/.btn 用CSSを必要とし、
+     このページには定義が無いため崩れる。絵文字も使わない方針） */
 document.getElementById('resetAll').addEventListener('click', ()=>{
   try{ if(window.Sfx&&Sfx.tap) Sfx.tap(); }catch(e){}
-  if(window.App && App.showModal){
-    App.showModal({
-      emoji:'🧹', title:'ぜんぶ けす？',
-      text:'あそんだ きろくが ぜんぶ きえます。<br>ほんとうに けして いい？',
-      buttons:[
-        {label:'やめる', cls:'btn--ghost'},
-        {label:'けす', cls:'', onClick:doReset}
-      ]
-    });
-    return;
-  }
   document.getElementById('ovl').hidden = false;
 });
 document.getElementById('ovlNo').addEventListener('click', ()=>{ document.getElementById('ovl').hidden = true; });
