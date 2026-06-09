@@ -310,6 +310,35 @@
   });
 
   /* ============================================================
+     バックグラウンド化したら必ず止める
+     ------------------------------------------------------------
+     Safari（特にiOS）はページが隠れても <audio> が裏で鳴り続けるため、
+     アプリを離れる/タブを切替/ホームに戻ると BGM が残ってしまう。
+     画面が隠れたら止め、戻ってきたら再生中だったトラックを再開する。
+     ============================================================ */
+  function pauseForHide() {
+    // started は保持（＝復帰時にどのトラックを鳴らすか覚えておく）。
+    if (audioEl) { try { audioEl.pause(); } catch (e) {} }
+    synth.stop();
+  }
+  function resumeFromShow() {
+    if (!enabled || !curTrack || !started) return;
+    if (usingMp3 && audioEl) {
+      var p = audioEl.play();
+      // 自動再開が拒否されたら、次のユーザー操作で鳴らせるよう started を戻す。
+      if (p && p.catch) p.catch(function () { started = false; });
+    } else if (!usingMp3) {
+      synth.start(curTrack);
+    }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) pauseForHide();
+    else resumeFromShow();
+  });
+  // bfcache 退避・ページ離脱でも確実に止める。
+  global.addEventListener('pagehide', pauseForHide);
+
+  /* ============================================================
      トグルボタン（右上・自動マウント）
      ============================================================ */
   var btn = null;
