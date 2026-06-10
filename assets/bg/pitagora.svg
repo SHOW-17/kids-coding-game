@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 420">
+  <!-- ゆうやけの おか（ぴたごら）。ころがる「くふう」のあたたかさ -->
+  <circle cx="1300" cy="120" r="96" fill="#ffd27a" opacity=".25"/>
+  <circle cx="1300" cy="120" r="60" fill="#ffd27a" opacity=".8"/>
+  <g fill="#ffffff" opacity=".5">
+    <g><ellipse cx="300" cy="80" rx="92" ry="29"/><ellipse cx="372" cy="60" rx="56" ry="22"/></g>
+    <g><ellipse cx="900" cy="110" rx="80" ry="26"/><ellipse cx="966" cy="92" rx="48" ry="19"/></g>
+  </g>
+  <path d="M0 296 Q 300 210 620 264 T 1140 248 T 1600 278 L1600 420 0 420 Z" fill="#ffd9a4" opacity=".9"/>
+  <g opacity=".95">
+    <rect x="494" y="228" width="12" height="44" rx="5" fill="#a9701f"/>
+    <circle cx="500" cy="214" r="34" fill="#f5b96a"/>
+    <rect x="1153" y="220" width="13" height="48" rx="6" fill="#a9701f"/>
+    <circle cx="1160" cy="204" r="38" fill="#f5b96a"/>
+  </g>
+  <path d="M0 356 Q 420 296 820 340 T 1600 328 L1600 420 0 420 Z" fill="#fcc685"/>
+  <g fill="#fff" opacity=".55">
+    <circle cx="260" cy="382" r="6"/><circle cx="760" cy="388" r="5"/><circle cx="1340" cy="384" r="6"/>
+  </g>
+</svg>

@@ -28,6 +28,7 @@
     background:
       radial-gradient(circle at 20% 0%, #fff3d6 0%, transparent 50%),
       radial-gradient(circle at 90% 10%, #ffe6c0 0%, transparent 45%),
+      url("../assets/bg/programming.svg") bottom center / 100% auto no-repeat,
       var(--cream);
     color:var(--ink);
     display:flex;flex-direction:column;align-items:center;
@@ -377,7 +378,7 @@ const INTRO = {
   3:'あたらしい！ した と ひだり も つかえるよ',
   5:'あたらしい！ ブロックが すくないよ。「くりかえし」で おなじ うごきを まとめよう！',
   7:'あたらしい！「ジャンプ」で かべを とびこえられるよ！（2マス すすむ）',
-  9:'さいごの ちょうせん！「くりかえし」と「ジャンプ」を じょうずに つかおう！',
+  9:'むずかしいぞ！「くりかえし」と「ジャンプ」を じょうずに つかおう！',
   11:'あたらしい！ ほしを ぜんぶ ひろってから ゴールへ いこう！',
   13:'あたらしい！ ボタンを ふむと とびらが ひらくよ！',
   15:'あたらしい！ うずまきに はいると もう ひとつの うずまきへ ワープ！',
@@ -940,7 +941,9 @@ function win(){
 }
 function next(){
   hideCard();
-  if(lvIndex>=LEVELS.length-1){ lvIndex=0; cleared=new Set(); announced=new Set(); }
+  // 全クリア後の「もういちど」はレベル1へ戻るだけ。cleared/announced は保持
+  //（消すと index.html の進捗 19/19 とどんぐりの星表示まで消えてしまう）
+  if(lvIndex>=LEVELS.length-1){ lvIndex=0; }
   else lvIndex++;
   program=[]; activeLoop=null; renderProgram(); setButtons(false); save(); buildLevel();
 }

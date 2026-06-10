@@ -54,6 +54,9 @@ games/
   pitagora.html         ぴたごら（たまころがし＝決定論グリッドsim）
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）
+  bg/                   各ゲームのシーン背景（SVG。body 背景の最下層に bottom アンカーで敷く丘・木・雲。
+                        実ファイル＝404を出さない。生成画像（webp等）に差し替えるときは
+                        各ゲーム body の url() を1行変えるだけ）
   icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）

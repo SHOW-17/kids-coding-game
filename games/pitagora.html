@@ -28,6 +28,7 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);min-height:100d
   background:
     radial-gradient(120% 70% at 15% -8%, #fff7ea 0%, transparent 55%),
     radial-gradient(120% 70% at 95% 0%, #ffe6c2 0%, transparent 50%),
+    url("../assets/bg/pitagora.svg") bottom center / 100% auto no-repeat,
     linear-gradient(180deg,#ffeccd 0%, #ffce92 100%) fixed;}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
@@ -88,7 +89,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 /* board */
 .board-wrap{position:relative;margin:3px 0;border-radius:22px;padding:9px;
-  background:linear-gradient(180deg,#bfe6ff 0%,#dcf2ff 100%);
+  background:
+    radial-gradient(90px 32px at 20% 14%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(120px 42px at 76% 7%, rgba(255,255,255,.75), transparent 70%),
+    radial-gradient(70px 26px at 50% 26%, rgba(255,255,255,.5), transparent 70%),
+    linear-gradient(180deg,#bfe6ff 0%,#dcf2ff 100%);
   box-shadow:0 14px 26px -12px rgba(60,120,160,.4), inset 0 0 0 4px #fff, inset 0 3px 0 rgba(255,255,255,.7);}
 .board{position:relative;}
 .cell{position:absolute;border-radius:8px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;
@@ -304,7 +309,7 @@ function jumpTo(idx){
   if(running) return;
   idx=Math.max(0,Math.min(idx,LEVELS.length-1));
   if(idx===lvIndex) return;
-  lvIndex=idx; sfx('tap'); save.set('current', lvIndex); loadLevel();
+  lvIndex=idx; sfx('tap'); loadLevel();   // current の保存は loadLevel 内で行う
 }
 function calcCell(lv){
   const landscape = window.innerWidth > window.innerHeight && window.innerWidth >= 720;
