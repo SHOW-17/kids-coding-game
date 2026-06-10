@@ -25,11 +25,7 @@
   html,body{margin:0;height:100%;}
   body{
     font-family:'M PLUS Rounded 1c',sans-serif;
-    background:
-      radial-gradient(circle at 20% 0%, #fff3d6 0%, transparent 50%),
-      radial-gradient(circle at 90% 10%, #ffe6c0 0%, transparent 45%),
-      url("../assets/bg/programming.svg") bottom center / 100% auto no-repeat,
-      var(--cream);
+    background:var(--cream) url("../assets/bg/programming.webp") center bottom / cover no-repeat fixed;
     color:var(--ink);
     display:flex;flex-direction:column;align-items:center;
     min-height:100%;padding:14px 12px calc(28px + env(safe-area-inset-bottom));overflow-x:hidden;user-select:none;
@@ -107,51 +103,37 @@
   .cell.bonk{animation:bonk .42s ease;box-shadow:inset 0 0 0 4px #ff4d4d,inset 0 -5px 0 #727c87 !important;}
   @keyframes bonk{0%,100%{filter:none}25%,70%{filter:brightness(1.18) saturate(1.5)}}
 
-  /* item = ほし */
-  .item{width:52%;height:52%;background:linear-gradient(160deg,#ff9ec4,#ff6b9d);
-    clip-path:polygon(50% 2%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));animation:bob 1.4s ease-in-out infinite;transition:transform .3s,opacity .3s;}
+  /* item = ほし（画像トークン） */
+  .item{width:60%;height:60%;background:url("../assets/tokens/star.webp") center/contain no-repeat;
+    filter:drop-shadow(0 3px 2px rgba(0,0,0,.22));animation:bob 1.4s ease-in-out infinite;transition:transform .3s,opacity .3s;}
   .item.got{transform:scale(1.6);opacity:0;}
 
-  .cell.gate{background:linear-gradient(160deg,#caa06e,#a9763f);
-    box-shadow:inset 0 -5px 0 #8a5a2c,inset 0 2px 0 rgba(255,255,255,.3);overflow:hidden;}
-  .cell.gate::after{content:"";position:absolute;inset:16% 22%;border-radius:4px;
-    background:repeating-linear-gradient(180deg,rgba(255,255,255,.14) 0 3px,transparent 3px 9px);
-    box-shadow:inset 0 0 0 2px rgba(120,75,35,.5);}
-  .cell.gate.gateopen{background:var(--grass);box-shadow:inset 0 -4px 0 var(--grass-d),inset 0 2px 0 rgba(255,255,255,.25);}
+  /* gate = とびら（草マスの上に木のとびら画像。ひらくと消える） */
+  .cell.gate::after{content:"";position:absolute;inset:4%;
+    background:url("../assets/tokens/gate.webp") center/contain no-repeat;
+    filter:drop-shadow(0 3px 2px rgba(0,0,0,.28));}
   .cell.gate.gateopen::after{display:none;}
 
-  /* switch = ボタン */
-  .switchmark{width:52%;height:52%;border-radius:50%;
-    background:radial-gradient(circle at 40% 32%,#ff8f8f,#e0494b);
-    box-shadow:inset 0 -4px 0 rgba(0,0,0,.22), inset 0 3px 0 rgba(255,255,255,.5), 0 2px 3px rgba(0,0,0,.2);}
-  .switchmark::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:38%;height:38%;border-radius:50%;background:rgba(255,255,255,.35);}
+  /* switch = ボタン（画像トークン） */
+  .switchmark{width:62%;height:62%;background:url("../assets/tokens/button.webp") center/contain no-repeat;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.22));}
 
-  /* warp = うずまき */
-  .warpmark{width:58%;height:58%;border-radius:50%;
-    background:conic-gradient(from 0deg,#b58cff,#5cc8e8,#b58cff,#5cc8e8,#b58cff);
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));animation:spin 2.4s linear infinite;
-    -webkit-mask:radial-gradient(circle,transparent 22%,#000 24%);mask:radial-gradient(circle,transparent 22%,#000 24%);}
+  /* warp = うずまき（画像トークン。くるくる回す） */
+  .warpmark{width:66%;height:66%;background:url("../assets/tokens/warp.webp") center/contain no-repeat;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));animation:spin 2.4s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* target = まと */
-  .target{width:58%;height:58%;border-radius:50%;
-    background:repeating-radial-gradient(circle,#ff6b6b 0 14%,#fff 14% 26%);
-    box-shadow:0 2px 3px rgba(0,0,0,.2);opacity:.95;animation:bob 1.6s ease-in-out infinite;}
+  /* target = まと（画像トークン） */
+  .target{width:66%;height:66%;background:url("../assets/tokens/target.webp") center/contain no-repeat;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.2));animation:bob 1.6s ease-in-out infinite;}
 
-  /* box = はこ */
+  /* box = はこ（画像トークン。まとに のると 緑に光る） */
   .boxtok{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;
     transition:transform .3s cubic-bezier(.34,1.4,.5,1);z-index:4;pointer-events:none;
     filter:drop-shadow(0 4px 3px rgba(0,0,0,.25));}
-  .boxtok::before{content:"";width:62%;height:62%;border-radius:8px;
-    background:linear-gradient(160deg,#d6a86a,#b07e42);
-    box-shadow:inset 0 0 0 3px rgba(120,80,40,.7), inset 0 -5px 0 rgba(0,0,0,.18), inset 0 3px 0 rgba(255,255,255,.4);
-    background-image:linear-gradient(160deg,#d6a86a,#b07e42),
-      linear-gradient(45deg,transparent 47%,rgba(120,80,40,.55) 47% 53%,transparent 53%),
-      linear-gradient(-45deg,transparent 47%,rgba(120,80,40,.55) 47% 53%,transparent 53%);
-    background-clip:padding-box;}
-  .boxtok.on::before{box-shadow:inset 0 0 0 3px #3da75c, 0 0 10px #5fcf80, inset 0 -5px 0 rgba(0,0,0,.18);}
+  .boxtok::before{content:"";width:78%;height:78%;
+    background:url("../assets/tokens/box.webp") center/contain no-repeat;}
+  .boxtok.on{filter:drop-shadow(0 4px 3px rgba(0,0,0,.22)) drop-shadow(0 0 9px #5fcf80) drop-shadow(0 0 4px #3da75c);}
 
   #bear{position:absolute;left:12px;top:12px;width:var(--cell);height:var(--cell);
     display:flex;align-items:center;justify-content:center;

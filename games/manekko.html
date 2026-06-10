@@ -26,11 +26,7 @@ html{-webkit-text-size-adjust:100%;}
 body{
   font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   min-height:100dvh;display:flex;flex-direction:column;align-items:center;
-  background:
-    radial-gradient(120% 70% at 15% -8%, #fbf7ff 0%, transparent 55%),
-    radial-gradient(120% 70% at 95% 0%, #efe3ff 0%, transparent 50%),
-    url("../assets/bg/manekko.svg") bottom center / 100% auto no-repeat,
-    linear-gradient(180deg,#f3ecff 0%, #e3d2ff 100%) fixed;
+  background:#e9dcff url("../assets/bg/manekko.webp") center bottom / cover no-repeat fixed;
   overflow-x:hidden;
 }
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
@@ -86,8 +82,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(123,89,224,.18);}
 .diff.sel{background:linear-gradient(180deg,#b39bff,var(--purple));color:#fff;box-shadow:0 4px 0 var(--purple-d);}
 
-.hint{font-weight:800;font-size:17px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px 0;
-  transition:color .2s;}
+.hint{font-weight:800;font-size:16px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px auto;
+  transition:color .2s;width:fit-content;background:rgba(255,255,255,.85);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(123,89,224,.14), inset 0 2px 0 #fff;}
 .hint.watch{color:var(--purple-d);}
 .hint.your{color:var(--green-d);}
 
