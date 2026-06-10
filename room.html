@@ -89,6 +89,7 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 .acc{position:absolute;left:50%;transform:translate(-50%,-50%);
   pointer-events:auto;touch-action:none;cursor:grab;}
 .acc.grab{cursor:grabbing;}
+.acc.acc-back{pointer-events:none;}   /* 後ろレイヤーはつかめない（前レイヤーで操作） */
 .acc img{display:block;width:100%;height:auto;
   filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
 .stage .uni{pointer-events:none;}
@@ -316,7 +317,7 @@ function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 
 /* つかんで うごかせるようにする。
    kind='wear'（ユニコーンの うえ／基準=.bob）／'furni'（へやの なか／基準=#room）。 */
-function makeDraggable(el, id, kind){
+function makeDraggable(el, id, kind, linkEl){
   el.addEventListener('pointerdown', function(ev){
     if(ev.button && ev.button!==0) return;
     ev.preventDefault();
@@ -334,6 +335,8 @@ function makeDraggable(el, id, kind){
       else { x=clamp(x,3,97); y=clamp(y,4,96); }
       el.style.left=x+'%'; el.style.top=y+'%'; el.style.bottom='auto'; el.style.right='auto';
       el.style.transform='translate(-50%,-50%)';
+      if(linkEl){ linkEl.style.left=x+'%'; linkEl.style.top=y+'%'; linkEl.style.bottom='auto';
+        linkEl.style.right='auto'; linkEl.style.transform='translate(-50%,-50%)'; }
       moved=true;
     }
     function up(e){
@@ -366,10 +369,12 @@ var PLACE = {
   face_heart:  {cx:50, cy:35,  w:64},
   face_star:   {cx:50, cy:35,  w:64},
   face_blush:  {cx:50, cy:43,  w:58},
-  neck_scarf:  {cx:50, cy:55,  w:58},
-  neck_bow:    {cx:50, cy:55,  w:40},
-  neck_bell:   {cx:50, cy:56,  w:60},
-  neck_cape:   {cx:50, cy:64,  w:104, z:-1}
+  /* 首まわりは「巻いてる」立体感のため前後2レイヤー。
+     wrap = 前レイヤー（手前）に見せるクリップ。後ろレイヤーは全体を本体の裏(z-1)へ。 */
+  neck_scarf:  {cx:50, cy:61,  w:58,  wrap:'inset(40% 0 0 0)'},
+  neck_bow:    {cx:50, cy:56,  w:40},
+  neck_bell:   {cx:50, cy:60,  w:60,  wrap:'inset(45% 0 0 0)'},
+  neck_cape:   {cx:50, cy:60,  w:106, wrap:'inset(0 0 62% 0)'}
 };
 function placeStyle(id){
   var p = PLACE[id] || {cx:50,cy:30,w:50};
@@ -408,12 +413,31 @@ function renderUni(){
   ['neck','face','hat'].forEach(function(cat){   // 重ね順：くび→かお→あたま
     var id = w[cat];
     if(!id) return;
-    var d = document.createElement('div');
-    d.className = 'acc';
-    d.setAttribute('style', placeStyle(id));
-    d.innerHTML = itemImg(id);
-    bobEl.appendChild(d);
-    makeDraggable(d, id, 'wear');
+    var p = PLACE[id] || {};
+    if(p.wrap){
+      // 後ろレイヤー（本体の裏。輪の後ろ側が隠れる）＝つかめない
+      var back = document.createElement('div');
+      back.className = 'acc acc-back';
+      back.setAttribute('style', placeStyle(id)+'z-index:-1;');
+      back.innerHTML = itemImg(id);
+      bobEl.appendChild(back);
+      // 前レイヤー（胸側だけクリップして手前に）＝こちらをつかむ
+      var front = document.createElement('div');
+      front.className = 'acc';
+      front.setAttribute('style', placeStyle(id)+'z-index:3;');
+      front.innerHTML = itemImg(id);
+      front.firstChild.style.clipPath = p.wrap;
+      front.firstChild.style.webkitClipPath = p.wrap;
+      bobEl.appendChild(front);
+      makeDraggable(front, id, 'wear', back);
+    } else {
+      var d = document.createElement('div');
+      d.className = 'acc';
+      d.setAttribute('style', placeStyle(id));
+      d.innerHTML = itemImg(id);
+      bobEl.appendChild(d);
+      makeDraggable(d, id, 'wear');
+    }
   });
 }
 function renderRoom(){
