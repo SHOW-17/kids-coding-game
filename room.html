@@ -223,6 +223,19 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   box-shadow:0 5px 0 var(--ac-sh),inset 0 2px 0 rgba(255,255,255,.35);}
 .tab:active{transform:translateY(2px);}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+/* 横画面（タブレット優先）：左におへやステージ、右にくじ＋ずかんの2カラム */
+@media (orientation:landscape) and (min-width:720px){
+  body{max-width:980px;display:grid;column-gap:30px;row-gap:14px;align-items:start;
+    grid-template-columns:minmax(320px,1fr) 1fr;
+    grid-template-areas:"top top" "room panel" "room tabs" "room zukan" "room hint";}
+  .topbar{grid-area:top;}
+  .room{grid-area:room;height:auto;min-height:400px;position:sticky;top:70px;margin-top:0;}
+  .panel{grid-area:panel;margin-top:0;}
+  .tabs{grid-area:tabs;margin:2px 0 0;}
+  #zukan{grid-area:zukan;}
+  .hint{grid-area:hint;}
+  .grid{grid-template-columns:repeat(4,1fr);}
+}
 .slot{position:relative;aspect-ratio:1;border-radius:20px;background:#fffdf7;cursor:pointer;
   box-shadow:0 8px 16px -10px rgba(120,75,20,.5),inset 0 2px 0 #fff,inset 0 -7px 12px rgba(190,150,90,.12);
   display:flex;align-items:center;justify-content:center;border:none;padding:0;
