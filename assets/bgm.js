@@ -394,6 +394,10 @@
       if (document.body) mountButton();
       else document.addEventListener('DOMContentLoaded', mountButton);
       // 実再生はブラウザの自動再生制限に従い、最初のユーザー操作（kick）で開始する。
+      // ただし Capacitor アプリ内の WebView は自動再生が許可されている
+      // （Bridge が setMediaPlaybackRequiresUserGesture(false) を設定）ため、
+      // タップを待たず即時に開始する。失敗時は従来どおり kick で再試行される。
+      if (global.Capacitor) kick();
     },
     stop: stopPlayback,
     setEnabled: function (b) {
