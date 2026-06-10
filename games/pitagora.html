@@ -241,6 +241,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
 <script>
 /* ====== ぴたごら（たまころがし）— ロジックは原版踏襲 ====== */
@@ -417,6 +418,10 @@ function win(){
   fx('burst', r.left+r.width/2, r.top+r.height/2, {count:26, power:1.3});
   hint.textContent='ゴール！';
   if(lvIndex+1 > cleared){ cleared=lvIndex+1; save.set('cleared', cleared); renderDots(); }
+  // 1レベル クリアごとに どんぐり＋（むずかしいレベルほど多く）。5レベルごとに1段階。再クリアでも増える。
+  const acGain = 1 + Math.floor(lvIndex/5);
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+  if(window.FX && FX.acornGain){ const rr=boardWrap.getBoundingClientRect(); setTimeout(()=>{ sfx('sparkle'); FX.acornGain(acGain, rr.left+rr.width/2, rr.top+rr.height/2); }, 420); }
   const isLast = (lvIndex >= LEVELS.length-1);
   setTimeout(()=>{
     showModal({

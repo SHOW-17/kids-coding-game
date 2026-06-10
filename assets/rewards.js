@@ -64,7 +64,8 @@
     try { if (global.Save && global.Save.game) return global.Save.game(ns).get(key, 0) || 0; } catch (e) {}
     return 0;
   }
-  function earned() {
+  // 旧方式（最高記録・初クリア数ベース）の集計＝移行ボーナスの元になる値。
+  function legacyEarned() {
     var total = 0;
     try {
       var d = JSON.parse(global.localStorage.getItem('kuma_prog_save_v1'));
@@ -75,6 +76,25 @@
     total += g('katachi', 'cleared');
     total += g('pitagora', 'cleared');
     return total;
+  }
+  // programming の累積クリア回数（自己完結のため独自キー kuma_prog_save_v1.wins）。
+  function progWins() {
+    try {
+      var d = JSON.parse(global.localStorage.getItem('kuma_prog_save_v1'));
+      if (d && typeof d.wins === 'number') return d.wins;
+    } catch (e) {}
+    return 0;
+  }
+  // どんぐり＝各ゲームの「せいこう量（wins）」の累計。クリア/正解のたびに増える
+  // （むずかしいほど多く・再クリアでも増える）。旧データで貯めた分は legacyBonus として
+  // 一度だけ確定し、どんぐりが減らないようにする。
+  function earned() {
+    var s = save();
+    var bonus = s ? s.get('legacyBonus', -1) : -1;
+    if (bonus < 0) { bonus = legacyEarned(); if (s) s.set('legacyBonus', bonus); }
+    var wins = g('manekko', 'wins') + g('kimari', 'wins') +
+               g('katachi', 'wins') + g('pitagora', 'wins') + progWins();
+    return bonus + wins;
   }
   function spent() {
     var s = save();

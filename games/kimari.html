@@ -243,6 +243,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
 <script>
 /* ====== きまり あそび（パターン推理）— ロジックは原版踏襲・図柄をCSS図形化 ====== */
@@ -489,6 +490,10 @@ function correctAnswer(btn, tok){
   total++; streak++;
   if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
+  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficulty は 1〜6。
+  const acGain = difficulty;
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+  if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
   renderStatus();
   streakPill.classList.add('bump'); setTimeout(()=>streakPill.classList.remove('bump'),220);
   hintEl.textContent=pick(['せいかい！','できた！','すごい！','ばっちり！']);

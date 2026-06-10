@@ -246,6 +246,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/audio.js"></script>
 <script src="../assets/fx.js"></script>
 <script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
 <script>
 /* ====== まねっこ（サイモン）— ロジックは原版を踏襲 ====== */
@@ -360,6 +361,10 @@ async function roundClear(){
   const r = dial.getBoundingClientRect();
   fx('sparkles', r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
   if(seq.length > best){ best = seq.length; save.set('best', best); renderBest(); }
+  // 1だん せいこうごとに どんぐり＋（ふかい段ほど多く）。3段ごとに1段階アップ。
+  const acGain = 1 + Math.floor((seq.length-1)/3);
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+  if(window.FX && FX.acornGain){ sfx('sparkle'); FX.acornGain(acGain, r.left+r.width/2, r.top+r.height*0.2); }
   await wait(720);
   if(my !== runId) return;
   await nextRound();
