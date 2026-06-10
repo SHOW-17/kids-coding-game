@@ -6,3 +6,8 @@ node_modules/
 assets/bgm/*.mp3
 assets/bgm/*.ogg
 assets/bgm/*.m4a
+
+# ビルド生成物（node scripts/build-www.mjs / @capacitor/assets で再生成可能）
+www/
+resources/
+dist/

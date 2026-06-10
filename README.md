@@ -82,6 +82,26 @@ python3 -m http.server 9090 --bind 0.0.0.0
 
 `index.html` がアーケード（オープニング）。各ゲームは `games/*.html`。
 
+### Androidタブレットで遊ぶ（オフライン）
+
+2つの方法がある。どちらも**ネット接続なしで遊べる**（フォントは `assets/fonts/` に同梱済み・外部CDN依存なし）。
+
+**① Androidアプリ（APK・おすすめ）** — Capacitor で Web 資産を丸ごと同梱した完全オフラインアプリ。
+INTERNET 権限なし＝通信は一切しない。ストア不要、APK をタブレットに送って「提供元不明のアプリ」を許可してインストール（サイドロード）。
+
+```bash
+# ビルド手順（要：JDK 21・Android SDK。署名鍵は ~/.android-keys/ に別管理）
+node scripts/build-sw.mjs       # sw.js（プリキャッシュ一覧）を再生成
+node scripts/build-www.mjs      # www/ に公開ファイルを集める
+npx cap sync android            # www/ を android プロジェクトへ同期
+cd android && ./gradlew assembleRelease
+# → android/app/build/outputs/apk/release/app-release.apk
+```
+
+**② PWA（ブラウザにインストール）** — HTTPSで配信した `index.html` を Chrome で開き「ホーム画面に追加」。
+Service Worker（`sw.js`）が全ファイルをキャッシュし、2回目以降はオフラインで動く。
+アセットを追加・変更したら `node scripts/build-sw.mjs` で `sw.js` を作り直すこと（キャッシュ版数が変わる）。
+
 ---
 
 ## ファイル構成
@@ -106,6 +126,7 @@ assets/
   tokens/               盤面トークン画像（webp 透過。ほし・はこ・まと・ボタン・とびら・
                         うずまき・たま・かご）
   icons/               ファビコン・PWA・apple-touch アイコン一式
+  fonts/                セルフホストフォント（fonts.css + woff2。オフライン対応）
   audio.js              共通サウンド（効果音。Web Audio）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク）
   save.js               共通セーブ（ゲーム別 localStorage）
@@ -113,8 +134,13 @@ assets/
   shell.js              共通UI（ヘッダー・トースト・モーダル・画面遷移）
   bgm.js                共通BGM（画面ごとにループ再生。mp3優先・無ければ合成）
   bgm/                  BGM音源置き場（mp3。.gitignore 済み＝公開しない）
+sw.js                   Service Worker（自動生成。直接編集しない）
+capacitor.config.json   Capacitor 設定（Androidアプリ化）
+android/                Android ネイティブプロジェクト（Capacitor 生成・Gradle）
 scripts/
   test-games.js         ヘッドレス・スモークテスト
+  build-sw.mjs          sw.js 生成（プリキャッシュ一覧の更新）
+  build-www.mjs         Capacitor 用 www/ の組み立て
 ```
 
 > スタイルは各HTMLに**インライン**で持つ（共通の見た目ルールは [Design.md](Design.md)）。
@@ -127,7 +153,7 @@ scripts/
 ## 技術メモ
 
 - バニラJS／ビルド不要。共通基盤（`assets/*`）の上に各ゲームを単一HTMLで実装。
-- フォント：Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
+- フォント：Mochiy Pop One / M PLUS Rounded 1c（Google Fonts 由来・OFL）。**woff2 を `assets/fonts/` にセルフホスト**しオフラインでも崩れない（外部CDNへの参照なし）。
 - 効果音：Web Audio で生成（音声ファイル不要、try/catch でガード）。
 - 画面の四隅UIは全画面で統一：**左上にホーム/せってい、右上にBGMトグル**（いずれも `position:fixed` でスクロール追従）。
   各ゲーム画面は左上に「おうちへ もどる」ホームボタンを固定（メニューへ戻る）。

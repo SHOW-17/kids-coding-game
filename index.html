@@ -12,9 +12,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="assets/fonts/fonts.css" rel="stylesheet">
 <style>
 :root{
   --paper:#fff7ea; --paper2:#ffeccd;
@@ -505,5 +503,11 @@ document.getElementById('ovlYes').addEventListener('click', doReset);
 ovl.addEventListener('click', e=>{ if(e.target===ovl) ovl.hidden = true; });
 </script>
 <script>Bgm.play('home');</script>
+<script>
+// PWAオフライン対応（Capacitorアプリ内では資産同梱のため不要）
+if ('serviceWorker' in navigator && !window.Capacitor) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
 </body>
 </html>

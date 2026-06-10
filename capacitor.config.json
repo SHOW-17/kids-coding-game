@@ -1,0 +1,8 @@
+{
+  "appId": "jp.show17.asobinomori",
+  "appName": "あそびのもり",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
