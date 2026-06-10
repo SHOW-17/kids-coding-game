@@ -21,7 +21,7 @@
     --pink:#ff8fab; --blue:#5cc8e8; --green:#5fcf80; --purple:#b58cff;
     --cell:64px; --gap:8px; --ease:cubic-bezier(.22,1,.36,1);
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
   html,body{margin:0;height:100%;}
   body{
     font-family:'M PLUS Rounded 1c',sans-serif;
@@ -180,10 +180,42 @@
   .loopbox{display:inline-flex;align-items:center;gap:6px;padding:6px;border-radius:14px;
     background:#f3ecff;border:3px solid var(--purple);box-shadow:0 3px 0 rgba(0,0,0,.12);animation:pop .2s ease;}
   .loopbox.active{border-style:dashed;box-shadow:0 0 0 4px #ffe08a;}
-  .loopbox .lhead{display:flex;align-items:center;gap:3px;font-weight:800;color:#7a4fd0;background:#fff;
-    border-radius:10px;padding:5px 9px;font-size:16px;cursor:pointer;white-space:nowrap;}
-  .loopbox .lbody{display:flex;gap:4px;align-items:center;}
+  .loopbox .lhead{display:flex;align-items:center;gap:5px;font-weight:800;color:#7a4fd0;background:#fff;
+    border-radius:12px;padding:4px 5px;font-size:17px;white-space:nowrap;}
+  .loopbox .lcount{display:flex;align-items:center;gap:3px;padding:0 2px;min-width:46px;justify-content:center;}
+  .lstep{border:none;cursor:pointer;width:34px;height:34px;min-width:34px;border-radius:10px;font-family:inherit;
+    font-weight:800;font-size:20px;line-height:1;padding:0;background:#8a5cff;color:#fff;
+    box-shadow:0 3px 0 #6f43e0, inset 0 2px 0 rgba(255,255,255,.3);
+    display:flex;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s;}
+  .lstep:active{transform:translateY(2px);box-shadow:0 1px 0 #6f43e0;}
+  .lstep:disabled{opacity:.3;cursor:default;}
+  body.running .lstep{opacity:.3;pointer-events:none;}
+  .loopbox .lbody{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:34px;}
   .loopbox .empty2{color:#c3a9ee;font-size:12px;font-weight:700;padding:0 4px;}
+  .caret{width:5px;height:30px;border-radius:3px;background:#8a5cff;animation:blink .9s steps(2) infinite;}
+  @keyframes blink{50%{opacity:.12}}
+
+  /* ===== drag & drop ===== */
+  .chip,.loopbox,#pad .btn,#jumpRow .jbtn{touch-action:none;}
+  .dragsrc{display:none;}
+  #ghost{position:fixed;left:0;top:0;z-index:1000;pointer-events:none;opacity:.92;
+    filter:drop-shadow(0 12px 14px rgba(0,0,0,.3));}
+  .dropind{width:6px;height:42px;border-radius:3px;background:var(--honey);pointer-events:none;
+    box-shadow:0 0 8px rgba(255,180,61,.8);animation:blink .7s steps(2) infinite;}
+  .dropind.sm{height:32px;}
+  #trash{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));z-index:900;
+    width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#ff8a80,#e0494b);
+    box-shadow:0 6px 0 #b23234,0 14px 26px rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.4);
+    display:flex;align-items:center;justify-content:center;opacity:0;
+    transform:translateX(-50%) scale(0);transition:transform .22s cubic-bezier(.34,1.5,.5,1),opacity .15s;}
+  #trash.show{transform:translateX(-50%) scale(1);opacity:1;}
+  #trash.hot{transform:translateX(-50%) scale(1.22);}
+  #trash .tic{width:36px;height:36px;background:#fff;
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 3h6l1 2h5v2H3V5h5zM6 9h12l-1.2 12H7.2z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 3h6l1 2h5v2H3V5h5zM6 9h12l-1.2 12H7.2z'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .poofdot{position:fixed;width:11px;height:11px;border-radius:50%;background:#d9bd97;z-index:999;
+    pointer-events:none;animation:poofout .45s ease-out forwards;}
+  @keyframes poofout{to{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}}
   .loopic{display:inline-block;width:16px;height:16px;background:currentColor;
     -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'/%3E%3C/svg%3E") center/contain no-repeat;
             mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'/%3E%3C/svg%3E") center/contain no-repeat;}
@@ -285,6 +317,8 @@
     <p id="cardMsg">ともだちに あえたよ！</p>
     <button class="next" id="cardBtn">つぎへ</button>
   </div></div>
+
+  <div id="trash" aria-hidden="true"><span class="tic"></span></div>
 
   <div class="toast" id="toast"></div>
 
@@ -482,13 +516,19 @@ function renderPad(){
   const pad=$('pad');
   pad.style.gridTemplateColumns=`repeat(${dirs.length},1fr)`;
   pad.innerHTML=dirs.map(d=>`<button class="btn ${d.cls}" data-dir="${d.dir}">${arHTML(d.dir)}<span class="cap">${d.label}</span></button>`).join('');
-  pad.querySelectorAll('.btn').forEach(b=>b.addEventListener('click',()=>addMove(b.dataset.dir,false)));
+  pad.querySelectorAll('.btn').forEach(b=>{
+    b.addEventListener('click',()=>{ if(justDragged) return; addMove(b.dataset.dir,false); });
+    b.addEventListener('pointerdown',e=>dragStart(e,{type:'new',dir:b.dataset.dir,jump:false},b));
+  });
   $('loopRow').style.display = (UNLOCKS.loop<=num)?'flex':'none';
   const jrow=$('jumpRow');
   if(UNLOCKS.jump<=num){
     jrow.style.display='grid';
     jrow.innerHTML=DIRDEF.map(d=>`<button class="jbtn" data-dir="${d.dir}"><span class="a2">${arHTML(d.dir)}<sup>2</sup></span><span class="cap">ジャンプ</span></button>`).join('');
-    jrow.querySelectorAll('.jbtn').forEach(b=>b.addEventListener('click',()=>addMove(b.dataset.dir,true)));
+    jrow.querySelectorAll('.jbtn').forEach(b=>{
+      b.addEventListener('click',()=>{ if(justDragged) return; addMove(b.dataset.dir,true); });
+      b.addEventListener('pointerdown',e=>dragStart(e,{type:'new',dir:b.dataset.dir,jump:true},b));
+    });
   } else jrow.style.display='none';
   updateLoopBtn();
 }
@@ -497,9 +537,9 @@ function addMove(dir, jump){
   if(running) return;
   const L=LEVELS[lvIndex];
   if(L.budget!=null && usedBlocks()+1 > L.budget){ toast('ブロックが たりない！ くりかえし で まとめよう'); return; }
-  if(activeLoop!==null){
-    if(program[activeLoop].body.length>=8) return;
-    program[activeLoop].body.push({dir,jump});
+  if(activeLoop){
+    if(activeLoop.body.length>=8) return;
+    activeLoop.body.push({dir,jump});
   } else {
     if(program.length>=16) return;
     program.push({kind:'move',dir,jump});
@@ -507,22 +547,36 @@ function addMove(dir, jump){
   renderProgram(); beep(jump?700:520,0.05);
 }
 function usedBlocks(){ return program.reduce((n,it)=> n + (it.kind==='move'?1:1+it.body.length), 0); }
+function dropEmptyActive(){
+  if(activeLoop && activeLoop.body.length===0){ const i=program.indexOf(activeLoop); if(i>=0) program.splice(i,1); }
+}
+function setActiveLoop(lp){
+  if(running) return;
+  if(lp===activeLoop) lp=null;
+  dropEmptyActive();
+  activeLoop=lp;
+  renderProgram(); beep(640,0.05);
+}
 function toggleLoop(){
   if(running) return;
-  if(activeLoop!==null){
-    if(program[activeLoop].body.length===0) program.splice(activeLoop,1);
+  if(activeLoop){
+    dropEmptyActive();
     activeLoop=null;
   } else {
     const L=LEVELS[lvIndex];
     if(L.budget!=null && usedBlocks()+1 > L.budget){ toast('ブロックが たりないよ！'); return; }
-    program.push({kind:'loop',count:2,body:[]});
-    activeLoop=program.length-1;
+    const lp={kind:'loop',count:2,body:[]};
+    program.push(lp);
+    activeLoop=lp;
   }
   renderProgram(); beep(640,0.05);
 }
 function undo(){
   if(running) return;
-  if(activeLoop!==null){ const lp=program[activeLoop]; if(lp.body.length>0) lp.body.pop(); else { program.splice(activeLoop,1); activeLoop=null; } }
+  if(activeLoop){
+    if(activeLoop.body.length>0) activeLoop.body.pop();
+    else { const i=program.indexOf(activeLoop); if(i>=0) program.splice(i,1); activeLoop=null; }
+  }
   else program.pop();
   renderProgram();
 }
@@ -530,26 +584,40 @@ function clearP(){ if(running) return; program=[]; activeLoop=null; renderProgra
 
 function renderProgram(){
   const p=$('program');
-  if(program.length===0){ p.innerHTML='<span class="empty">ここに めいれいが ならぶよ</span>'; updateLoopBtn(); renderBudget(); return; }
   p.innerHTML='';
+  if(program.length===0){ p.innerHTML='<span class="empty">ここに めいれいが ならぶよ</span>'; updateLoopBtn(); renderBudget(); return; }
   program.forEach((item,pi)=>{
     if(item.kind==='move'){
       const chip=document.createElement('div');
       chip.className='chip '+item.dir+(item.jump?' jmp':'');
       chip.innerHTML=arHTML(item.dir)+(item.jump?'<sup>2</sup>':'');
-      chip.dataset.pi=pi; chip.dataset.t='m'; p.appendChild(chip);
+      chip.dataset.pi=pi; chip.dataset.t='m';
+      chip.addEventListener('pointerdown',e=>{ e.stopPropagation(); dragStart(e,{type:'chip',item,fromLoop:null},chip); });
+      p.appendChild(chip);
     } else {
       const box=document.createElement('div');
-      box.className='loopbox'+(activeLoop===pi?' active':''); box.dataset.pi=pi;
-      const head=document.createElement('div'); head.className='lhead'; head.innerHTML='<span class="loopic"></span>×'+item.count;
-      head.addEventListener('click',()=>{ if(running) return; item.count=item.count>=8?2:item.count+1; renderProgram(); beep(600,0.04); });
+      box.className='loopbox'+(item===activeLoop?' active':''); box.dataset.pi=pi;
+      box._lp=item;
+      box.addEventListener('pointerdown',e=>{ if(e.target.closest('.lstep')) return; dragStart(e,{type:'loop',item},box); });
+      const head=document.createElement('div'); head.className='lhead';
+      const minus=document.createElement('button'); minus.className='lstep'; minus.textContent='−'; minus.disabled=item.count<=2;
+      minus.setAttribute('aria-label','かいすうを へらす');
+      minus.addEventListener('click',()=>{ if(running||item.count<=2) return; item.count--; renderProgram(); beep(480,0.04); });
+      const cnt=document.createElement('span'); cnt.className='lcount'; cnt.innerHTML='<span class="loopic"></span>×'+item.count;
+      const plus=document.createElement('button'); plus.className='lstep'; plus.textContent='＋'; plus.disabled=item.count>=8;
+      plus.setAttribute('aria-label','かいすうを ふやす');
+      plus.addEventListener('click',()=>{ if(running||item.count>=8) return; item.count++; renderProgram(); beep(660,0.04); });
+      head.appendChild(minus); head.appendChild(cnt); head.appendChild(plus);
       const body=document.createElement('div'); body.className='lbody';
-      if(item.body.length===0){ const e=document.createElement('span'); e.className='empty2'; e.textContent='やじるしを いれてね'; body.appendChild(e); }
+      if(item.body.length===0 && item!==activeLoop){ const e=document.createElement('span'); e.className='empty2'; e.textContent='やじるしを いれてね'; body.appendChild(e); }
       item.body.forEach((b,bi)=>{
         const c=document.createElement('div'); c.className='chip sm '+b.dir+(b.jump?' jmp':'');
         c.innerHTML=arHTML(b.dir)+(b.jump?'<sup>2</sup>':'');
-        c.dataset.pi=pi; c.dataset.bi=bi; body.appendChild(c);
+        c.dataset.pi=pi; c.dataset.bi=bi;
+        c.addEventListener('pointerdown',e=>{ e.stopPropagation(); dragStart(e,{type:'chip',item:b,fromLoop:item},c); });
+        body.appendChild(c);
       });
+      if(item===activeLoop){ const k=document.createElement('span'); k.className='caret'; body.appendChild(k); }
       box.appendChild(head); box.appendChild(body); p.appendChild(box);
     }
   });
@@ -566,8 +634,159 @@ function renderBudget(){
 }
 function updateLoopBtn(){
   const b=$('loopBtn'); if(!b) return;
-  if(activeLoop!==null){ b.innerHTML='✓ とじる'; b.classList.add('on'); }
+  if(activeLoop){ b.innerHTML='✓ とじる'; b.classList.add('on'); }
   else { b.innerHTML='<span class="loopic"></span> くりかえし'; b.classList.remove('on'); }
+}
+
+/* ===== ドラッグ＆ドロップ =====
+   チップ・くりかえし枠・パレットのボタンを指でつまんで動かせる。
+   ならびかえ／くりかえしへの出し入れ／パレットから好きな位置へ挿入。
+   ドラッグ中だけ画面下にゴミ箱が現れ、落とすと削除。
+   うごかさずに離す＝タップは従来どおり（click にまかせる）。 */
+let drag=null, justDragged=false;
+const dropInd=document.createElement('span'); dropInd.className='dropind';
+
+function dragStart(e,src,el){
+  if(running || drag) return;
+  if(e.button!==undefined && e.button>0) return;
+  drag={src, el, id:e.pointerId, sx:e.clientX, sy:e.clientY, started:false, ghost:null, drop:null, gw:0, gh:0};
+}
+function beginDrag(e){
+  const d=drag, src=d.src;
+  d.started=true; justDragged=true;
+  try{ d.el.setPointerCapture(d.id); }catch(err){}
+  const g=document.createElement('div'); g.id='ghost';
+  if(src.type==='new'){
+    g.innerHTML=`<div class="chip ${src.dir}${src.jump?' jmp':''}" style="animation:none">${arHTML(src.dir)}${src.jump?'<sup>2</sup>':''}</div>`;
+  } else {
+    const c=d.el.cloneNode(true); c.style.animation='none'; g.appendChild(c);
+    d.el.classList.add('dragsrc');
+  }
+  document.body.appendChild(g);
+  const r=g.getBoundingClientRect(); d.gw=r.width; d.gh=r.height;
+  d.ghost=g;
+  if(src.type!=='new') $('trash').classList.add('show');
+  beep(740,0.05);
+  moveDrag(e);
+}
+function dragKids(container,selector){
+  return [...container.children].filter(el=>el.matches(selector) && el!==dropInd && !el.classList.contains('dragsrc'));
+}
+function calcIndex(container,x,y,selector){
+  const kids=dragKids(container,selector);
+  for(let i=0;i<kids.length;i++){
+    const r=kids[i].getBoundingClientRect();
+    if(y < r.top-4) return i;
+    if(y <= r.bottom+4 && x < r.left+r.width/2) return i;
+  }
+  return kids.length;
+}
+function placeInd(container,idx,selector,small){
+  dropInd.className='dropind'+(small?' sm':'');
+  const kids=dragKids(container,selector);
+  if(idx>=kids.length) container.appendChild(dropInd);
+  else container.insertBefore(dropInd,kids[idx]);
+}
+function moveDrag(e){
+  const d=drag;
+  d.ghost.style.transform=`translate(${e.clientX-d.gw/2}px,${e.clientY-d.gh-14}px)`;
+  d.drop=null; dropInd.remove();
+  const t=document.elementFromPoint(e.clientX,e.clientY);
+  const overTrash = t && t.closest('#trash');
+  $('trash').classList.toggle('hot', !!overTrash && d.src.type!=='new');
+  if(overTrash){ if(d.src.type!=='new') d.drop={zone:'trash'}; return; }
+  const lb = t && t.closest('.loopbox');
+  if(lb && d.src.type!=='loop'){
+    const body=lb.querySelector('.lbody');
+    const idx=calcIndex(body,e.clientX,e.clientY,'.chip');
+    placeInd(body,idx,'.chip',true);
+    d.drop={zone:'loop', lp:lb._lp, index:idx};
+    return;
+  }
+  if(t && t.closest('#program')){
+    const idx=calcIndex($('program'),e.clientX,e.clientY,'.chip,.loopbox');
+    placeInd($('program'),idx,'.chip,.loopbox',false);
+    d.drop={zone:'top', index:idx};
+  }
+}
+function takeSrcItem(src){
+  if(src.type==='new') return null;
+  if(src.type==='loop'){
+    const i=program.indexOf(src.item); if(i>=0) program.splice(i,1);
+    if(activeLoop===src.item) activeLoop=null;
+    return src.item;
+  }
+  if(src.fromLoop){ const i=src.fromLoop.body.indexOf(src.item); if(i>=0) src.fromLoop.body.splice(i,1); }
+  else { const i=program.indexOf(src.item); if(i>=0) program.splice(i,1); }
+  return src.item;
+}
+function performDrop(d,e){
+  const src=d.src, drop=d.drop, L=LEVELS[lvIndex];
+  if(!drop){ if(src.type!=='new') beep(260,0.05); return; }
+  if(drop.zone==='trash'){
+    takeSrcItem(src); poof(e.clientX,e.clientY);
+    beep(420,0.06,'triangle'); setTimeout(()=>beep(240,0.08,'triangle'),70);
+    return;
+  }
+  if(src.type==='new' && L.budget!=null && usedBlocks()+1>L.budget){ toast('ブロックが たりない！ くりかえし で まとめよう'); return; }
+  if(drop.zone==='top'){
+    const wasTop = src.type==='loop' || (src.type==='chip' && !src.fromLoop);
+    if(program.length-(wasTop?1:0)+1 > 16){ toast('もう いっぱいだよ'); return; }
+    const it=takeSrcItem(src);
+    const ins = src.type==='new' ? {kind:'move',dir:src.dir,jump:src.jump}
+              : src.type==='loop' ? it
+              : {kind:'move',dir:it.dir,jump:it.jump};
+    program.splice(Math.min(drop.index,program.length),0,ins);
+    beep(520,0.06);
+  } else if(drop.zone==='loop'){
+    const lp=drop.lp;
+    if(lp.body.length-(src.fromLoop===lp?1:0)+1 > 8){ toast('くりかえしには 8こ まで'); return; }
+    const it=takeSrcItem(src);
+    const ins = src.type==='new' ? {dir:src.dir,jump:src.jump} : {dir:it.dir,jump:it.jump};
+    lp.body.splice(Math.min(drop.index,lp.body.length),0,ins);
+    beep(560,0.06);
+  }
+}
+function endDrag(e){
+  const d=drag; drag=null;
+  if(!d) return;
+  if(!d.started){
+    if(d.src.type==='loop') setActiveLoop(d.src.item);
+    return;
+  }
+  setTimeout(()=>{ justDragged=false; },250);
+  dropInd.remove(); if(d.ghost) d.ghost.remove();
+  $('trash').classList.remove('show','hot');
+  if(!running) performDrop(d,e);
+  renderProgram();
+}
+function cancelDrag(){
+  const d=drag; drag=null;
+  if(!d || !d.started) return;
+  setTimeout(()=>{ justDragged=false; },250);
+  dropInd.remove(); if(d.ghost) d.ghost.remove();
+  $('trash').classList.remove('show','hot');
+  renderProgram();
+}
+window.addEventListener('pointermove',e=>{
+  if(!drag || e.pointerId!==drag.id) return;
+  if(!drag.started){
+    if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<9) return;
+    beginDrag(e);
+  } else moveDrag(e);
+});
+window.addEventListener('pointerup',e=>{ if(drag && e.pointerId===drag.id) endDrag(e); });
+window.addEventListener('pointercancel',e=>{ if(drag && e.pointerId===drag.id) cancelDrag(); });
+
+function poof(x,y){
+  for(let i=0;i<8;i++){
+    const s=document.createElement('span'); s.className='poofdot';
+    s.style.left=(x-5)+'px'; s.style.top=(y-5)+'px';
+    const a=i/8*Math.PI*2;
+    s.style.setProperty('--dx',Math.cos(a)*40+'px');
+    s.style.setProperty('--dy',(Math.sin(a)*40-20)+'px');
+    document.body.appendChild(s); setTimeout(()=>s.remove(),500);
+  }
 }
 
 function renderStars(){
@@ -599,7 +818,7 @@ function winSound(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0.1
 
 async function run(){
   if(running) return;
-  if(activeLoop!==null){ if(program[activeLoop].body.length===0) program.splice(activeLoop,1); activeLoop=null; renderProgram(); }
+  if(activeLoop){ dropEmptyActive(); activeLoop=null; renderProgram(); }
   const p=$('program'), flat=[];
   program.forEach((item,pi)=>{
     if(item.kind==='move'){ flat.push({dir:item.dir, jump:item.jump, el:p.querySelector(`[data-pi="${pi}"][data-t="m"]`)}); }
@@ -661,6 +880,7 @@ function finishRun(){ running=false; setButtons(false); }
 function setButtons(dis){
   ['playBtn','backBtn','clearBtn','loopBtn'].forEach(id=>{const e=$(id); if(e)e.disabled=dis;});
   document.querySelectorAll('#pad .btn, #jumpRow .jbtn').forEach(b=>b.disabled=dis);
+  document.body.classList.toggle('running',dis);
 }
 
 function win(){
