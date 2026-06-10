@@ -370,7 +370,8 @@ function kumaBestLevel(){
 function progressOf(g){
   if(!g.ns) return 0;
   try{ if(window.Save && Save.game) return Save.game(g.ns).get(g.progressKey,0); }catch(e){}
-  try{ return JSON.parse(localStorage.getItem('save_'+g.ns)||'{}')[g.progressKey]||0; }catch(e){}
+  // save.js が無い環境用の直読みフォールバック（キーは save.js の PREFIX と同じ）
+  try{ return JSON.parse(localStorage.getItem('asobinomori:'+g.ns)||'{}')[g.progressKey]||0; }catch(e){}
   return 0;
 }
 
@@ -458,16 +459,19 @@ GAMES.forEach((g,i)=>{
 /* ===== おへや 入口（どんぐり残数・くじ通知） ===== */
 (function(){
   const entry = document.getElementById('roomEntry');
-  if(!entry || !window.Rewards) return;
+  if(!entry) return;
+  // どんぐり残数・くじ通知（Rewards が無い環境でも入口ナビは生かす）
   try{
-    document.getElementById('roomCount').textContent = Rewards.balance();
-    const canDraw = Rewards.canDraw();
-    const bell = document.getElementById('roomBell');
-    bell.hidden = !canDraw;
-    document.getElementById('roomSub').textContent =
-      Rewards.allCollected() ? 'ごほうびを ぜんぶ あつめたよ！'
-      : canDraw ? 'くじが ひけるよ！みに いこう'
-      : 'どんぐりを ためて くじを ひこう';
+    if(window.Rewards){
+      document.getElementById('roomCount').textContent = Rewards.balance();
+      const canDraw = Rewards.canDraw();
+      const bell = document.getElementById('roomBell');
+      bell.hidden = !canDraw;
+      document.getElementById('roomSub').textContent =
+        Rewards.allCollected() ? 'ごほうびを ぜんぶ あつめたよ！'
+        : canDraw ? 'くじが ひけるよ！みに いこう'
+        : 'どんぐりを ためて くじを ひこう';
+    }
   }catch(e){}
   entry.addEventListener('click', (ev)=>{
     try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
@@ -491,7 +495,8 @@ ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true
 function doReset(){
   try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
   try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','room']); }catch(e){}
-  ['manekko','kimari','katachi','pitagora','room'].forEach(ns=>{ try{ localStorage.removeItem('save_'+ns); }catch(e){} });
+  // Save が無い環境でも確実に消す（キーは save.js の PREFIX と同じ）
+  ['manekko','kimari','katachi','pitagora','room'].forEach(ns=>{ try{ localStorage.removeItem('asobinomori:'+ns); }catch(e){} });
   sfx('whoosh');
   setTimeout(()=>location.reload(), 200);
 }

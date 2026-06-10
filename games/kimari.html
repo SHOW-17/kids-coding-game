@@ -25,10 +25,7 @@
 html{-webkit-text-size-adjust:100%;}
 body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);min-height:100dvh;
   display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
-  background:
-    radial-gradient(120% 70% at 15% -8%, #f3fbff 0%, transparent 55%),
-    radial-gradient(120% 70% at 95% 0%, #e3f4fb 0%, transparent 50%),
-    linear-gradient(180deg,#e6f5fb 0%, #c8e9f6 100%) fixed;}
+  background:#d4eef9 url("../assets/bg/kimari.webp") center bottom / cover no-repeat fixed;}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 
@@ -93,7 +90,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(33,137,173,.16);}
 .diff.sel{background:linear-gradient(180deg,#76d3ee,var(--accent));color:#fff;box-shadow:0 4px 0 var(--accent-d);}
 
-.hint{font-weight:800;font-size:18px;color:var(--accent-d);min-height:26px;text-align:center;margin:10px 0 6px;}
+.hint{font-weight:800;font-size:16px;color:var(--accent-d);min-height:26px;text-align:center;margin:10px auto 6px;
+  width:fit-content;background:rgba(255,255,255,.85);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(33,137,173,.14), inset 0 2px 0 #fff;}
 
 /* sequence card */
 .seq-card{width:100%;background:var(--paper);border-radius:26px;padding:18px 12px;margin:4px 0 12px;
@@ -431,6 +430,11 @@ function tierFor(idx){
   const e = idx + (diff==='hard' ? 14 : 0);            // むずかしい：はじめから むずかしいきまり
   return TIERS.find(t=>e<t.until)||TIERS[TIERS.length-1];
 }
+/* いまの出題のむずかしさ（1〜6）。tier が深いほど・「むずかしい」設定ほど大きい */
+function difficultyNow(){
+  const i = TIERS.indexOf(tierFor(qIndex));            // 0〜4
+  return Math.max(1, Math.min(6, i + 1 + (diff==='hard' ? 1 : 0)));
+}
 function buildProblem(idx, depth){
   depth=depth||0;
   const tier=tierFor(idx);
@@ -490,8 +494,8 @@ function correctAnswer(btn, tok){
   total++; streak++;
   if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
-  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficulty は 1〜6。
-  const acGain = difficulty;
+  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficultyNow() は 1〜6。
+  const acGain = difficultyNow();
   save.set('wins', (save.get('wins',0)||0)+acGain);
   if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
   renderStatus();

@@ -54,6 +54,11 @@ games/
   pitagora.html         ぴたごら（たまころがし＝決定論グリッドsim）
 assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）
+  bg/                   各ゲームのシーン背景（webp 1024x1536。生成画像＝空＋下1/3だけ丘の縦長シーン。
+                        body に center bottom / cover で敷く。中央は余白＝UIが乗る前提の低コントラスト）
+  tokens/               盤面トークン画像（webp 透過・余白トリム済み）。programming の
+                        star/box/target/button/gate/warp ＋ pitagora の ball/basket。
+                        CSS図形だったトークンを background-image central/contain で差し替えた
   icons/               ファビコン・PWA・apple-touch アイコン一式
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）

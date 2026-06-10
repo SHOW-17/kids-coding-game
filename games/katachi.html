@@ -25,10 +25,7 @@
 html{-webkit-text-size-adjust:100%;}
 body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);min-height:100dvh;
   display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
-  background:
-    radial-gradient(120% 70% at 15% -8%, #f3fdf5 0%, transparent 55%),
-    radial-gradient(120% 70% at 95% 0%, #e1f7e8 0%, transparent 50%),
-    linear-gradient(180deg,#e4f7ea 0%, #c4edd0 100%) fixed;}
+  background:#d6f2df url("../assets/bg/katachi.webp") center bottom / cover no-repeat fixed;}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
 
@@ -84,7 +81,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .dots .d.on{background:var(--accent);}
 .dots .d.cur{background:var(--accent-d);box-shadow:0 0 0 3px rgba(58,158,92,.25);}
 
-.hint{font-weight:800;font-size:15px;color:var(--ink-soft);min-height:22px;text-align:center;margin:4px 0;}
+.hint{font-weight:800;font-size:14px;color:var(--ink-soft);min-height:22px;text-align:center;margin:4px auto;
+  width:fit-content;background:rgba(255,255,255,.85);
+  padding:7px 16px;border-radius:999px;box-shadow:0 3px 0 rgba(58,158,92,.14), inset 0 2px 0 #fff;}
 
 .board-wrap{position:relative;margin:4px 0;border-radius:22px;padding:10px;
   background:linear-gradient(180deg,#f0fff4 0%,#dcf6e2 100%);
@@ -363,7 +362,7 @@ function jumpTo(idx){
   if(winning || dragging) return;
   idx=Math.max(0,Math.min(idx,LEVELS.length-1));
   if(idx===lvIndex) return;
-  lvIndex=idx; sfx('tap'); save.set('current', lvIndex); loadLevel();
+  lvIndex=idx; sfx('tap'); loadLevel();   // current の保存は loadLevel 内で行う
 }
 function calcSizes(){
   const landscape = window.innerWidth > window.innerHeight && window.innerWidth >= 720;
