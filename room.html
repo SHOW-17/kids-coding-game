@@ -51,7 +51,7 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   box-shadow:0 5px 0 rgba(150,100,40,.2),inset 0 2px 0 #fff;}
 .purse .n{font-family:'Mochiy Pop One';font-size:18px;color:var(--ac-d);}
 
-/* ===== どんぐり アイコン（CSS図形） ===== */
+/* ===== どんぐり アイコン（CSS図形・通貨） ===== */
 .acorn{position:relative;display:inline-block;width:22px;height:24px;flex:0 0 auto;}
 .acorn .cap{position:absolute;top:0;left:0;width:22px;height:11px;border-radius:11px 11px 4px 4px;
   background:linear-gradient(180deg,#a9712f,#7d4f17);box-shadow:inset 0 2px 0 rgba(255,255,255,.35);}
@@ -64,126 +64,41 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 
 /* ===== おへや ステージ ===== */
 .room{position:relative;height:300px;border-radius:26px;overflow:hidden;margin-top:4px;
-  background:linear-gradient(180deg,#ffe6c8 0%,#ffe6c8 56%,#f6c98f 56%,#eabb7a 100%);
-  box-shadow:0 16px 30px -12px rgba(120,75,20,.45),inset 0 3px 0 rgba(255,255,255,.7),
+  background:#ffe6c8 center/cover no-repeat;
+  background-image:url('assets/room/room_bg.png');
+  box-shadow:0 16px 30px -12px rgba(120,75,20,.45),inset 0 3px 0 rgba(255,255,255,.5),
     inset 0 -10px 18px rgba(150,100,40,.16);}
-/* かべの巾木 */
-.room::after{content:"";position:absolute;left:0;right:0;top:56%;height:6px;
-  background:rgba(150,100,40,.18);}
-.furni{position:absolute;}
-/* 自分のユニコーン（床中央） */
+.furni{position:absolute;touch-action:none;cursor:grab;}
+.furni.grab{cursor:grabbing;z-index:9!important;}
+.furni img{display:block;width:100%;height:auto;
+  filter:drop-shadow(0 5px 4px rgba(110,70,20,.28));}
+/* 自分のユニコーン（床中央）。本体は当たり判定なし＝うしろの家具もつかめる */
 .stage{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
-  width:172px;z-index:5;}
+  width:168px;z-index:5;pointer-events:none;}
+/* ユニコーン＋着せ替えを一緒にふわふわさせるラッパー（影は外＝固定） */
+.bob{position:relative;width:100%;animation:bob 3.4s var(--ease) infinite;}
+.bob.dragging{animation:none;}   /* ドラッグ中はふわふわを止めてズレ防止 */
 .stage .uni{display:block;width:100%;height:auto;
-  filter:drop-shadow(0 10px 8px rgba(110,70,20,.32));
-  animation:bob 3.4s var(--ease) infinite;}
+  filter:drop-shadow(0 10px 8px rgba(110,70,20,.32));}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .stage .pad{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
   width:62%;height:16px;border-radius:50%;background:rgba(120,75,20,.2);filter:blur(5px);z-index:-1;}
-@media (prefers-reduced-motion: reduce){ .stage .uni{animation:none;} }
+@media (prefers-reduced-motion: reduce){ .bob{animation:none;} }
 
-/* 着せ替えアクセサリ（ユニコーンに重ねる） */
-.acc{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;}
-
-/* === あたま === */
-.hat-party{top:-13%;width:46%;}
-.hat-party .cone{width:100%;padding-top:96%;position:relative;
-  background:linear-gradient(135deg,#ff8aa6,#ec4d75);
-  clip-path:polygon(50% 0,100% 100%,0 100%);
-  filter:drop-shadow(0 3px 2px rgba(120,30,50,.3));}
-.hat-party .cone::before{content:"";position:absolute;left:14%;right:14%;bottom:8%;height:18%;
-  background:repeating-linear-gradient(45deg,#fff5,#fff5 5px,transparent 5px,transparent 11px);}
-.hat-party .pom{position:absolute;top:-12%;left:50%;transform:translateX(-50%);
-  width:26%;padding-top:26%;border-radius:50%;background:#fff;
-  box-shadow:inset 0 2px 0 #fff,0 2px 2px rgba(0,0,0,.15);}
-.hat-crown{top:-5%;width:50%;}
-.hat-crown .band{width:100%;padding-top:62%;position:relative;
-  background:linear-gradient(180deg,#ffd34d,#f0a81f);
-  clip-path:polygon(0 38%,16% 38%,25% 0,37% 38%,50% 6%,63% 38%,75% 0,84% 38%,100% 38%,100% 100%,0 100%);
-  filter:drop-shadow(0 3px 2px rgba(140,90,10,.35));}
-.hat-crown .band::after{content:"";position:absolute;left:50%;top:60%;transform:translateX(-50%);
-  width:16%;padding-top:16%;border-radius:50%;background:#ff5d7a;box-shadow:inset 0 2px 0 #fff8;}
-.hat-ribbon{top:-2%;left:74%;width:34%;}
-.hat-ribbon .b{width:100%;padding-top:64%;position:relative;}
-.hat-ribbon .b::before,.hat-ribbon .b::after{content:"";position:absolute;top:0;width:48%;height:100%;
-  background:linear-gradient(180deg,#ff9ec4,#f06ba0);}
-.hat-ribbon .b::before{left:0;clip-path:polygon(100% 0,100% 100%,0 78%,0 22%);border-radius:8px 0 0 8px;}
-.hat-ribbon .b::after{right:0;clip-path:polygon(0 0,0 100%,100% 78%,100% 22%);border-radius:0 8px 8px 0;}
-.hat-ribbon .knot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:24%;padding-top:24%;border-radius:50%;background:#e85a93;z-index:2;box-shadow:inset 0 2px 0 #fff7;}
-.hat-flower{top:-3%;left:73%;width:30%;}
-.hat-flower .f{width:100%;padding-top:100%;position:relative;}
-.hat-flower .petal{position:absolute;left:50%;top:50%;width:46%;height:46%;border-radius:50%;
-  background:linear-gradient(180deg,#fff0a6,#ffd24d);margin:-23% 0 0 -23%;}
-.hat-flower .core{position:absolute;left:50%;top:50%;width:34%;height:34%;border-radius:50%;
-  background:#ff9d2e;transform:translate(-50%,-50%);z-index:2;box-shadow:inset 0 2px 0 #fff8;}
-.hat-knit{top:-10%;width:54%;}
-.hat-knit .k{width:100%;padding-top:58%;position:relative;
-  background:linear-gradient(180deg,#7fd0e8,#3fa9cc);border-radius:50% 50% 16px 16px;
-  filter:drop-shadow(0 3px 2px rgba(20,90,120,.3));}
-.hat-knit .k::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26%;
-  background:#bfeaf6;border-radius:0 0 14px 14px;box-shadow:inset 0 3px 0 #fff8;}
-.hat-knit .pom{position:absolute;top:-16%;left:50%;transform:translateX(-50%);
-  width:26%;padding-top:26%;border-radius:50%;background:#fff;box-shadow:0 2px 2px rgba(0,0,0,.12);}
-
-/* === かお === */
-.face-glasses{top:39%;width:64%;}
-.face-glasses .g{width:100%;padding-top:34%;position:relative;}
-.face-glasses .lens{position:absolute;top:0;width:40%;height:100%;border-radius:50%;
-  border:4px solid #4a3a2a;background:rgba(255,255,255,.22);box-sizing:border-box;}
-.face-glasses .lens.l{left:0;}.face-glasses .lens.r{right:0;}
-.face-glasses .br{position:absolute;left:40%;right:40%;top:42%;height:4px;background:#4a3a2a;border-radius:2px;}
-.face-heart{top:38%;width:66%;}
-.face-heart .g{width:100%;padding-top:36%;position:relative;}
-.face-heart .lens{position:absolute;top:0;width:42%;height:100%;}
-.face-heart .lens::before{content:"";position:absolute;inset:0;background:#ff7a9c;
-  clip-path:polygon(50% 100%,8% 45%,8% 22%,28% 8%,50% 24%,72% 8%,92% 22%,92% 45%);
-  box-shadow:inset 0 2px 0 #fff7;}
-.face-heart .lens.l{left:0;}.face-heart .lens.r{right:0;}
-.face-heart .br{position:absolute;left:42%;right:42%;top:30%;height:4px;background:#e8567a;border-radius:2px;}
-.face-star{top:38%;width:66%;}
-.face-star .g{width:100%;padding-top:36%;position:relative;}
-.face-star .lens{position:absolute;top:0;width:42%;height:100%;}
-.face-star .lens::before{content:"";position:absolute;inset:0;background:#ffcf3e;
-  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
-  box-shadow:inset 0 2px 0 #fff8;}
-.face-star .lens.l{left:0;}.face-star .lens.r{right:0;}
-.face-star .br{position:absolute;left:42%;right:42%;top:30%;height:4px;background:#e0a91f;border-radius:2px;}
-.face-blush{top:46%;width:78%;}
-.face-blush .b{width:100%;padding-top:22%;position:relative;}
-.face-blush .c{position:absolute;top:0;width:24%;height:100%;border-radius:50%;
-  background:radial-gradient(circle,#ff9bb3,rgba(255,155,179,0) 70%);}
-.face-blush .c.l{left:2%;}.face-blush .c.r{right:2%;}
-
-/* === くび === */
-.neck-scarf{top:55%;width:72%;}
-.neck-scarf .s{width:100%;padding-top:30%;position:relative;}
-.neck-scarf .band{position:absolute;left:0;right:0;top:0;height:64%;border-radius:14px;
-  background:linear-gradient(180deg,#ff8f6b,#ee5a3c);box-shadow:inset 0 3px 0 #fff5;}
-.neck-scarf .tail{position:absolute;left:30%;top:46%;width:22%;height:80%;border-radius:8px;
-  background:linear-gradient(180deg,#f86b48,#d6411f);}
-.neck-scarf .tail::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:#fff6;}
-.neck-bow{top:54%;width:42%;}
-.neck-bow .b{width:100%;padding-top:50%;position:relative;}
-.neck-bow .b::before,.neck-bow .b::after{content:"";position:absolute;top:8%;width:46%;height:84%;
-  background:linear-gradient(180deg,#8f7bf0,#6c54d6);}
-.neck-bow .b::before{left:0;clip-path:polygon(0 0,100% 26%,100% 74%,0 100%);border-radius:8px;}
-.neck-bow .b::after{right:0;clip-path:polygon(100% 0,0 26%,0 74%,100% 100%);border-radius:8px;}
-.neck-bow .k{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:18%;padding-top:30%;border-radius:5px;background:#5a40c0;z-index:2;}
-.neck-bell{top:55%;width:70%;}
-.neck-bell .s{width:100%;padding-top:26%;position:relative;}
-.neck-bell .band{position:absolute;left:0;right:0;top:0;height:40%;border-radius:10px;
-  background:linear-gradient(180deg,#ff9ec4,#ec5f97);box-shadow:inset 0 2px 0 #fff6;}
-.neck-bell .bell{position:absolute;left:50%;top:24%;transform:translateX(-50%);
-  width:22%;padding-top:22%;border-radius:50%;background:linear-gradient(180deg,#ffe06a,#e0a91f);
-  box-shadow:inset 0 2px 0 #fff8;z-index:2;}
-.neck-cape{top:50%;width:104%;z-index:-1;}
-.neck-cape .c{width:100%;padding-top:52%;position:relative;
-  background:linear-gradient(180deg,#7ad08f,#3d9e5d);
-  clip-path:polygon(50% 0,90% 10%,100% 100%,0 100%,10% 10%);
-  border-radius:0 0 24px 24px;filter:drop-shadow(0 4px 3px rgba(20,90,40,.3));}
-.neck-cape .c::after{content:"";position:absolute;left:0;right:0;top:0;height:18%;background:#bfe9c9;}
+/* 着せ替えアクセサリ（ユニコーンに画像で重ねる。.bob の中に入れて一緒に動く） */
+.acc{position:absolute;left:50%;transform:translate(-50%,-50%);
+  pointer-events:auto;touch-action:none;cursor:grab;}
+.acc.grab{cursor:grabbing;}
+.acc.acc-back{pointer-events:none;}   /* 後ろレイヤーはつかめない（前レイヤーで操作） */
+.acc img{display:block;width:100%;height:auto;
+  filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
+.stage .uni{pointer-events:none;}
+/* ほっぺ（画像でなくCSS図形に戻したやつ） */
+.blush-css{position:relative;width:100%;padding-top:30%;}
+.blush-css .cheek{position:absolute;top:0;width:32%;height:100%;border-radius:50%;
+  background:radial-gradient(circle,#ff8fae 0%,rgba(255,143,174,.65) 45%,rgba(255,143,174,0) 72%);}
+.blush-css .cheek.l{left:1%;}
+.blush-css .cheek.r{right:1%;}
 
 /* ===== くじパネル ===== */
 .panel{margin-top:14px;background:#fffdf7;border-radius:24px;padding:16px 16px 18px;
@@ -241,7 +156,9 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   display:flex;align-items:center;justify-content:center;border:none;padding:0;
   transition:transform .13s var(--ease);overflow:hidden;}
 .slot:active{transform:translateY(3px) scale(.97);}
-.slot .pv{position:relative;width:62%;height:62%;}        /* プレビュー枠 */
+.slot .pv{position:relative;width:78%;height:78%;display:flex;align-items:center;justify-content:center;}
+.slot .pv img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;
+  filter:drop-shadow(0 3px 3px rgba(110,70,20,.2));}
 .slot.locked{cursor:default;background:#f3ead7;}
 .slot.locked:active{transform:none;}
 .slot.locked .q{font-family:'Mochiy Pop One';font-size:30px;color:#cdb78f;}
@@ -250,7 +167,7 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 .slot .nm{position:absolute;left:0;right:0;bottom:5px;font-size:10px;font-weight:800;
   color:var(--ink-soft);text-align:center;}
 .slot .check{position:absolute;top:5px;right:6px;width:20px;height:20px;border-radius:50%;
-  background:var(--ac);box-shadow:0 2px 0 var(--ac-sh);display:none;}
+  background:var(--ac);box-shadow:0 2px 0 var(--ac-sh);display:none;z-index:2;}
 .slot.on .check{display:block;}
 .slot .check::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;
   border:solid #fff;border-width:0 3px 3px 0;transform:rotate(42deg);}
@@ -260,43 +177,63 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 .cat-h:first-child{margin-top:2px;}
 .hint{text-align:center;font-size:12px;font-weight:800;color:var(--ink-faint);margin-top:14px;}
 
-/* プレビュー（ずかん内）— acc をそのまま縮小して中央に置く */
-.pv .acc{left:50%;top:50%!important;transform:translate(-50%,-50%)!important;width:88%!important;}
-.pv .acc.hat-ribbon,.pv .acc.hat-flower{left:50%;}
-
 /* ===== くじ えんしゅつ（オーバーレイ） ===== */
 .ovl{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
   background:rgba(60,40,15,.5);backdrop-filter:blur(3px);padding:24px;}
 .ovl[hidden]{display:none;}
-.prize{background:#fffdf7;border-radius:30px;max-width:330px;width:100%;padding:26px 22px 22px;
-  text-align:center;box-shadow:0 26px 50px -16px rgba(90,55,15,.6),inset 0 3px 0 #fff;}
-.prize .egg{width:120px;height:138px;margin:4px auto 6px;position:relative;cursor:pointer;}
-/* おおきな どんぐり（たまご役） */
-.bigacorn{width:100%;height:100%;position:relative;animation:wob .6s ease-in-out infinite;}
-@keyframes wob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
-.bigacorn .cap{position:absolute;top:0;left:6%;width:88%;height:42%;border-radius:60px 60px 14px 14px;
-  background:linear-gradient(180deg,#a9712f,#7d4f17);box-shadow:inset 0 4px 0 rgba(255,255,255,.3);}
-.bigacorn .cap::after{content:"";position:absolute;top:-10%;left:50%;transform:translateX(-50%);
-  width:12px;height:16px;border-radius:6px;background:#5e3a10;}
-.bigacorn .nut{position:absolute;bottom:0;left:12%;width:76%;height:66%;
-  border-radius:38px 38px 38px 38px / 26px 26px 50px 50px;
-  background:linear-gradient(180deg,#e6b25a,#cf8b2c);
-  box-shadow:inset 0 5px 0 rgba(255,255,255,.4),inset 0 -7px 10px rgba(120,70,15,.3);}
-.prize .tap{font-size:12.5px;font-weight:800;color:var(--ink-faint);}
-.prize .got{display:none;}
-.prize.opened .egg,.prize.opened .tap{display:none;}
-.prize.opened .got{display:block;animation:popin .4s var(--spring);}
-@keyframes popin{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
-.prize .gotpv{width:120px;height:120px;margin:0 auto 10px;position:relative;
-  background:radial-gradient(circle at 50% 38%,#fff6df,#ffe6bf);border-radius:50%;
-  box-shadow:inset 0 3px 0 #fff,0 8px 16px -8px rgba(120,75,20,.5);}
-.prize .gotpv .acc{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:74%!important;}
+.prize{background:#fffdf7;border-radius:30px;max-width:330px;width:100%;padding:22px 22px 22px;
+  text-align:center;box-shadow:0 26px 50px -16px rgba(90,55,15,.6),inset 0 3px 0 #fff;
+  overflow:hidden;}
+
+/* ガチャマシン */
+.gacha{position:relative;height:280px;}
+.machine{position:absolute;left:50%;top:0;transform:translateX(-50%);width:190px;height:auto;
+  filter:drop-shadow(0 10px 10px rgba(110,70,20,.3));transition:opacity .5s var(--ease),transform .5s var(--ease);}
+.gacha.rolling .machine{animation:wiggle .35s ease-in-out infinite;}
+@keyframes wiggle{0%,100%{transform:translateX(-50%) rotate(-2.5deg)}50%{transform:translateX(-50%) rotate(2.5deg)}}
+.gacha.opened .machine{opacity:.18;transform:translateX(-50%) scale(.86) translateY(-10px);}
+
+/* たまご（マシンの下から出てくる） */
+.egg{position:absolute;left:50%;bottom:30px;width:128px;height:128px;transform:translateX(-50%);
+  cursor:pointer;opacity:0;}
+.egg img{position:absolute;left:0;top:0;width:100%;height:auto;display:block;
+  filter:drop-shadow(0 8px 8px rgba(110,70,20,.3));}
+.egg .open{opacity:0;transform:scale(.7);transition:opacity .25s,transform .35s var(--spring);}
+.gacha.ready .egg{opacity:1;animation:drop .7s var(--spring) 1, eggbob 1.6s var(--ease) .7s infinite;}
+@keyframes drop{0%{transform:translateX(-50%) translateY(-150px) scale(.6);opacity:0}
+  60%{opacity:1}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
+@keyframes eggbob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-5deg)}50%{transform:translateX(-50%) translateY(-6px) rotate(5deg)}}
+.gacha.opened .egg{opacity:1;animation:none;transform:translateX(-50%);bottom:54px;cursor:default;}
+.gacha.opened .egg .closed{opacity:0;transform:scale(1.15);}
+.gacha.opened .egg .open{opacity:1;transform:scale(1.12);}
+.egg .closed{transition:opacity .25s,transform .35s var(--ease);}
+/* たまごの中身（ごほうび） */
+.prizepop{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.4);
+  width:78px;height:78px;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:none;z-index:3;}
+.gacha.opened .prizepop{opacity:1;transform:translate(-50%,-50%) scale(1);
+  animation:popin .5s var(--spring);}
+.prizepop img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;
+  filter:drop-shadow(0 4px 5px rgba(110,70,20,.35));}
+@keyframes popin{from{transform:translate(-50%,-50%) scale(.3);opacity:0}to{opacity:1}}
+
+.tap{font-size:12.5px;font-weight:800;color:var(--ink-faint);min-height:18px;transition:opacity .3s;}
+.gacha.rolling ~ .tap,.gacha:not(.ready) ~ .tap{opacity:0;}
+.gacha.ready ~ .tap{opacity:1;}
+.gacha.opened ~ .tap{opacity:0;}
+.got{display:none;}
+.prize.opened .got{display:block;animation:popin2 .4s var(--spring);}
+@keyframes popin2{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .prize h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin-bottom:4px;}
 .prize .pname{font-family:'Mochiy Pop One';font-size:17px;color:var(--ac-d);margin-bottom:16px;}
 .prize button{width:100%;border:none;cursor:pointer;font-family:'Mochiy Pop One';font-size:16px;
   color:#fff;padding:14px;border-radius:999px;background:linear-gradient(180deg,var(--honey),var(--honey-d));
   box-shadow:0 5px 0 #d9851f;}
 .prize button:active{transform:translateY(2px);box-shadow:0 3px 0 #d9851f;}
+@media (prefers-reduced-motion: reduce){
+  .gacha.rolling .machine,.gacha.ready .egg{animation:none;}
+  .egg{opacity:1;}
+}
 </style>
 </head>
 <body>
@@ -315,8 +252,10 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   <!-- 家具（JSで挿入） -->
   <div class="stage">
     <div class="pad"></div>
-    <img class="uni" src="assets/uni/blue_standing.png" alt="わたしの ユニコーン" draggable="false">
-    <!-- 着せ替え acc（JSで挿入） -->
+    <div class="bob">
+      <img class="uni" src="assets/uni/blue_standing.png" alt="わたしの ユニコーン" draggable="false">
+      <!-- 着せ替え acc（JSで挿入） -->
+    </div>
   </div>
 </div>
 
@@ -346,10 +285,16 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 <!-- くじ えんしゅつ -->
 <div class="ovl" id="ovl" hidden>
   <div class="prize" id="prize">
-    <div class="egg" id="egg"><div class="bigacorn"><span class="cap"></span><span class="nut"></span></div></div>
-    <div class="tap">タップして あけてね！</div>
+    <div class="gacha" id="gacha">
+      <img class="machine" src="assets/gacha/machine.png" alt="" draggable="false">
+      <div class="egg" id="egg">
+        <img class="closed" src="assets/gacha/egg_closed.png" alt="" draggable="false">
+        <img class="open" src="assets/gacha/egg_open.png" alt="" draggable="false">
+        <div class="prizepop" id="gotpv"></div>
+      </div>
+    </div>
+    <div class="tap" id="tapHint">タップして あけてね！</div>
     <div class="got">
-      <div class="gotpv" id="gotpv"></div>
       <h2>やったね！</h2>
       <div class="pname" id="pname">　</div>
       <button id="prizeOk">うける</button>
@@ -367,86 +312,143 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
 function fx(n){ try{ if(window.FX&&FX[n]) return FX[n].apply(FX, [].slice.call(arguments,1)); }catch(e){} }
 
-/* ====== アクセサリ／家具の見た目（CSS図形）======
-   返すのは .acc 要素の中身（HTML）。配置は CSS クラスで持つ。 */
-function accInner(id){
-  switch(id){
-    case 'hat_party':  return '<div class="cone"></div><div class="pom"></div>';
-    case 'hat_crown':  return '<div class="band"></div>';
-    case 'hat_ribbon': return '<div class="b"></div><div class="knot"></div>';
-    case 'hat_flower': return '<div class="f">'+
-        '<div class="petal" style="transform:rotate(0deg) translateY(-58%)"></div>'+
-        '<div class="petal" style="transform:rotate(72deg) translateY(-58%)"></div>'+
-        '<div class="petal" style="transform:rotate(144deg) translateY(-58%)"></div>'+
-        '<div class="petal" style="transform:rotate(216deg) translateY(-58%)"></div>'+
-        '<div class="petal" style="transform:rotate(288deg) translateY(-58%)"></div>'+
-        '<div class="core"></div></div>';
-    case 'hat_knit':   return '<div class="k"></div><div class="pom"></div>';
-    case 'face_glasses':return '<div class="g"><div class="lens l"></div><div class="lens r"></div><div class="br"></div></div>';
-    case 'face_heart': return '<div class="g"><div class="lens l"></div><div class="lens r"></div><div class="br"></div></div>';
-    case 'face_star':  return '<div class="g"><div class="lens l"></div><div class="lens r"></div><div class="br"></div></div>';
-    case 'face_blush': return '<div class="b"><div class="c l"></div><div class="c r"></div></div>';
-    case 'neck_scarf': return '<div class="s"><div class="band"></div><div class="tail"></div></div>';
-    case 'neck_bow':   return '<div class="b"></div><div class="k"></div>';
-    case 'neck_bell':  return '<div class="s"><div class="band"></div><div class="bell"></div></div>';
-    case 'neck_cape':  return '<div class="c"></div>';
-  }
-  return '';
+/* ====== アイテムの見た目 ======
+   原則は画像。ほっぺ(face_blush)だけ画像がいまいちなのでCSS図形で描く。 */
+function itemImg(id){ return '<img src="assets/items/'+id+'.png" alt="" draggable="false">'; }
+function itemInner(id){
+  if(id==='face_blush') return '<div class="blush-css"><div class="cheek l"></div><div class="cheek r"></div></div>';
+  return itemImg(id);
 }
-/* class 名（acc + 形クラス）。形クラスは id のアンダースコアをハイフンに。 */
-function accClass(id){ return 'acc '+id.replace('_','-'); }
 
-/* 家具の見た目。返すのは .furni 要素まるごと（位置 inline）。 */
-var FURNI = {
-  room_window:  {style:'top:8%;left:9%;width:74px;height:60px;z-index:0',
-    html:'<div style="width:100%;height:100%;background:linear-gradient(180deg,#bfe6ff,#88c8f0);border:6px solid #fff;border-radius:10px;box-shadow:0 4px 0 rgba(150,100,40,.2),inset 0 2px 6px rgba(0,0,0,.08)"><div style="position:absolute;left:50%;top:6px;bottom:6px;width:4px;background:#fff;transform:translateX(-50%)"></div><div style="position:absolute;top:50%;left:6px;right:6px;height:4px;background:#fff;transform:translateY(-50%)"></div></div>'},
-  room_rainbow: {style:'top:5%;left:50%;transform:translateX(-50%);width:120px;height:60px;z-index:0',
-    html:'<div style="width:100%;height:200%;border-radius:50% 50% 0 0;border:7px solid #ff8a8a;border-bottom:none;box-sizing:border-box"></div>'+
-         '<div style="position:absolute;top:7px;left:7px;right:7px;height:200%;border-radius:50% 50% 0 0;border:7px solid #ffd36b;border-bottom:none;box-sizing:border-box"></div>'+
-         '<div style="position:absolute;top:14px;left:14px;right:14px;height:200%;border-radius:50% 50% 0 0;border:7px solid #7fd09a;border-bottom:none;box-sizing:border-box"></div>'},
-  room_rug:     {style:'bottom:3%;left:50%;transform:translateX(-50%);width:200px;height:40px;z-index:1',
-    html:'<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#ffc9d6,#f59ab0);box-shadow:inset 0 3px 0 #fff6,0 4px 8px -4px rgba(120,75,20,.4)"></div>'},
-  room_books:   {style:'bottom:8%;left:3%;width:52px;height:64px;z-index:2',
-    html:'<div style="position:absolute;bottom:0;width:100%;height:84%;background:#caa06a;border-radius:6px;box-shadow:inset 0 3px 0 #fff5"></div>'+
-         '<div style="position:absolute;bottom:30%;left:6px;width:9px;height:46%;background:#ef6b6b;border-radius:2px"></div>'+
-         '<div style="position:absolute;bottom:30%;left:17px;width:9px;height:54%;background:#5fa9e8;border-radius:2px"></div>'+
-         '<div style="position:absolute;bottom:30%;left:28px;width:9px;height:40%;background:#7fcf8f;border-radius:2px"></div>'+
-         '<div style="position:absolute;bottom:30%;left:39px;width:8px;height:50%;background:#ffcf3e;border-radius:2px"></div>'},
-  room_plant:   {style:'bottom:7%;left:8%;width:46px;height:64px;z-index:3',
-    html:'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:34px;height:30px;background:linear-gradient(180deg,#d98a4e,#b56a30);border-radius:6px 6px 10px 10px;box-shadow:inset 0 2px 0 #fff5"></div>'+
-         '<div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:18px;height:38px;background:#5fb878;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%"></div>'+
-         '<div style="position:absolute;bottom:30px;left:32%;width:16px;height:26px;background:#6fc888;border-radius:50%;transform:rotate(-30deg)"></div>'+
-         '<div style="position:absolute;bottom:30px;right:32%;width:16px;height:26px;background:#6fc888;border-radius:50%;transform:rotate(30deg)"></div>'},
-  room_lamp:    {style:'bottom:8%;right:8%;width:46px;height:80px;z-index:3',
-    html:'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:30px;height:8px;background:#9a6420;border-radius:5px"></div>'+
-         '<div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:48px;background:#b58450"></div>'+
-         '<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:42px;height:30px;background:linear-gradient(180deg,#ffe9a8,#ffd24d);border-radius:8px 8px 16px 16px;box-shadow:0 0 16px 4px rgba(255,210,90,.5),inset 0 3px 0 #fff7"></div>'},
-  room_teddy:   {style:'bottom:7%;right:24%;width:50px;height:60px;z-index:4',
-    html:'<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:34px;height:32px;background:#caa06a;border-radius:50%;box-shadow:inset 0 3px 0 #fff5"></div>'+
-         '<div style="position:absolute;top:-3px;left:6px;width:14px;height:14px;background:#b88a52;border-radius:50%"></div>'+
-         '<div style="position:absolute;top:-3px;right:6px;width:14px;height:14px;background:#b88a52;border-radius:50%"></div>'+
-         '<div style="position:absolute;top:9px;left:50%;transform:translateX(-50%);width:8px;height:6px;background:#5b4022;border-radius:50%"></div>'+
-         '<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:38px;height:32px;background:#bd9460;border-radius:16px;box-shadow:inset 0 3px 0 #fff5"></div>'},
-  room_balloon: {style:'top:6%;right:14%;width:44px;height:120px;z-index:2',
-    html:'<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:40px;height:50px;background:radial-gradient(circle at 38% 32%,#ff9aa9,#ee5d72);border-radius:50% 50% 50% 50% / 46% 46% 54% 54%;box-shadow:inset 0 4px 0 #fff7"></div>'+
-         '<div style="position:absolute;top:48px;left:50%;width:2px;height:70px;background:rgba(120,75,20,.4)"></div>'}
+/* ====== じぶんで おいた いち（ドラッグ位置）を ほぞん ====== */
+function roomSave(){ try{ if(window.Save&&Save.game) return Save.game('room'); }catch(e){} return null; }
+function loadPos(){ var s=roomSave(); var p=s?s.get('pos',{}):{}; return (p&&typeof p==='object')?p:{}; }
+function savePos(id,x,y){ var s=roomSave(); if(!s) return; var p=loadPos(); p[id]={x:x,y:y}; s.set('pos',p); }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+/* つかんで うごかせるようにする。
+   kind='wear'（ユニコーンの うえ／基準=.bob）／'furni'（へやの なか／基準=#room）。 */
+function makeDraggable(el, id, kind, linkEl){
+  el.addEventListener('pointerdown', function(ev){
+    if(ev.button && ev.button!==0) return;
+    ev.preventDefault();
+    var base = (kind==='wear') ? bobEl : roomEl;
+    if(kind==='wear') bobEl.classList.add('dragging');   // ふわふわ停止＝座標を安定
+    el.classList.add('grab');
+    try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+    sfx('tap');
+    var moved=false;
+    function move(e){
+      var r=base.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width*100;
+      var y=(e.clientY-r.top)/r.height*100;
+      if(kind==='wear'){ x=clamp(x,-15,115); y=clamp(y,-25,120); }
+      else { x=clamp(x,3,97); y=clamp(y,4,96); }
+      el.style.left=x+'%'; el.style.top=y+'%'; el.style.bottom='auto'; el.style.right='auto';
+      el.style.transform='translate(-50%,-50%)';
+      if(linkEl){ linkEl.style.left=x+'%'; linkEl.style.top=y+'%'; linkEl.style.bottom='auto';
+        linkEl.style.right='auto'; linkEl.style.transform='translate(-50%,-50%)'; }
+      moved=true;
+    }
+    function up(e){
+      el.removeEventListener('pointermove',move);
+      el.removeEventListener('pointerup',up);
+      el.removeEventListener('pointercancel',up);
+      try{ el.releasePointerCapture(ev.pointerId); }catch(e){}
+      el.classList.remove('grab');
+      if(kind==='wear') bobEl.classList.remove('dragging');
+      if(moved){
+        var x=parseFloat(el.style.left), y=parseFloat(el.style.top);
+        savePos(id,x,y); sfx('pop');
+      }
+    }
+    el.addEventListener('pointermove',move);
+    el.addEventListener('pointerup',up);
+    el.addEventListener('pointercancel',up);
+  });
+}
+
+/* 着せ替えの重ね位置（ユニコーンのうえ）。
+   cx/cy = 画像中心を置く位置（ステージ幅・高さの%）、w = 画像幅（ステージ幅の%）、z = 重ね。 */
+var PLACE = {
+  hat_party:   {cx:50, cy:-2,  w:46},
+  hat_crown:   {cx:50, cy:9,   w:52},
+  hat_ribbon:  {cx:50, cy:6,   w:56},
+  hat_flower:  {cx:67, cy:13,  w:30},
+  hat_knit:    {cx:50, cy:3,   w:58},
+  face_glasses:{cx:50, cy:35,  w:62},
+  face_heart:  {cx:50, cy:35,  w:64},
+  face_star:   {cx:50, cy:35,  w:64},
+  face_blush:  {cx:50, cy:43,  w:58},
+  /* 首まわりは「巻いてる」立体感のため前後2レイヤー。
+     wrap = 前レイヤー（手前）に見せるクリップ。後ろレイヤーは全体を本体の裏(z-1)へ。 */
+  neck_scarf:  {cx:50, cy:61,  w:58,  wrap:'inset(40% 0 0 0)'},
+  neck_bow:    {cx:50, cy:56,  w:40},
+  neck_bell:   {cx:50, cy:60,  w:60,  wrap:'inset(45% 0 0 0)'},
+  neck_cape:   {cx:50, cy:60,  w:106, wrap:'inset(0 0 62% 0)'}
 };
+function placeStyle(id){
+  var p = PLACE[id] || {cx:50,cy:30,w:50};
+  var c = loadPos()[id];
+  var cx = c ? c.x : p.cx, cy = c ? c.y : p.cy;
+  return 'left:'+cx+'%;top:'+cy+'%;width:'+p.w+'%;'+
+         'transform:translate(-50%,-50%);'+(p.z!=null?'z-index:'+p.z+';':'');
+}
+
+/* 家具の配置（部屋のなか）。bottom/top・left/right・width(px)・z を指定。 */
+var FURNI = {
+  room_rainbow: {w:'140px', z:0, style:'top:5%;left:50%;transform:translateX(-50%);width:140px;z-index:0'},
+  room_window:  {w:'78px',  z:0, style:'top:11%;left:7%;width:78px;z-index:0'},
+  room_balloon: {w:'50px',  z:1, style:'bottom:36%;right:11%;width:50px;z-index:1'},
+  room_rug:     {w:'210px', z:1, style:'bottom:2%;left:50%;transform:translateX(-50%);width:210px;z-index:1'},
+  room_books:   {w:'64px',  z:2, style:'bottom:6%;left:3%;width:64px;z-index:2'},
+  room_plant:   {w:'54px',  z:3, style:'bottom:6%;left:21%;width:54px;z-index:3'},
+  room_lamp:    {w:'56px',  z:3, style:'bottom:6%;right:6%;width:56px;z-index:3'},
+  room_teddy:   {w:'60px',  z:4, style:'bottom:5%;right:22%;width:60px;z-index:4'}
+};
+function furniStyle(id){
+  var f = FURNI[id]; if(!f) return '';
+  var c = loadPos()[id];
+  if(c) return 'left:'+c.x+'%;top:'+c.y+'%;width:'+f.w+';z-index:'+f.z+';transform:translate(-50%,-50%)';
+  return f.style;
+}
 
 /* ====== 描画 ====== */
 var stageEl = document.querySelector('.stage');
+var bobEl   = document.querySelector('.bob');
 var roomEl  = document.getElementById('room');
 
 function renderUni(){
-  // 既存 acc を消す
-  [].forEach.call(stageEl.querySelectorAll('.acc'), function(n){ n.remove(); });
+  [].forEach.call(bobEl.querySelectorAll('.acc'), function(n){ n.remove(); });
   var w = Rewards.wear();
   ['neck','face','hat'].forEach(function(cat){   // 重ね順：くび→かお→あたま
     var id = w[cat];
     if(!id) return;
-    var d = document.createElement('div');
-    d.className = accClass(id);
-    d.innerHTML = accInner(id);
-    stageEl.appendChild(d);
+    var p = PLACE[id] || {};
+    if(p.wrap){
+      // 後ろレイヤー（本体の裏。輪の後ろ側が隠れる）＝つかめない
+      var back = document.createElement('div');
+      back.className = 'acc acc-back';
+      back.setAttribute('style', placeStyle(id)+'z-index:-1;');
+      back.innerHTML = itemImg(id);
+      bobEl.appendChild(back);
+      // 前レイヤー（胸側だけクリップして手前に）＝こちらをつかむ
+      var front = document.createElement('div');
+      front.className = 'acc';
+      front.setAttribute('style', placeStyle(id)+'z-index:3;');
+      front.innerHTML = itemImg(id);
+      front.firstChild.style.clipPath = p.wrap;
+      front.firstChild.style.webkitClipPath = p.wrap;
+      bobEl.appendChild(front);
+      makeDraggable(front, id, 'wear', back);
+    } else {
+      var d = document.createElement('div');
+      d.className = 'acc';
+      d.setAttribute('style', placeStyle(id));
+      d.innerHTML = itemInner(id);
+      bobEl.appendChild(d);
+      makeDraggable(d, id, 'wear');
+    }
   });
 }
 function renderRoom(){
@@ -455,9 +457,10 @@ function renderRoom(){
     if(!Rewards.isOwned(it.id)) return;
     var f = FURNI[it.id]; if(!f) return;
     var d = document.createElement('div');
-    d.className = 'furni'; d.setAttribute('style', f.style);
-    d.innerHTML = f.html;
+    d.className = 'furni'; d.setAttribute('style', furniStyle(it.id));
+    d.innerHTML = itemImg(it.id);
     roomEl.insertBefore(d, stageEl);
+    makeDraggable(d, it.id, 'furni');
   });
 }
 function renderPurse(){
@@ -486,17 +489,7 @@ function renderPurse(){
 
 /* ====== ずかん（タブ） ====== */
 var curTab = 'wear';
-function miniPreview(id){
-  // 着せ替え：acc をそのまま縮小。家具：FURNI を縮小して中央に。
-  var it = Rewards.byId(id);
-  if(it.cat==='room'){
-    var f = FURNI[id];
-    return '<div class="pv" style="transform:scale(.78)">'+
-      '<div class="furni" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'+
-      (f.style.replace(/(top|bottom|left|right|transform|z-index)\s*:[^;]*;?/g,''))+'">'+f.html+'</div></div>';
-  }
-  return '<div class="pv"><div class="'+accClass(id)+'">'+accInner(id)+'</div></div>';
-}
+function miniPreview(id){ return '<div class="pv">'+itemInner(id)+'</div>'; }
 function renderZukan(){
   var box = document.getElementById('zukan');
   var hint = document.getElementById('zukanHint');
@@ -510,12 +503,12 @@ function renderZukan(){
       Rewards.byCat(c[0]).forEach(function(it){ g.appendChild(makeSlot(it,true)); });
       box.appendChild(g);
     });
-    hint.textContent='タップで きせかえ／もう いちど タップで ぬげるよ';
+    hint.textContent='タップで きせかえ。ユニコーンの うえで ゆびで うごかせるよ';
   } else {
     var g=document.createElement('div'); g.className='grid';
     Rewards.byCat('room').forEach(function(it){ g.appendChild(makeSlot(it,false)); });
     box.appendChild(g);
-    hint.textContent='もっている かぐは おへやに かざられるよ';
+    hint.textContent='かぐを ゆびで うごかして すきに かざろう';
   }
 }
 function makeSlot(it, wearable){
@@ -553,34 +546,48 @@ function selTab(t){
   renderZukan();
 }
 
-/* ====== くじ ====== */
+/* ====== くじ（ガチャ演出） ====== */
 var pendingPrize = null;
+var rollTimer = null;
+var gachaEl = document.getElementById('gacha');
+var reduce = false;
+try{ reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+
 document.getElementById('btnDraw').addEventListener('click', function(){
   if(!Rewards.canDraw()) return;
   var item = Rewards.draw();
   if(!item) return;
-  sfx('whoosh');
   pendingPrize = item;
-  // オーバーレイ（たまご）を出す
-  var prize = document.getElementById('prize');
-  prize.classList.remove('opened');
+  // たまごの中身を仕込む
+  document.getElementById('gotpv').innerHTML = itemInner(item.id);
+  document.getElementById('pname').textContent = item.name + ' を ゲット！';
+  document.getElementById('prize').classList.remove('opened');
+  // マシンを回す → たまごが出る
+  gachaEl.className = 'gacha';
   document.getElementById('ovl').hidden = false;
+  sfx('whoosh');
+  if(rollTimer) clearTimeout(rollTimer);
+  if(reduce){ gachaEl.classList.add('ready'); sfx('pop'); return; }
+  gachaEl.classList.add('rolling');
+  // ガラガラ音
+  var tk=0; var tick=setInterval(function(){ sfx('tap'); if(++tk>=4) clearInterval(tick); }, 200);
+  rollTimer = setTimeout(function(){
+    gachaEl.classList.remove('rolling');
+    gachaEl.classList.add('ready');
+    sfx('pop');
+  }, 950);
 });
 document.getElementById('egg').addEventListener('click', openEgg);
 function openEgg(){
-  var prize = document.getElementById('prize');
-  if(prize.classList.contains('opened')) return;
+  if(!gachaEl.classList.contains('ready')) return;   // 出てくる前は無視
   var item = pendingPrize; if(!item) return;
+  gachaEl.classList.remove('ready');
+  gachaEl.classList.add('opened');
+  document.getElementById('prize').classList.add('opened');
   sfx('fanfare');
-  // 中身プレビュー
-  document.getElementById('gotpv').innerHTML =
-    (item.cat==='room') ? miniPreview(item.id) : ('<div class="'+accClass(item.id)+'">'+accInner(item.id)+'</div>');
-  document.getElementById('pname').textContent = item.name + ' を ゲット！';
-  prize.classList.add('opened');
-  // 演出
   try{
-    var r = document.getElementById('gotpv').getBoundingClientRect();
-    fx('burst', r.left+r.width/2, r.top+r.height/2, {count:26});
+    var r = document.getElementById('egg').getBoundingClientRect();
+    fx('burst', r.left+r.width/2, r.top+r.height/2, {count:28});
     fx('confetti');
   }catch(e){}
 }
@@ -591,9 +598,8 @@ document.getElementById('prizeOk').addEventListener('click', function(){
   renderUni(); renderRoom(); renderPurse(); renderZukan();
 });
 document.getElementById('ovl').addEventListener('click', function(e){
-  // たまご未開封なら背景タップで開ける、開封後は閉じない（ボタン誘導）
   if(e.target===this){
-    if(!document.getElementById('prize').classList.contains('opened')) openEgg();
+    if(gachaEl.classList.contains('ready')) openEgg();
   }
 });
 
