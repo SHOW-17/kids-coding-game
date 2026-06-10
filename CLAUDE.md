@@ -115,14 +115,20 @@ scripts/
   （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
 - **どんぐりくじ**：1回 `Rewards.PRICE`（=4）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。
   着せ替え系（hat/face/neck）は当選時に自動装備、かぐ（room）は部屋に並ぶ。全部そろうと `allCollected()`。
-- **ごほうび図鑑** = `Rewards.ITEMS`（`{id,cat,name}`）。**見た目は room.html 側の `accInner(id)`／`FURNI[id]`
-  が CSS図形で描画**（rewards.js はデータとロジックのみ＝関心の分離）。新ごほうびは ITEMS に1行足し、
-  room.html に描画を1つ足すだけで増やせる。
-- **アバター＝自分のユニコーン**（`assets/uni/blue_standing.png`）に acc を絶対配置で重ねる方式。
+- **ごほうび図鑑** = `Rewards.ITEMS`（`{id,cat,name}`）。**見た目は画像アセット**（`assets/items/<id>.png`。
+  ユニコーンと同じつやつやクレイ調の透過PNG）。room.html 側は `itemImg(id)` が `<img>` を返すだけ
+  （rewards.js はデータとロジックのみ＝関心の分離）。新ごほうびは ITEMS に1行足し、同名のPNGを
+  `assets/items/` に置けば増える（着せ替えなら `PLACE` に重ね位置、かぐなら `FURNI` に配置を1行追加）。
+  ※ アイテムPNGは中身を中央に置いた正方形→透明余白をトリムして使う（床置き家具を下端で揃えるため）。
+- **アバター＝自分のユニコーン**（`assets/uni/blue_standing.png`）に着せ替え画像を絶対配置で重ねる方式。
+  重ね位置は room.html の `PLACE` マップ（`{cx,cy,w,z}`＝ステージ%で中心位置・幅・重ね）。
   新キャラは作らずマスコットを流用＝世界観を崩さない。重ね順は くび→かお→あたま。
 - **index 連携**：ホームに「わたしの おへや」入口。`Rewards.balance()` を表示し、`Rewards.canDraw()` なら
   「！」バッジ。index も `rewards.js` を読み込む（save.js の後）。
-- **文字を読ませない**：くじは大きなどんぐり（たまご役）が割れて品物が飛び出す演出＋効果音だけで伝わる。
+- **文字を読ませない**：くじは どんぐりガチャマシン（`assets/gacha/machine.png`）が回り、虹色のたまご
+  （`egg_closed`→タップで`egg_open`）が割れてごほうびが飛び出す演出＋紙吹雪＋効果音だけで伝わる。
+- **おへや背景**＝`assets/room/room_bg.png`（家具なしの空っぽの部屋）。家具は手前に重ねる。
+  どんぐり通貨アイコンだけは従来どおり CSS図形（`.acorn`）。
 - room.html は新ゲームと同じく `audio.js / fx.js / save.js`（＋ `rewards.js` / `bgm.js`）を読み込み、UIは自前インライン。
 
 ### 新ゲームを追加する手順
