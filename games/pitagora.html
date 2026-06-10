@@ -57,6 +57,19 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .dots .d{cursor:pointer;}
 
 .wrap{position:relative;z-index:1;width:100%;max-width:460px;flex:1;display:flex;flex-direction:column;align-items:center;padding:0 12px 10px;}
+/* 横画面：盤面を左に大きく、レベルバー/ヒント/さか/操作は右カラムに縦積み（タブレット横を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1080px;display:grid;align-items:start;justify-content:center;
+    column-gap:34px;row-gap:6px;
+    grid-template-columns:auto minmax(200px,300px);
+    grid-template-areas:"board status" "board dots" "board hint" "board tray" "board controls";}
+  .board-wrap{grid-area:board;align-self:center;margin:0;}
+  .statusbar{grid-area:status;margin-top:2px;}
+  .dots{grid-area:dots;}
+  .hint{grid-area:hint;}
+  .tray{grid-area:tray;margin-top:8px;}
+  .controls{grid-area:controls;justify-content:flex-start;min-height:60px;margin:4px 0;}
+}
 
 .statusbar{display:flex;gap:10px;align-items:center;margin:4px 0 2px;}
 .pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;
@@ -293,6 +306,14 @@ function jumpTo(idx){
   lvIndex=idx; sfx('tap'); save.set('current', lvIndex); loadLevel();
 }
 function calcCell(lv){
+  const landscape = window.innerWidth > window.innerHeight && window.innerWidth >= 720;
+  if(landscape){
+    // 盤は左カラムで縦いっぱい、道具類は右カラム。盤は高さ基準で大きく。
+    const rightCol = Math.min(300, Math.max(200, window.innerWidth*0.28));
+    const maxW = window.innerWidth - rightCol - 74;
+    const maxBoardH = window.innerHeight - 96;   // 上部バー＋枠ぶんを残す
+    return Math.max(22, Math.min(Math.floor(maxW/lv.w), Math.floor(maxBoardH/lv.h), 80));
+  }
   const maxW = Math.min(window.innerWidth-30, 432);
   const chrome = 326;
   const maxBoardH = Math.max(140, window.innerHeight - chrome);

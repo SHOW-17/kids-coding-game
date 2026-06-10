@@ -56,6 +56,19 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .dots .d{cursor:pointer;}
 
 .wrap{position:relative;z-index:1;width:100%;max-width:460px;flex:1;display:flex;flex-direction:column;align-items:center;padding:0 12px 10px;}
+/* 横画面：盤面を左に大きく、レベルバー/ヒント/トレイ/操作は右カラムに縦積み（タブレット横を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1080px;display:grid;align-items:start;justify-content:center;
+    column-gap:32px;row-gap:6px;
+    grid-template-columns:auto minmax(220px,360px);
+    grid-template-areas:"board status" "board dots" "board hint" "board tray" "board controls";}
+  .board-wrap{grid-area:board;align-self:center;margin:0;}
+  .statusbar{grid-area:status;margin-top:2px;}
+  .dots{grid-area:dots;}
+  .hint{grid-area:hint;}
+  .tray-wrap{grid-area:tray;}
+  .controls{grid-area:controls;justify-content:flex-start;min-height:52px;margin:4px 0;}
+}
 
 .statusbar{display:flex;gap:10px;align-items:center;margin:4px 0 2px;}
 .pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;
@@ -331,6 +344,7 @@ let cleared = save.get('cleared', 0);
 let lvIndex = Math.min(Math.max(save.get('current', Math.min(cleared, LEVELS.length-1)),0), LEVELS.length-1);
 let cur = null;
 let boardPx = 300;
+let trayW = 300;
 let trayH = 110;
 let placedCount = 0;
 let pieceEls = [];
@@ -351,10 +365,23 @@ function jumpTo(idx){
   lvIndex=idx; sfx('tap'); save.set('current', lvIndex); loadLevel();
 }
 function calcSizes(){
-  const maxW = Math.min(window.innerWidth-28, 432);
-  const maxBoardH = Math.max(220, window.innerHeight*0.46);
-  boardPx = Math.max(220, Math.min(maxW, maxBoardH));
-  trayH = Math.max(96, Math.round(boardPx*0.32));
+  const landscape = window.innerWidth > window.innerHeight && window.innerWidth >= 720;
+  if(landscape){
+    // 盤は左カラムで縦いっぱい、レベルバー等は右カラム。盤は高さ基準でできるだけ大きく。
+    const rightCol = Math.min(360, Math.max(220, window.innerWidth*0.32));
+    const maxW = window.innerWidth - rightCol - 70;
+    const maxBoardH = window.innerHeight - 128;   // 上部バー＋枠＋余白ぶんを残す
+    boardPx = Math.max(220, Math.min(maxW, maxBoardH, 600));
+    trayW = rightCol;
+    // 右カラム全体（レベルバー等＋トレイ）が画面高に収まるようトレイ高を抑える
+    trayH = Math.max(104, Math.min(Math.round(trayW*0.8), window.innerHeight - 262));
+  } else {
+    const maxW = Math.min(window.innerWidth-28, 432);
+    const maxBoardH = Math.max(220, window.innerHeight*0.46);
+    boardPx = Math.max(220, Math.min(maxW, maxBoardH));
+    trayW = boardPx;
+    trayH = Math.max(96, Math.round(boardPx*0.32));
+  }
 }
 function loadLevel(){
   cur = LEVELS[lvIndex];
@@ -384,7 +411,7 @@ function layout(){
   const sc = boardPx/100;
   board.style.width = boardPx+'px'; board.style.height = boardPx+'px';
   boardSvg.setAttribute('viewBox', '0 0 '+boardPx+' '+boardPx);
-  tray.style.width = boardPx+'px'; tray.style.height = trayH+'px';
+  tray.style.width = trayW+'px'; tray.style.height = trayH+'px';
   boardSvg.innerHTML='';
   cur.targets.forEach((t,i)=>{
     const c = centroid(t.shape.pts);
@@ -408,7 +435,7 @@ function layout(){
     if(e._placed){ placeOnShadow(e); }
     else {
       const slot = p._slot;
-      const tx = slot.x*boardPx - e._pw/2; const ty = slot.y*trayH - e._ph/2;
+      const tx = slot.x*trayW - e._pw/2; const ty = slot.y*trayH - e._ph/2;
       e.dataset.home = JSON.stringify({x:tx, y:ty});
       if(e.dataset.parent!=='tray'){ tray.appendChild(e); }
       e.dataset.parent='tray'; e.style.left = tx+'px'; e.style.top = ty+'px'; e.style.transform='';

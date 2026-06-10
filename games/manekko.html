@@ -56,6 +56,18 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ===== layout ===== */
 .wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
   display:flex;flex-direction:column;align-items:center;padding:0 16px;}
+/* 横画面：ダイヤルを左に大きく、スコア/むずかしさ/ヒント/操作は右カラムに（タブレット横を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:980px;display:grid;align-items:center;justify-items:center;
+    column-gap:40px;row-gap:10px;
+    grid-template-columns:auto minmax(190px,300px);
+    grid-template-areas:"dial status" "dial diff" "dial hint" "dial controls";}
+  .statusbar{grid-area:status;align-self:end;}
+  .diffbar{grid-area:diff;}
+  .hint{grid-area:hint;margin:6px 0;}
+  .dial-wrap{grid-area:dial;width:min(50vw,82vh,460px);}
+  .controls{grid-area:controls;align-self:start;}
+}
 
 .statusbar{display:flex;gap:10px;align-items:center;margin:8px 0 2px;}
 .pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 18px;border-radius:999px;font-size:18px;

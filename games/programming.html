@@ -33,6 +33,16 @@
     display:flex;flex-direction:column;align-items:center;
     min-height:100%;padding:14px 12px calc(28px + env(safe-area-inset-bottom));overflow-x:hidden;user-select:none;
   }
+  /* レイアウト：縦画面は1カラム（従来どおり）／横画面は左=盤面・右=操作の2カラム */
+  #page{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;}
+  #leftPane,#rightPane{display:flex;flex-direction:column;align-items:center;width:100%;}
+  @media (orientation:landscape) and (min-width:720px){
+    body{padding-top:10px;justify-content:flex-start;}
+    #page{flex-direction:row;align-items:flex-start;justify-content:center;gap:26px;max-width:1180px;margin:0 auto;}
+    #leftPane{flex:0 0 auto;width:auto;position:sticky;top:8px;}
+    #rightPane{flex:0 1 500px;max-width:520px;}
+    #rightPane .label{margin-top:2px;}
+  }
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
   h1{position:relative;z-index:1;font-family:'Mochiy Pop One',sans-serif;font-size:clamp(22px,6vw,30px);margin:4px 0 2px;
@@ -284,31 +294,38 @@
 </head>
 <body>
   <a class="home" href="../index.html" aria-label="おうちへ もどる"><span class="ic"></span></a>
-  <h1><img class="h1uni" src="../assets/uni/blue_standing.png" alt="">プログラミング</h1>
-  <div class="sub">めいれいを ならべて ともだちの ところまで いこう！</div>
 
-  <div class="levelbar">
-    <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
-    <span class="lv" id="lvText">レベル 1</span>
-    <button class="lvnav" id="nextLv" aria-label="つぎの レベル"><span class="tri r"></span></button>
-    <span class="stars" id="stars"></span>
-    <button class="reset" id="resetBtn">さいしょ</button>
-  </div>
+  <div id="page">
+   <div id="leftPane">
+    <h1><img class="h1uni" src="../assets/uni/blue_standing.png" alt="">プログラミング</h1>
+    <div class="sub">めいれいを ならべて ともだちの ところまで いこう！</div>
 
-  <div id="stage"><div id="board"></div><div id="bear"><img src="../assets/uni/blue_standing.png" alt=""></div></div>
+    <div class="levelbar">
+      <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
+      <span class="lv" id="lvText">レベル 1</span>
+      <button class="lvnav" id="nextLv" aria-label="つぎの レベル"><span class="tri r"></span></button>
+      <span class="stars" id="stars"></span>
+      <button class="reset" id="resetBtn">さいしょ</button>
+    </div>
 
-  <div class="label"><span class="dn"></span> ユニコーンへの めいれい</div>
-  <div id="budgetPill" class="budget"></div>
-  <div id="program"><span class="empty">ここに めいれいが ならぶよ</span></div>
+    <div id="stage"><div id="board"></div><div id="bear"><img src="../assets/uni/blue_standing.png" alt=""></div></div>
+   </div>
 
-  <div id="pad"></div>
-  <div id="loopRow"><button id="loopBtn"></button></div>
-  <div id="jumpRow"></div>
+   <div id="rightPane">
+    <div class="label"><span class="dn"></span> ユニコーンへの めいれい</div>
+    <div id="budgetPill" class="budget"></div>
+    <div id="program"><span class="empty">ここに めいれいが ならぶよ</span></div>
 
-  <div id="controls">
-    <button class="ctrl back"  id="backBtn">もどす</button>
-    <button class="ctrl clear" id="clearBtn">けす</button>
-    <button class="ctrl play"  id="playBtn"><span class="tri"></span> スタート！</button>
+    <div id="pad"></div>
+    <div id="loopRow"><button id="loopBtn"></button></div>
+    <div id="jumpRow"></div>
+
+    <div id="controls">
+      <button class="ctrl back"  id="backBtn">もどす</button>
+      <button class="ctrl clear" id="clearBtn">けす</button>
+      <button class="ctrl play"  id="playBtn"><span class="tri"></span> スタート！</button>
+    </div>
+   </div>
   </div>
 
   <div id="overlay"><div class="card">
@@ -398,10 +415,24 @@ function resetSave(){
   renderProgram(); buildLevel();
 }
 
-function cellSize(w){
-  const avail = Math.min(window.innerWidth - 36, 460) - 24, gap = 8;
-  let c = Math.floor((avail - gap*(w-1)) / w);
-  return Math.max(40, Math.min(c, 84));
+function cellSize(w,h){
+  const gap = 8, pad = 24;
+  const landscape = window.innerWidth > window.innerHeight && window.innerWidth >= 720;
+  let availW, availH, cap;
+  if(landscape){
+    // 左カラム＝画面のおよそ半分。高さは見出し＋レベルバー分を引いた残り全部に収める。
+    availW = Math.min(window.innerWidth*0.52, 640) - pad;
+    availH = window.innerHeight - 150 - pad;
+    cap = 110;
+  } else {
+    availW = Math.min(window.innerWidth - 36, 520) - pad;
+    availH = window.innerHeight - 320 - pad;   // 盤の下に並ぶ操作群ぶんを残す
+    cap = 88;
+  }
+  const cByW = Math.floor((availW - gap*(w-1)) / w);
+  const cByH = Math.floor((availH - gap*(h-1)) / h);
+  let c = Math.min(cByW, cByH);
+  return Math.max(38, Math.min(c, cap));
 }
 function isWall(L,x,y){ return L.walls.some(p=>p.x===x&&p.y===y); }
 function footprint(x,y){
@@ -469,7 +500,7 @@ function levelCleared(L){
 
 function buildLevel(){
   const L = LEVELS[lvIndex];
-  document.documentElement.style.setProperty('--cell', cellSize(L.w)+'px');
+  document.documentElement.style.setProperty('--cell', cellSize(L.w,L.h)+'px');
   board.style.gridTemplateColumns = `repeat(${L.w}, var(--cell))`;
   board.innerHTML='';
   for(let y=0;y<L.h;y++) for(let x=0;x<L.w;x++){
