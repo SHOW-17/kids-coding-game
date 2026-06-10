@@ -60,6 +60,7 @@ assets/
                         star/box/target/button/gate/warp ＋ pitagora の ball/basket。
                         CSS図形だったトークンを background-image central/contain で差し替えた
   icons/               ファビコン・PWA・apple-touch アイコン一式
+  fonts/                セルフホストフォント（fonts.css + woff2 496個。外部CDN参照は禁止）
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
   save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
@@ -69,8 +70,13 @@ assets/
   bgm/                  BGM音源置き場（mp3。.gitignore済み＝公開リポジトリに入れない）
                         優先順位：<画面名>.mp3 → _default.mp3（全画面共通）→ 合成ループ。
                         全画面同じ曲なら _default.mp3 を1つ置くだけ。
+sw.js                   Service Worker（scripts/build-sw.mjs で自動生成。直接編集しない）
+capacitor.config.json   Capacitor 設定（Androidアプリ化。appId: jp.show17.asobinomori）
+android/                Android ネイティブプロジェクト（Capacitor 生成。詳細は「技術メモ」）
 scripts/
   test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
+  build-sw.mjs          sw.js 生成（アセット追加・変更時に実行）
+  build-www.mjs         Capacitor 用 www/ 組み立て（APKビルド前に実行）
 ```
 ※ `index.html` はもうシンボリックリンクではなく実体（アーケード）。各ゲームは個別HTML。
 ※ 見た目のルール（ねんどカード・カラー・タイポ）は各HTMLにインラインで持つ。共通定義は Design.md 参照。
@@ -275,7 +281,20 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
 ## 技術メモ
 
 - 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
-- フォント: Google Fonts（Mochiy Pop One / M PLUS Rounded 1c）。
+- フォント: Mochiy Pop One / M PLUS Rounded 1c。**`assets/fonts/` にセルフホスト**（fonts.css + woff2）。
+  **外部CDN（fonts.googleapis.com 等）への参照を復活させないこと**＝オフライン動作の前提。新ページは
+  `assets/fonts/fonts.css` を読む（games/ からは `../assets/fonts/fonts.css`）。
+- **オフライン対応（Android）**：
+  - **PWA**：`sw.js`（Service Worker）が全公開ファイルをプリキャッシュ。`sw.js` は自動生成＝直接編集せず、
+    **アセット・ページを追加/変更したら `node scripts/build-sw.mjs` で再生成**（キャッシュ版数が中身ハッシュで変わる）。
+    登録は index.html 末尾（Capacitor 内では `window.Capacitor` 検出でスキップ）。
+  - **Androidアプリ（Capacitor）**：`capacitor.config.json`＋`android/`。`node scripts/build-www.mjs` で
+    公開ファイルだけを `www/` に集め（.gitignore 済みの BGM mp3 も同梱）、`npx cap sync android` →
+    `cd android && ./gradlew assembleRelease` で署名済みAPK。署名鍵はリポジトリ外 `~/.android-keys/`
+    （`asobinomori.jks`＋`asobinomori.keystore.properties`。**紛失すると同一署名で更新できなくなる**）。
+    APK は INTERNET 権限なし＝完全オフライン。appId は `jp.show17.asobinomori`。
+    新ゲーム追加時は www/ 再構築 → cap sync → APK 再ビルドも忘れずに。アプリのアイコン/スプラッシュは
+    `assets/icons/icon.svg` から生成（`resources/` に sharp で書き出し → `npx @capacitor/assets generate --android`）。
 - 状態管理はメモリ内。永続化は `localStorage`（try/catchでガード済み）。
   - 注意：Claude.aiのプレビューiframe等では `localStorage` が保存されないことがある。実機ブラウザでは正常動作。
 - キャラは絶対配置のトークン。cellサイズは画面幅から動的計算（スマホ対応）。
