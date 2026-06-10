@@ -74,15 +74,16 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 /* 自分のユニコーン（床中央） */
 .stage{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
   width:168px;z-index:5;}
+/* ユニコーン＋着せ替えを一緒にふわふわさせるラッパー（影は外＝固定） */
+.bob{position:relative;width:100%;animation:bob 3.4s var(--ease) infinite;}
 .stage .uni{display:block;width:100%;height:auto;
-  filter:drop-shadow(0 10px 8px rgba(110,70,20,.32));
-  animation:bob 3.4s var(--ease) infinite;}
+  filter:drop-shadow(0 10px 8px rgba(110,70,20,.32));}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .stage .pad{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
   width:62%;height:16px;border-radius:50%;background:rgba(120,75,20,.2);filter:blur(5px);z-index:-1;}
-@media (prefers-reduced-motion: reduce){ .stage .uni{animation:none;} }
+@media (prefers-reduced-motion: reduce){ .bob{animation:none;} }
 
-/* 着せ替えアクセサリ（ユニコーンに画像で重ねる） */
+/* 着せ替えアクセサリ（ユニコーンに画像で重ねる。.bob の中に入れて一緒に動く） */
 .acc{position:absolute;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
 .acc img{display:block;width:100%;height:auto;
   filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
@@ -239,8 +240,10 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   <!-- 家具（JSで挿入） -->
   <div class="stage">
     <div class="pad"></div>
-    <img class="uni" src="assets/uni/blue_standing.png" alt="わたしの ユニコーン" draggable="false">
-    <!-- 着せ替え acc（JSで挿入） -->
+    <div class="bob">
+      <img class="uni" src="assets/uni/blue_standing.png" alt="わたしの ユニコーン" draggable="false">
+      <!-- 着せ替え acc（JSで挿入） -->
+    </div>
   </div>
 </div>
 
@@ -337,10 +340,11 @@ var FURNI = {
 
 /* ====== 描画 ====== */
 var stageEl = document.querySelector('.stage');
+var bobEl   = document.querySelector('.bob');
 var roomEl  = document.getElementById('room');
 
 function renderUni(){
-  [].forEach.call(stageEl.querySelectorAll('.acc'), function(n){ n.remove(); });
+  [].forEach.call(bobEl.querySelectorAll('.acc'), function(n){ n.remove(); });
   var w = Rewards.wear();
   ['neck','face','hat'].forEach(function(cat){   // 重ね順：くび→かお→あたま
     var id = w[cat];
@@ -349,7 +353,7 @@ function renderUni(){
     d.className = 'acc';
     d.setAttribute('style', placeStyle(id));
     d.innerHTML = itemImg(id);
-    stageEl.appendChild(d);
+    bobEl.appendChild(d);
   });
 }
 function renderRoom(){
