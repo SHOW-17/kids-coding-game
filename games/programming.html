@@ -421,7 +421,7 @@ function load(){
 function resetSave(){
   let ok=true; try{ ok = window.confirm('さいしょから やりなおす？'); }catch(e){ ok=false; }
   if(!ok) return;
-  cleared=new Set(); announced=new Set(); lvIndex=0; program=[]; activeLoop=null;
+  cleared=new Set(); announced=new Set(); lvIndex=0; program=[]; activeLoop=null; progWins=0;
   try{ localStorage.removeItem(KEY); }catch(e){}
   renderProgram(); buildLevel();
 }
