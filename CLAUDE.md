@@ -121,8 +121,13 @@ scripts/
   `assets/items/` に置けば増える（着せ替えなら `PLACE` に重ね位置、かぐなら `FURNI` に配置を1行追加）。
   ※ アイテムPNGは中身を中央に置いた正方形→透明余白をトリムして使う（床置き家具を下端で揃えるため）。
 - **アバター＝自分のユニコーン**（`assets/uni/blue_standing.png`）に着せ替え画像を絶対配置で重ねる方式。
-  重ね位置は room.html の `PLACE` マップ（`{cx,cy,w,z}`＝ステージ%で中心位置・幅・重ね）。
+  重ね位置の**初期値**は room.html の `PLACE` マップ（`{cx,cy,w,z}`＝ステージ%で中心位置・幅・重ね）。
   新キャラは作らずマスコットを流用＝世界観を崩さない。重ね順は くび→かお→あたま。
+  ユニコーン＋着せ替えは共通ラッパー `.bob` に入れて一緒にふわふわ上下させる（影 `.pad` は外＝固定）。
+- **ドラッグで自由配置**：きせかえ（`.acc`）も かぐ（`.furni`）も Pointer Events でつかんで動かせる。
+  着せ替えの基準は `.bob`、家具の基準は `#room`。動かした座標（中心%）は `Save.game('room').set('pos', {<id>:{x,y}})`
+  に保存し、`placeStyle`/`furniStyle` が **カスタム位置があればそれを、無ければ `PLACE`/`FURNI` の初期値**を使う。
+  ドラッグ中は `.bob` の bob を止めて座標を安定させる。`index.html` のリセットは `pos` も含めて消える。
 - **index 連携**：ホームに「わたしの おへや」入口。`Rewards.balance()` を表示し、`Rewards.canDraw()` なら
   「！」バッジ。index も `rewards.js` を読み込む（save.js の後）。
 - **文字を読ませない**：くじは どんぐりガチャマシン（`assets/gacha/machine.png`）が回り、虹色のたまご

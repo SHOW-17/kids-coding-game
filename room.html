@@ -68,14 +68,16 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
   background-image:url('assets/room/room_bg.png');
   box-shadow:0 16px 30px -12px rgba(120,75,20,.45),inset 0 3px 0 rgba(255,255,255,.5),
     inset 0 -10px 18px rgba(150,100,40,.16);}
-.furni{position:absolute;}
+.furni{position:absolute;touch-action:none;cursor:grab;}
+.furni.grab{cursor:grabbing;z-index:9!important;}
 .furni img{display:block;width:100%;height:auto;
   filter:drop-shadow(0 5px 4px rgba(110,70,20,.28));}
-/* 自分のユニコーン（床中央） */
+/* 自分のユニコーン（床中央）。本体は当たり判定なし＝うしろの家具もつかめる */
 .stage{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
-  width:168px;z-index:5;}
+  width:168px;z-index:5;pointer-events:none;}
 /* ユニコーン＋着せ替えを一緒にふわふわさせるラッパー（影は外＝固定） */
 .bob{position:relative;width:100%;animation:bob 3.4s var(--ease) infinite;}
+.bob.dragging{animation:none;}   /* ドラッグ中はふわふわを止めてズレ防止 */
 .stage .uni{display:block;width:100%;height:auto;
   filter:drop-shadow(0 10px 8px rgba(110,70,20,.32));}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -84,9 +86,12 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 @media (prefers-reduced-motion: reduce){ .bob{animation:none;} }
 
 /* 着せ替えアクセサリ（ユニコーンに画像で重ねる。.bob の中に入れて一緒に動く） */
-.acc{position:absolute;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.acc{position:absolute;left:50%;transform:translate(-50%,-50%);
+  pointer-events:auto;touch-action:none;cursor:grab;}
+.acc.grab{cursor:grabbing;}
 .acc img{display:block;width:100%;height:auto;
   filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
+.stage .uni{pointer-events:none;}
 
 /* ===== くじパネル ===== */
 .panel{margin-top:14px;background:#fffdf7;border-radius:24px;padding:16px 16px 18px;
@@ -303,6 +308,52 @@ function fx(n){ try{ if(window.FX&&FX[n]) return FX[n].apply(FX, [].slice.call(a
 /* ====== アイテム画像 ====== */
 function itemImg(id){ return '<img src="assets/items/'+id+'.png" alt="" draggable="false">'; }
 
+/* ====== じぶんで おいた いち（ドラッグ位置）を ほぞん ====== */
+function roomSave(){ try{ if(window.Save&&Save.game) return Save.game('room'); }catch(e){} return null; }
+function loadPos(){ var s=roomSave(); var p=s?s.get('pos',{}):{}; return (p&&typeof p==='object')?p:{}; }
+function savePos(id,x,y){ var s=roomSave(); if(!s) return; var p=loadPos(); p[id]={x:x,y:y}; s.set('pos',p); }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+/* つかんで うごかせるようにする。
+   kind='wear'（ユニコーンの うえ／基準=.bob）／'furni'（へやの なか／基準=#room）。 */
+function makeDraggable(el, id, kind){
+  el.addEventListener('pointerdown', function(ev){
+    if(ev.button && ev.button!==0) return;
+    ev.preventDefault();
+    var base = (kind==='wear') ? bobEl : roomEl;
+    if(kind==='wear') bobEl.classList.add('dragging');   // ふわふわ停止＝座標を安定
+    el.classList.add('grab');
+    try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+    sfx('tap');
+    var moved=false;
+    function move(e){
+      var r=base.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width*100;
+      var y=(e.clientY-r.top)/r.height*100;
+      if(kind==='wear'){ x=clamp(x,-15,115); y=clamp(y,-25,120); }
+      else { x=clamp(x,3,97); y=clamp(y,4,96); }
+      el.style.left=x+'%'; el.style.top=y+'%'; el.style.bottom='auto'; el.style.right='auto';
+      el.style.transform='translate(-50%,-50%)';
+      moved=true;
+    }
+    function up(e){
+      el.removeEventListener('pointermove',move);
+      el.removeEventListener('pointerup',up);
+      el.removeEventListener('pointercancel',up);
+      try{ el.releasePointerCapture(ev.pointerId); }catch(e){}
+      el.classList.remove('grab');
+      if(kind==='wear') bobEl.classList.remove('dragging');
+      if(moved){
+        var x=parseFloat(el.style.left), y=parseFloat(el.style.top);
+        savePos(id,x,y); sfx('pop');
+      }
+    }
+    el.addEventListener('pointermove',move);
+    el.addEventListener('pointerup',up);
+    el.addEventListener('pointercancel',up);
+  });
+}
+
 /* 着せ替えの重ね位置（ユニコーンのうえ）。
    cx/cy = 画像中心を置く位置（ステージ幅・高さの%）、w = 画像幅（ステージ幅の%）、z = 重ね。 */
 var PLACE = {
@@ -322,21 +373,29 @@ var PLACE = {
 };
 function placeStyle(id){
   var p = PLACE[id] || {cx:50,cy:30,w:50};
-  return 'left:'+p.cx+'%;top:'+p.cy+'%;width:'+p.w+'%;'+
+  var c = loadPos()[id];
+  var cx = c ? c.x : p.cx, cy = c ? c.y : p.cy;
+  return 'left:'+cx+'%;top:'+cy+'%;width:'+p.w+'%;'+
          'transform:translate(-50%,-50%);'+(p.z!=null?'z-index:'+p.z+';':'');
 }
 
 /* 家具の配置（部屋のなか）。bottom/top・left/right・width(px)・z を指定。 */
 var FURNI = {
-  room_rainbow: {style:'top:5%;left:50%;transform:translateX(-50%);width:140px;z-index:0'},
-  room_window:  {style:'top:11%;left:7%;width:78px;z-index:0'},
-  room_balloon: {style:'bottom:36%;right:11%;width:50px;z-index:1'},
-  room_rug:     {style:'bottom:2%;left:50%;transform:translateX(-50%);width:210px;z-index:1'},
-  room_books:   {style:'bottom:6%;left:3%;width:64px;z-index:2'},
-  room_plant:   {style:'bottom:6%;left:21%;width:54px;z-index:3'},
-  room_lamp:    {style:'bottom:6%;right:6%;width:56px;z-index:3'},
-  room_teddy:   {style:'bottom:5%;right:22%;width:60px;z-index:4'}
+  room_rainbow: {w:'140px', z:0, style:'top:5%;left:50%;transform:translateX(-50%);width:140px;z-index:0'},
+  room_window:  {w:'78px',  z:0, style:'top:11%;left:7%;width:78px;z-index:0'},
+  room_balloon: {w:'50px',  z:1, style:'bottom:36%;right:11%;width:50px;z-index:1'},
+  room_rug:     {w:'210px', z:1, style:'bottom:2%;left:50%;transform:translateX(-50%);width:210px;z-index:1'},
+  room_books:   {w:'64px',  z:2, style:'bottom:6%;left:3%;width:64px;z-index:2'},
+  room_plant:   {w:'54px',  z:3, style:'bottom:6%;left:21%;width:54px;z-index:3'},
+  room_lamp:    {w:'56px',  z:3, style:'bottom:6%;right:6%;width:56px;z-index:3'},
+  room_teddy:   {w:'60px',  z:4, style:'bottom:5%;right:22%;width:60px;z-index:4'}
 };
+function furniStyle(id){
+  var f = FURNI[id]; if(!f) return '';
+  var c = loadPos()[id];
+  if(c) return 'left:'+c.x+'%;top:'+c.y+'%;width:'+f.w+';z-index:'+f.z+';transform:translate(-50%,-50%)';
+  return f.style;
+}
 
 /* ====== 描画 ====== */
 var stageEl = document.querySelector('.stage');
@@ -354,6 +413,7 @@ function renderUni(){
     d.setAttribute('style', placeStyle(id));
     d.innerHTML = itemImg(id);
     bobEl.appendChild(d);
+    makeDraggable(d, id, 'wear');
   });
 }
 function renderRoom(){
@@ -362,9 +422,10 @@ function renderRoom(){
     if(!Rewards.isOwned(it.id)) return;
     var f = FURNI[it.id]; if(!f) return;
     var d = document.createElement('div');
-    d.className = 'furni'; d.setAttribute('style', f.style);
+    d.className = 'furni'; d.setAttribute('style', furniStyle(it.id));
     d.innerHTML = itemImg(it.id);
     roomEl.insertBefore(d, stageEl);
+    makeDraggable(d, it.id, 'furni');
   });
 }
 function renderPurse(){
@@ -407,12 +468,12 @@ function renderZukan(){
       Rewards.byCat(c[0]).forEach(function(it){ g.appendChild(makeSlot(it,true)); });
       box.appendChild(g);
     });
-    hint.textContent='タップで きせかえ／もう いちど タップで ぬげるよ';
+    hint.textContent='タップで きせかえ。ユニコーンの うえで ゆびで うごかせるよ';
   } else {
     var g=document.createElement('div'); g.className='grid';
     Rewards.byCat('room').forEach(function(it){ g.appendChild(makeSlot(it,false)); });
     box.appendChild(g);
-    hint.textContent='もっている かぐは おへやに かざられるよ';
+    hint.textContent='かぐを ゆびで うごかして すきに かざろう';
   }
 }
 function makeSlot(it, wearable){
