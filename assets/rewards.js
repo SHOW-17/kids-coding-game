@@ -93,7 +93,9 @@
     var bonus = s ? s.get('legacyBonus', -1) : -1;
     if (bonus < 0) { bonus = legacyEarned(); if (s) s.set('legacyBonus', bonus); }
     var wins = g('manekko', 'wins') + g('kimari', 'wins') +
-               g('katachi', 'wins') + g('pitagora', 'wins') + progWins();
+               g('katachi', 'wins') + g('pitagora', 'wins') +
+               g('tomare', 'wins') + g('chigai', 'wins') + g('sokkuri', 'wins') +
+               g('pair', 'wins') + g('uta', 'wins') + progWins();
     return bonus + wins;
   }
   function spent() {

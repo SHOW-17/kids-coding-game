@@ -30,4 +30,7 @@
     </application>
 
     <!-- Permissions: 完全オフラインの子供向けアプリのため INTERNET 権限は付与しない -->
+    <!-- うたあそび（音程ゲーム）のマイク入力のみ使用。録音データは端末外に出ない（INTERNETなし） -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 </manifest>

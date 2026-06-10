@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>とまれあそび — あそびのもり</title>
+<meta name="description" content="ユニコーンを タップ！とげとげは がまん！がまんの ちからを そだてる あそび。">
+<meta name="theme-color" content="#e8567c">
+<link rel="icon" href="../assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link href="../assets/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#5c3340; --ink-soft:#936277; --ink-faint:#bb93a4;
+  --ac:#e8567c; --ac-d:#d13b64; --ac-sh:#ab2c50; --ac-soft:#ffdce7;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --paper:#fff4f7; --paper2:#ffdce7;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  background:#ffe9ef url("../assets/bg/tomare.webp") center bottom / cover no-repeat fixed;
+  overflow-x:hidden;touch-action:manipulation;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 6px 72px;}
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(209,59,100,.22), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(209,59,100,.22);}
+.home .ic{width:22px;height:22px;border:none;background:var(--ac-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:20px;color:var(--ac-d);text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(171,44,80,.3));}
+
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
+  display:flex;flex-direction:column;align-items:center;padding:0 16px;}
+/* 横画面：3x3の あなを 大きく左、ステータス類は右カラム（タブレット横） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1020px;display:grid;align-items:center;justify-items:center;
+    column-gap:44px;row-gap:12px;
+    grid-template-columns:auto minmax(220px,330px);
+    grid-template-areas:"board status" "board diff" "board gauge" "board hint";}
+  .statusbar{grid-area:status;align-self:end;}
+  .diffbar{grid-area:diff;}
+  .gaugewrap{grid-area:gauge;width:100%;}
+  .hint{grid-area:hint;align-self:start;margin:0;}
+  .board-wrap{grid-area:board;width:min(46vw,72vh,520px);margin:18px 0;}
+}
+
+.statusbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:8px 0 2px;}
+.pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 16px;border-radius:999px;font-size:17px;
+  color:var(--ac-d);box-shadow:0 4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;transition:transform .15s var(--spring);}
+.pill.bump{transform:scale(1.14);}
+.best-pill{display:inline-flex;align-items:center;gap:6px;font-family:'M PLUS Rounded 1c';font-weight:800;
+  font-size:13.5px;color:var(--ink-soft);background:#ffffffcc;padding:9px 13px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(209,59,100,.14), inset 0 2px 0 #fff;}
+.cstar{width:14px;height:14px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+
+/* ハート（のこり）＝ CSS図形 */
+.hearts{display:inline-flex;gap:7px;align-items:center;background:#ffffffcc;padding:11px 14px 8px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(209,59,100,.14), inset 0 2px 0 #fff;}
+.hh{position:relative;width:21px;height:19px;transition:transform .25s var(--spring), opacity .25s, filter .25s;
+  filter:drop-shadow(0 2px 0 rgba(171,44,80,.3));}
+.hh::before,.hh::after{content:"";position:absolute;top:0;width:10.5px;height:17px;border-radius:10px 10px 0 0;
+  background:linear-gradient(180deg,#ff8fab 20%,var(--ac));}
+.hh::before{left:10.5px;transform:rotate(-45deg);transform-origin:0 100%;}
+.hh::after{left:0;transform:rotate(45deg);transform-origin:100% 100%;}
+.hh.off{transform:scale(.8);opacity:.55;filter:none;}
+.hh.off::before,.hh.off::after{background:#e6ccd6;}
+
+/* むずかしさ えらび */
+.diffbar{display:flex;gap:8px;justify-content:center;margin:8px 0 0;}
+.diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--ac-d);background:#fff;border:none;cursor:pointer;
+  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(209,59,100,.18);}
+.diff.sel{background:linear-gradient(180deg,#ff8fab,var(--ac));color:#fff;box-shadow:0 4px 0 var(--ac-d);}
+
+.hint{font-weight:800;font-size:15.5px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px auto 6px;
+  transition:color .2s;width:fit-content;background:rgba(255,255,255,.88);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(209,59,100,.14), inset 0 2px 0 #fff;}
+.hint.go{color:var(--green-d);}
+.hint.no{color:var(--ac-d);}
+
+/* ===== のこりじかん ねんどゲージ ===== */
+.gaugewrap{display:flex;align-items:center;gap:10px;width:min(88vw,420px);margin:4px 0 8px;}
+.clock{flex:none;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 50% 32%,#fff,#ffeaf0);
+  position:relative;box-shadow:0 3px 0 rgba(209,59,100,.2), inset 0 2px 0 #fff;}
+.clock::before,.clock::after{content:"";position:absolute;left:50%;top:50%;background:var(--ac-d);border-radius:3px;transform-origin:50% 100%;}
+.clock::before{width:3.5px;height:9px;transform:translate(-50%,-100%);}
+.clock::after{width:3.5px;height:7px;transform:translate(-50%,-100%) rotate(115deg);}
+.gauge{flex:1;height:20px;border-radius:999px;background:#fff;padding:4px;
+  box-shadow:inset 0 3px 5px rgba(171,44,80,.2), 0 3px 0 rgba(255,255,255,.7);}
+.gfill{height:100%;border-radius:999px;width:100%;
+  background:linear-gradient(180deg,#ff8fab,var(--ac));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.55);}
+.gauge.low .gfill{background:linear-gradient(180deg,#ffc36b,#f59312);animation:gpulse .9s infinite;}
+@keyframes gpulse{50%{filter:brightness(1.2);}}
+
+/* ===== ばんめん（3x3 の あな） ===== */
+.board-wrap{position:relative;width:min(88vw,52vh,420px);aspect-ratio:1;margin:8px 0 16px;}
+/* ねんどのトレイ（あそびの舞台の土台） */
+.board-wrap::before{content:"";position:absolute;inset:-14px;border-radius:36px;
+  background:radial-gradient(120% 100% at 50% 0,#fff,#ffe3eb 78%);
+  box-shadow:0 22px 36px -16px rgba(171,44,80,.45), 0 5px 0 rgba(209,59,100,.16),
+    inset 0 4px 0 #fff, inset 0 -12px 18px rgba(209,59,100,.14);}
+.board{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;}
+.cell{position:relative;border:none;background:transparent;cursor:pointer;padding:0;touch-action:manipulation;}
+/* ねんどタイル */
+.cell::before{content:"";position:absolute;inset:3%;border-radius:24px;
+  background:radial-gradient(circle at 50% 28%,#fff8fa,#ffe7ee 78%);
+  box-shadow:inset 0 3px 0 #fff, inset 0 -8px 12px rgba(209,59,100,.13), 0 6px 10px -6px rgba(171,44,80,.28);}
+/* あな（くぼみ・うしろがわ） */
+.mouth{position:absolute;left:13%;right:13%;bottom:10%;height:26%;border-radius:50%;z-index:1;
+  background:radial-gradient(ellipse at 50% 36%,#c4768f,#9e4f6c 75%);
+  box-shadow:inset 0 5px 8px rgba(110,25,55,.5), 0 2px 0 rgba(255,255,255,.6);}
+/* とびだすゾーン（あなの まんなかで きりとる） */
+.popwrap{position:absolute;left:5%;right:5%;top:0;bottom:23%;overflow:hidden;z-index:2;pointer-events:none;}
+.actor{position:absolute;left:50%;bottom:0;width:72%;aspect-ratio:1;
+  transform:translate(-50%,112%);transition:transform .2s var(--spring);
+  display:flex;align-items:flex-end;justify-content:center;}
+.cell.up .actor{transform:translate(-50%,12%);}
+.actor .face{width:100%;display:block;filter:drop-shadow(0 4px 4px rgba(171,44,80,.28));}
+/* とげとげボール（イガグリ）＝CSS図形 */
+.toge{position:relative;width:100%;aspect-ratio:1;display:none;filter:drop-shadow(0 4px 4px rgba(90,40,15,.3));}
+.toge::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#7a5230,#4e3015);
+  clip-path:polygon(50% 0%,59.3% 15.2%,75% 6.7%,75.5% 24.5%,93.3% 25%,84.8% 40.7%,100% 50%,84.8% 59.3%,93.3% 75%,75.5% 75.5%,75% 93.3%,59.3% 84.8%,50% 100%,40.7% 84.8%,25% 93.3%,24.5% 75.5%,6.7% 75%,15.2% 59.3%,0% 50%,15.2% 40.7%,6.7% 25%,24.5% 24.5%,25% 6.7%,40.7% 15.2%);}
+.toge::after{content:"";position:absolute;inset:14%;border-radius:50%;
+  background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.5) 0 11%,rgba(255,255,255,0) 14%),
+    radial-gradient(circle at 38% 30%,#96693c,#6e4525 62%,#573418 100%);
+  box-shadow:inset 0 4px 5px rgba(255,235,210,.3), inset 0 -7px 10px rgba(40,18,4,.4);}
+.cell[data-kind="nogo"] .face{display:none;}
+.cell[data-kind="nogo"] .toge{display:block;}
+/* あな（てまえがわ＝アクターの したを かくす） */
+.lip{position:absolute;left:13%;right:13%;bottom:10%;height:13%;z-index:3;
+  border-radius:4px 4px 50% 50% / 6px 6px 100% 100%;
+  background:linear-gradient(180deg,#b25e7b,#d98ba3 80%);
+  box-shadow:inset 0 3px 4px rgba(110,25,55,.4), 0 2px 0 rgba(255,255,255,.55);}
+/* タップせいこう＝ぷにっと しぼんで たいじょう */
+.cell.pop .actor{transition:none;animation:squish .3s var(--ease) forwards;}
+@keyframes squish{
+  0%{transform:translate(-50%,12%) scale(1,1);}
+  40%{transform:translate(-50%,30%) scale(1.28,.55);}
+  100%{transform:translate(-50%,118%) scale(.75,.9);}
+}
+.cell.snap .actor{transition:none;animation:none;}
+/* おっと！バブル */
+.oops{position:absolute;left:50%;top:4%;z-index:6;pointer-events:none;white-space:nowrap;
+  font-family:'Mochiy Pop One';font-size:14px;color:var(--ac-d);background:#fff;
+  padding:6px 13px;border-radius:999px;box-shadow:0 3px 0 rgba(209,59,100,.25), inset 0 2px 0 #fff;
+  animation:oopsUp .9s var(--ease) forwards;}
+@keyframes oopsUp{
+  0%{opacity:0;transform:translate(-50%,10px) scale(.6);}
+  22%{opacity:1;transform:translate(-50%,0) scale(1.06);}
+  100%{opacity:0;transform:translate(-50%,-30px) scale(1);}
+}
+
+/* start cover */
+.startcover{position:absolute;inset:-14px;z-index:8;border-radius:36px;
+  background:rgba(255,244,247,.62);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;transition:opacity .3s;}
+.startcover.hide{opacity:0;pointer-events:none;}
+.btn-play{width:92px;height:92px;border:none;cursor:pointer;border-radius:50%;
+  background:linear-gradient(180deg,#75e093,var(--green));
+  box-shadow:0 8px 0 var(--green-d), inset 0 3px 0 rgba(255,255,255,.5), 0 12px 22px rgba(60,140,80,.35);
+  display:flex;align-items:center;justify-content:center;transition:transform .12s var(--ease);}
+.btn-play:active{transform:translateY(4px);box-shadow:0 4px 0 var(--green-d), inset 0 3px 0 rgba(255,255,255,.5);}
+.btn-play .tri{width:0;height:0;border-left:30px solid #fff;border-top:19px solid transparent;border-bottom:19px solid transparent;margin-left:8px;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.15));}
+
+/* ===== modal (clay) ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:rgba(95,35,55,.4);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,#fff4f7);border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(140,40,70,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:118px;margin:-26px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(171,44,80,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:22px;color:var(--ink);margin:4px 0 8px;}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg p .cstar{display:inline-block;vertical-align:-2px;margin-right:2px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;
+  transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:var(--ac-soft);color:var(--ac-d);box-shadow:0 4px 0 #f0b6c8;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+/* はじめての あんない（ミニずかい） */
+.guide{display:flex;flex-direction:column;gap:10px;margin:6px 0 14px;}
+.grow{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;
+  border-radius:20px;padding:9px 14px;box-shadow:0 4px 0 rgba(209,59,100,.12), inset 0 2px 0 #fff;}
+.gpic{width:48px;height:48px;display:flex;align-items:center;justify-content:center;}
+.gpic img{width:46px;display:block;filter:drop-shadow(0 3px 3px rgba(171,44,80,.25));}
+.gpic .toge{display:block;width:47px;}
+.gico{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+.gico.tapok{background:#e2f7e9;box-shadow:inset 0 -4px 0 rgba(63,174,98,.2), inset 0 2px 0 #fff;}
+.gico.tapno{background:var(--ac-soft);box-shadow:inset 0 -4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;}
+.fing{width:24px;height:24px;background:var(--green-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 11.2V7.5a2.5 2.5 0 0 1 5 0v3.7c1.2-.8 2-2.2 2-3.7C16 5 14 3 11.5 3S7 5 7 7.5c0 1.5.8 2.9 2 3.7zm9.8 4.7-4.5-2.3a1.3 1.3 0 0 0-.5-.1H13V7.5a1.5 1.5 0 0 0-3 0v10.7l-3.4-.7c-.4-.1-.8 0-1 .3-.4.4-.4 1.1 0 1.6l4.8 4.8c.3.3.7.4 1 .4h6.8c.8 0 1.4-.6 1.5-1.3l.8-5.3c.1-.8-.3-1.6-1.1-1.9z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 11.2V7.5a2.5 2.5 0 0 1 5 0v3.7c1.2-.8 2-2.2 2-3.7C16 5 14 3 11.5 3S7 5 7 7.5c0 1.5.8 2.9 2 3.7zm9.8 4.7-4.5-2.3a1.3 1.3 0 0 0-.5-.1H13V7.5a1.5 1.5 0 0 0-3 0v10.7l-3.4-.7c-.4-.1-.8 0-1 .3-.4.4-.4 1.1 0 1.6l4.8 4.8c.3.3.7.4 1 .4h6.8c.8 0 1.4-.6 1.5-1.3l.8-5.3c.1-.8-.3-1.6-1.1-1.9z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.cross{position:relative;width:22px;height:22px;}
+.cross::before,.cross::after{content:"";position:absolute;left:50%;top:50%;width:22px;height:5px;border-radius:3px;background:var(--ac-d);}
+.cross::before{transform:translate(-50%,-50%) rotate(45deg);}
+.cross::after{transform:translate(-50%,-50%) rotate(-45deg);}
+.glbl{font-family:'Mochiy Pop One';font-size:15px;min-width:74px;text-align:left;}
+.glbl.ok{color:var(--green-d);}
+.glbl.no{color:var(--ac-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.07s}.enter.d2{animation-delay:.14s}.enter.d3{animation-delay:.21s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .enter{opacity:1;transform:none;animation:none;}
+  .gauge.low .gfill{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.png" alt="">とまれあそび</div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="pill" id="scorePill">てん 0</span>
+    <span class="best-pill" id="bestPill"><span class="cstar"></span>さいこう 0</span>
+    <span class="hearts" id="hearts" aria-label="のこり">
+      <span class="hh"></span><span class="hh"></span><span class="hh"></span>
+    </span>
+  </div>
+
+  <div class="diffbar enter d1" id="diffbar">
+    <button class="diff" data-d="slow">ゆっくり</button>
+    <button class="diff sel" data-d="normal">ふつう</button>
+    <button class="diff" data-d="fast">はやい</button>
+  </div>
+
+  <div class="hint enter d1" id="hint">みどりの ボタンで スタート！</div>
+
+  <div class="gaugewrap enter d2">
+    <span class="clock" aria-hidden="true"></span>
+    <div class="gauge" id="gauge"><div class="gfill" id="gfill"></div></div>
+  </div>
+
+  <div class="board-wrap enter d3" id="boardWrap">
+    <div class="board" id="board"></div>
+    <div class="startcover" id="startcover">
+      <button class="btn-play" id="startBtn" aria-label="スタート"><span class="tri"></span></button>
+    </div>
+  </div>
+</div>
+
+<!-- はじめての あんない -->
+<div class="ovl" id="introOvl" hidden>
+  <div class="dlg">
+    <img class="uni" src="../assets/uni/green_standing.png" alt="">
+    <h2>とまれあそび！</h2>
+    <div class="guide">
+      <div class="grow">
+        <span class="gpic"><img src="../assets/uni/blue_face.png" alt=""></span>
+        <span class="gico tapok"><span class="fing"></span></span>
+        <span class="glbl ok">タップ！</span>
+      </div>
+      <div class="grow">
+        <span class="gpic"><span class="toge"></span></span>
+        <span class="gico tapno"><span class="cross"></span></span>
+        <span class="glbl no">がまん！</span>
+      </div>
+    </div>
+    <p>ユニコーンを タップ！<br>とげとげは がまん！</p>
+    <div class="row">
+      <button class="go" id="introBtn">わかった！</button>
+    </div>
+  </div>
+</div>
+
+<!-- result modal -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlRetry">もう いちど</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
+<script src="../assets/bgm.js"></script>
+<script>
+/* ====== とまれあそび（Go/No-Go）＝がまん力をそだてる ====== */
+function S(){ return (window.Save&&Save.game)?Save.game('tomare'):{get:(k,d)=>d,set:()=>{},bestMax:()=>{}}; }
+const save = S();
+
+/* helpers (Sfx/FX/buzz guarded) */
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+
+const board = document.getElementById('board');
+const boardWrap = document.getElementById('boardWrap');
+const hint = document.getElementById('hint');
+const scorePill = document.getElementById('scorePill');
+const bestPill = document.getElementById('bestPill');
+const heartEls = [...document.querySelectorAll('.hh')];
+const gauge = document.getElementById('gauge');
+const gfill = document.getElementById('gfill');
+const startcover = document.getElementById('startcover');
+
+const ROUND_MS = 30000;
+const SPEED_MULT = {slow:1.3, normal:1, fast:0.78};
+const FACES = ['blue_face','blue_face','green_face','purple_face'];
+
+let speed = save.get('speed','normal');
+if(!(speed in SPEED_MULT)) speed = 'normal';
+let best = save.get('best',0) || 0;
+let bestAtStart = best;
+let state = 'idle';           // idle | play | over
+let score = 0, hearts = 3;
+let runId = 0;
+let activeIdx = -1, lastIdx = -1, lastWasNogo = false, resolved = true;
+let actorTimer = null, spawnTimer = null, endAt = 0, lowFlag = false;
+
+/* ----- ばんめん（3x3）をつくる ----- */
+const cells = [];
+for(let i=0;i<9;i++){
+  const c = document.createElement('button');
+  c.className = 'cell';
+  c.setAttribute('aria-label','あな');
+  c.innerHTML = '<span class="mouth"></span>'+
+    '<span class="popwrap"><span class="actor"><img class="face" src="../assets/uni/blue_face.png" alt=""><span class="toge"></span></span></span>'+
+    '<span class="lip"></span>';
+  c.addEventListener('pointerdown', ev=>onCellTap(i, ev));
+  board.appendChild(c);
+  cells.push(c);
+}
+
+/* ----- ひょうじ ----- */
+function renderScore(){
+  scorePill.textContent = 'てん ' + score;
+  scorePill.classList.add('bump');
+  setTimeout(()=>scorePill.classList.remove('bump'), 180);
+}
+function renderBest(){ bestPill.innerHTML = '<span class="cstar"></span>さいこう ' + best; }
+function renderHearts(){ heartEls.forEach((h,i)=>h.classList.toggle('off', i>=hearts)); }
+function setHint(text, cls){ hint.textContent = text; hint.className = 'hint' + (cls?' '+cls:''); }
+renderBest(); renderHearts();
+
+/* ----- テンポ：スコアが あがるほど はやくなる ----- */
+function tempo(){
+  const m = SPEED_MULT[speed];
+  const show = Math.round(Math.max(700, 1400 - score*38) * m);
+  const gap  = Math.round(Math.max(240, 560 - score*14) * m);
+  return {show:Math.max(500,show), gap:Math.max(180,gap)};
+}
+
+/* ----- しゅつげん ----- */
+function spawn(){
+  if(state!=='play') return;
+  const my = runId;
+  let idx;
+  do{ idx = Math.floor(Math.random()*9); }while(idx===lastIdx);
+  lastIdx = idx; activeIdx = idx; resolved = false;
+  // NO-GO は やく30%。たまに れんぞくで「がまんの れんぞく」
+  const pNogo = lastWasNogo ? 0.45 : 0.26;
+  const kind = Math.random() < pNogo ? 'nogo' : 'go';
+  lastWasNogo = (kind==='nogo');
+  const cell = cells[idx];
+  cell.dataset.kind = kind;
+  if(kind==='go'){
+    cell.querySelector('.face').src = '../assets/uni/' + FACES[Math.floor(Math.random()*FACES.length)] + '.png';
+    sfx('pop');
+  }else{
+    sfx('step');
+  }
+  cell.classList.add('up');
+  const {show} = tempo();
+  actorTimer = setTimeout(()=>{ if(my!==runId) return; expire(cell, kind); }, show);
+}
+
+/* じかんぎれで ひっこむ（NO-GOを みおくれたら ほめる） */
+function expire(cell, kind){
+  if(resolved) return;
+  resolved = true; activeIdx = -1;
+  cell.classList.remove('up');
+  if(kind==='nogo'){
+    const r = cell.getBoundingClientRect();
+    fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:8, color:'#ffd23f'});
+    sfx('sparkle');
+  }
+  spawnTimer = setTimeout(spawn, tempo().gap);
+}
+
+/* ----- タップ ----- */
+function onCellTap(idx, ev){
+  if(state!=='play') return;
+  if(idx!==activeIdx || resolved){ sfx('step'); return; }
+  const cell = cells[idx];
+  const kind = cell.dataset.kind;
+  clearTimeout(actorTimer);
+  resolved = true; activeIdx = -1;
+  if(kind==='go') hitGo(cell, ev); else hitNogo(cell);
+}
+
+function hitGo(cell, ev){
+  score++; renderScore();
+  sfx('pop'); buzz(12);
+  const r = cell.getBoundingClientRect();
+  const x = (ev && ev.clientX) || r.left+r.width/2;
+  const y = (ev && ev.clientY) || r.top+r.height/2;
+  fx('burst', x, y, {count:14, power:0.9});
+  if(score>0 && score%10===0){ sfx('ding'); fx('sparkles', r.left+r.width/2, r.top, {count:10, color:'#ffd23f'}); }
+  cell.classList.add('pop');
+  setTimeout(()=>{
+    cell.classList.add('snap');
+    cell.classList.remove('up','pop');
+    requestAnimationFrame(()=>cell.classList.remove('snap'));
+  }, 300);
+  spawnTimer = setTimeout(spawn, Math.max(180, Math.round(tempo().gap*0.55)));
+}
+
+function hitNogo(cell){
+  hearts--; renderHearts();
+  sfx('error'); buzz([30,40,30]);
+  fx('shake', boardWrap, 8, 320);
+  const b = document.createElement('div');
+  b.className = 'oops'; b.textContent = 'おっと！';
+  cell.appendChild(b);
+  setTimeout(()=>b.remove(), 950);
+  cell.classList.remove('up');
+  setHint('とげとげは がまん！','no');
+  if(hearts<=0){ endRound(); return; }
+  spawnTimer = setTimeout(()=>{
+    if(state==='play') setHint('ユニコーンを タップ！','go');
+    spawn();
+  }, 900);
+}
+
+/* ----- のこりじかん ----- */
+function tick(){
+  if(state!=='play') return;
+  const rem = endAt - Date.now();
+  gfill.style.width = Math.max(0, rem/ROUND_MS*100) + '%';
+  if(rem<=6000 && !lowFlag){ lowFlag = true; gauge.classList.add('low'); }
+  if(rem<=0){ endRound(); return; }
+  requestAnimationFrame(tick);
+}
+
+/* ----- ラウンド ----- */
+function startRound(){
+  if(state==='play') return;
+  runId++;
+  state = 'play';
+  score = 0; hearts = 3; lastIdx = -1; lastWasNogo = false; resolved = true; activeIdx = -1;
+  bestAtStart = best; lowFlag = false;
+  scorePill.textContent = 'てん 0';
+  renderHearts();
+  gauge.classList.remove('low');
+  gfill.style.width = '100%';
+  startcover.classList.add('hide');
+  setHint('ユニコーンを タップ！','go');
+  sfx('whoosh');
+  endAt = Date.now() + ROUND_MS;
+  requestAnimationFrame(tick);
+  spawnTimer = setTimeout(spawn, 700);
+}
+
+function endRound(){
+  if(state!=='play') return;
+  state = 'over'; runId++;
+  clearTimeout(spawnTimer); clearTimeout(actorTimer);
+  cells.forEach(c=>c.classList.remove('up','pop'));
+  gauge.classList.remove('low');
+  setHint('おしまい！');
+  const isBest = score > bestAtStart && score > 0;
+  if(score > best){ best = score; }
+  save.bestMax('best', score);
+  renderBest();
+  if(score > 0){
+    sfx('success');
+    // どんぐりゲット（むずかしく なるほど おおく）
+    const acGain = Math.min(5, 1 + Math.floor(score/8));
+    save.set('wins', (save.get('wins',0)||0) + acGain);
+    sfx('sparkle');
+    fx('acornGain', acGain, window.innerWidth/2, window.innerHeight*0.42);
+  }
+  setTimeout(()=>{
+    let img, title, html;
+    if(isBest){
+      img = '../assets/uni/purple_wave.png';
+      title = score + 'てん！ すごい！';
+      html = 'じこ さいこう きろく！<br>がまんの めいじんだね！';
+      sfx('fanfare'); fx('celebrate');
+    }else if(score > 0){
+      img = '../assets/uni/purple_face.png';
+      title = score + 'てん とれたね！';
+      html = (hearts<=0 ? 'とげとげに きをつけて！<br>' : '') +
+        '<span class="cstar"></span>さいこうは ' + best + 'てん。<br>つぎは こえられるかな？';
+    }else{
+      img = '../assets/uni/blue_wave.png';
+      title = 'ドンマイ！';
+      html = 'ユニコーンが でたら タップ！<br>とげとげは がまん だよ';
+    }
+    showResult(img, title, html);
+  }, 1000);
+}
+
+function resetIdle(){
+  runId++;
+  clearTimeout(spawnTimer); clearTimeout(actorTimer);
+  state = 'idle'; resolved = true; activeIdx = -1;
+  cells.forEach(c=>c.classList.remove('up','pop'));
+  hearts = 3; renderHearts();
+  score = 0; scorePill.textContent = 'てん 0';
+  gauge.classList.remove('low');
+  gfill.style.width = '100%';
+  startcover.classList.remove('hide');
+  setHint('みどりの ボタンで スタート！');
+}
+
+/* ----- result modal ----- */
+const ovl = document.getElementById('ovl');
+function showResult(img, title, html){
+  document.getElementById('ovlUni').src = img;
+  document.getElementById('ovlTitle').textContent = title;
+  document.getElementById('ovlText').innerHTML = html;
+  ovl.hidden = false;
+  requestAnimationFrame(()=>ovl.classList.add('show'));
+}
+function hideResult(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlRetry').addEventListener('click', ()=>{ sfx('tap'); hideResult(); resetIdle(); startRound(); });
+
+/* ----- はじめての あんない ----- */
+const introOvl = document.getElementById('introOvl');
+document.getElementById('introBtn').addEventListener('click', ()=>{
+  sfx('tap'); save.set('intro', 1);
+  introOvl.classList.remove('show');
+  setTimeout(()=>{ introOvl.hidden = true; startRound(); }, 260);
+});
+function maybeIntro(){
+  if(save.get('intro', 0)) return false;
+  introOvl.hidden = false;
+  requestAnimationFrame(()=>introOvl.classList.add('show'));
+  return true;
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  sfx('tap');
+  if(maybeIntro()) return;
+  startRound();
+});
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+/* むずかしさ（はやさ）えらび */
+const diffBtns = [...document.querySelectorAll('.diff')];
+diffBtns.forEach(b=>b.classList.toggle('sel', b.dataset.d===speed));
+diffBtns.forEach(b=>b.addEventListener('click', ()=>{
+  speed = b.dataset.d; save.set('speed', speed); sfx('tap');
+  diffBtns.forEach(x=>x.classList.toggle('sel', x===b));
+  if(state==='play'){ resetIdle(); }
+}));
+</script>
+<script>Bgm.play('tomare');</script>
+</body>
+</html>

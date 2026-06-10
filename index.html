@@ -344,6 +344,51 @@ const GAMES = [
     progressKey:'cleared', bestLabel:v=>v>0?(v+'こ クリア'):null,
     banner:'assets/menu/banner_pitagora.webp',
     scene:'assets/menu/card_pitagora.webp'
+  },
+  {
+    id:'tomare', href:'games/tomare.html', ns:'tomare',
+    name:'とまれあそび', desc:'ユニコーンは タップ、<br>とげとげは がまん！',
+    ac:'#e8567c', acd:'#d13b64', acsh:'#ab2c50', acsoft:'#ffdce7',
+    tag:'がまん力', ribbon:'しんさく！',
+    progressKey:'best', bestLabel:v=>v>0?('さいこう '+v+'てん'):null,
+    banner:'assets/menu/banner_tomare.webp',
+    scene:'assets/menu/card_tomare.webp'
+  },
+  {
+    id:'chigai', href:'games/chigai.html', ns:'chigai',
+    name:'どこちがう', desc:'2まいの え、<br>ちがう ところは どこ？',
+    ac:'#2cb1a0', acd:'#1f9183', acsh:'#15715f', acsoft:'#d3f3ec',
+    tag:'かんさつ力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'もん クリア'):null,
+    banner:'assets/menu/banner_chigai.webp',
+    scene:'assets/menu/card_chigai.webp'
+  },
+  {
+    id:'sokkuri', href:'games/sokkuri.html', ns:'sokkuri',
+    name:'そっくりわけ', desc:'いろ・かたちで<br>かごに わけよう。',
+    ac:'#c95fc2', acd:'#a844a1', acsh:'#83307d', acsoft:'#f7ddf5',
+    tag:'きりかえ力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'こ せいかい'):null,
+    banner:'assets/menu/banner_sokkuri.webp',
+    scene:'assets/menu/card_sokkuri.webp'
+  },
+  {
+    id:'pair', href:'games/pair.html', ns:'pair',
+    name:'ぺあさがし', desc:'カードを めくって<br>おなじ えを さがそう。',
+    ac:'#6577e0', acd:'#4a5cc4', acsh:'#3a489c', acsoft:'#e1e5fb',
+    tag:'おぼえる力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'かい クリア'):null,
+    banner:'assets/menu/banner_pair.webp',
+    scene:'assets/menu/card_pair.webp'
+  },
+  {
+    id:'uta', href:'games/uta.html', ns:'uta',
+    name:'うたあそび', desc:'たかい こえ ひくい こえ、<br>うたって あそぼう。',
+    ac:'#ff7e62', acd:'#e85c3e', acsh:'#bd4528', acsoft:'#ffe2da',
+    tag:'おんかん力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'かい クリア'):null,
+    banner:'assets/menu/banner_uta.webp',
+    scene:'assets/menu/card_uta.webp'
   }
 ];
 
@@ -435,6 +480,7 @@ function makeCard(g, i){
     card.innerHTML =
       `<div class="art">
          <img class="scene" src="${g.scene}" alt="" draggable="false">
+         ${ribbon}
        </div>` +
       `<div class="body">
          ${bannerImg}
@@ -492,9 +538,9 @@ ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true
 
 function doReset(){
   try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
-  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','room']); }catch(e){}
+  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','room']); }catch(e){}
   // Save が無い環境でも確実に消す（キーは save.js の PREFIX と同じ）
-  ['manekko','kimari','katachi','pitagora','room'].forEach(ns=>{ try{ localStorage.removeItem('asobinomori:'+ns); }catch(e){} });
+  ['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','room'].forEach(ns=>{ try{ localStorage.removeItem('asobinomori:'+ns); }catch(e){} });
   sfx('whoosh');
   setTimeout(()=>location.reload(), 200);
 }
