@@ -83,8 +83,11 @@ scripts/
 - **App**（shell.js）：`App.go(href)`／`App.toast(msg)`／`App.showModal({...})`／`App.el()` など。**現状は index.html 専用**。
   各ゲームは shell.js を読み込まず、**topbar・結果モーダル・トーストをテーマに合わせて自前実装**している
   （色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先した結果）。新ゲームもこの方式に倣う
-  ＝ `audio.js / fx.js / save.js` の3本だけ読み込み、UI ガワは各HTMLにインライン。`App.showModal` は絵文字を
+  ＝ `audio.js / fx.js / save.js` を読み込み、UI ガワは各HTMLにインライン。`App.showModal` は絵文字を
   渡せる API だが「絵文字を使わない」方針のため使わない。
+  ※ さらに各ゲームは **`rewards.js` も読み込む**（save.js の後）。クリアで どんぐりが増えた瞬間に
+  「🌰＋N」を見せる即フィードバックのため（後述の「どんぐりゲット演出」）。`rewards.js` は副作用なく
+  どんぐりを集計するだけなので安全に読める。programming だけは自己完結方針を守り、読み込まず独自実装。
 - 見た目は `:root` で `--accent / --accent-d / --accent-l` をゲームごとに上書きし、背景グラデも合わせる。入場は `.enter .d1..d6`。
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** カードに進捗を出すため、各ゲームは規定キーを保存すること：
   - manekko → `Save.game('manekko').set('best', 最高だん数)`
@@ -111,6 +114,14 @@ scripts/
 - **どんぐり（横断通貨）＝全ゲームのがんばり合計**。`assets/rewards.js`（グローバル `Rewards`）が集計：
   programming のクリア数（`kuma_prog_save_v1.cleared` 一意化）＋ manekko `best` ＋ kimari `best` ＋
   katachi/pitagora `cleared`。`Rewards.earned()`。**減らない**（失敗しても損しない＝叱らない方針）。
+- **どんぐりゲット演出（即フィードバック）**：「いつ どんぐりが増えたか」が伝わらないと達成感が薄いので、
+  クリアで増えた瞬間に「🌰＋N」を噴き上げる。各ゲームは**クリア処理の前後で `Rewards.earned()` の差分**を取り、
+  `gained>0` のときだけ `FX.acornGain(gained, x, y)`（fx.js）を出す＝集計ロジックを変えずに獲得量を逆算する方式。
+  どんぐりの見た目は `.acorn`（room.html）準拠で fx.js が canvas 描画。**増え方はゲームで異なる**点に注意：
+  programming/katachi/pitagora は新レベル初クリアで＋1、manekko/kimari は**自己ベスト更新時のみ**増える
+  （ベスト未更新のクリアは差分0＝演出も出ない＝earned の実態に忠実）。
+  ※ **programming だけは fx.js も rewards.js も持たない自己完結**のため、`!cleared.has(lv)` で初クリア判定し、
+  独自の `acornPop(n)`（DOM＋rAF。CSS `.acorn-fx`/`.acorn-plus`）で同じ演出を出す。
 - **収支**：`balance() = earned() - spent()`。`spent`・所持 `owned`・装備 `wear` は **room 名前空間**
   （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
 - **どんぐりくじ**：1回 `Rewards.PRICE`（=4）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。

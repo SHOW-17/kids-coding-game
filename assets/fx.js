@@ -204,6 +204,76 @@
     start();
   }
 
+  // ---- どんぐり1粒を描く（ごほうび通貨と同じ見た目・room.html の .acorn 準拠） ----
+  function drawAcorn(ctx, x, y, s, rot, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    // 実（ナット）
+    var ng = ctx.createLinearGradient(0, -s * 0.1, 0, s * 0.62);
+    ng.addColorStop(0, '#e6b25a'); ng.addColorStop(1, '#cf8b2c');
+    ctx.fillStyle = ng;
+    ctx.beginPath(); ctx.ellipse(0, s * 0.16, s * 0.4, s * 0.46, 0, 0, 6.283); ctx.fill();
+    // 傘（キャップ）
+    var cg = ctx.createLinearGradient(0, -s * 0.42, 0, -s * 0.04);
+    cg.addColorStop(0, '#a9712f'); cg.addColorStop(1, '#7d4f17');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.ellipse(0, -s * 0.22, s * 0.48, s * 0.26, 0, 0, 6.283); ctx.fill();
+    // 茎
+    ctx.fillStyle = '#5e3a10';
+    ctx.fillRect(-s * 0.06, -s * 0.56, s * 0.12, s * 0.16);
+    ctx.restore();
+  }
+
+  // ---- どんぐりゲット！（クリアでごほうび通貨が増えた瞬間の演出） ----
+  // n 粒のどんぐりが噴き上がり、「＋N」が浮かぶ。x,y は噴き出す中心。
+  function acornGain(n, x, y, opts) {
+    init(); opts = opts || {};
+    n = Math.max(1, Math.min(n | 0, 12));
+    var W = global.innerWidth, H = global.innerHeight;
+    if (x == null) x = W / 2;
+    if (y == null) y = H * 0.42;
+    var size = opts.size || 32;
+    if (reduceMotion()) n = Math.min(n, 4);
+    for (var i = 0; i < n; i++) {
+      var a = -Math.PI / 2 + rnd(-0.55, 0.55);
+      var sp = rnd(4.5, 7.5);
+      particles.push({
+        x: x + rnd(-14, 14), y: y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        size: size, rot: rnd(-0.4, 0.4), vr: rnd(-0.14, 0.14),
+        delay: i * 5, life: 82 + i * 4, maxLife: 82 + i * 4,
+        update: function (p) {
+          if (p.delay > 0) { p.delay--; return; }
+          p.x += p.vx; p.y += p.vy; p.vy += 0.24; p.vx *= 0.99; p.rot += p.vr;
+        },
+        draw: function (ctx, p) {
+          if (p.delay > 0) return;
+          drawAcorn(ctx, p.x, p.y, p.size, p.rot, Math.min(1, p.life / 45));
+        }
+      });
+    }
+    // ＋N（数字は小1も読める。白フチで背景に負けない）
+    particles.push({
+      x: x, y: y - size * 1.3, vy: -1.0, size: size * 1.5, text: '+' + n,
+      life: 84, maxLife: 84,
+      update: function (p) { p.y += p.vy; p.vy *= 0.96; },
+      draw: function (ctx, p) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, p.life / 38);
+        ctx.font = '900 ' + p.size + 'px "Mochiy Pop One", system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = p.size * 0.22; ctx.strokeStyle = '#fff';
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillStyle = '#cf8b2c'; ctx.fillText(p.text, p.x, p.y);
+        ctx.restore();
+      }
+    });
+    start();
+  }
+
   // ---- 広がるリング波（ボタン押下・ワープ） ----
   function ring(x, y, opts) {
     init(); opts = opts || {};
@@ -256,6 +326,7 @@
   global.FX = {
     confetti: confetti, burst: burst, sparkles: sparkles,
     floatEmoji: floatEmoji, ring: ring, shake: shake, celebrate: celebrate,
+    acornGain: acornGain,
     COLORS: CONFETTI_COLORS
   };
 })(window);
