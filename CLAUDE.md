@@ -111,17 +111,19 @@ scripts/
 ### ごほうびシステム（わたしの おへや＝room.html）
 全ゲーム横断の継続動機。**ゲーム側のコードには一切手を入れず**、既存セーブから通貨を集計する設計（最小構成）。
 
-- **どんぐり（横断通貨）＝全ゲームのがんばり合計**。`assets/rewards.js`（グローバル `Rewards`）が集計：
-  programming のクリア数（`kuma_prog_save_v1.cleared` 一意化）＋ manekko `best` ＋ kimari `best` ＋
-  katachi/pitagora `cleared`。`Rewards.earned()`。**減らない**（失敗しても損しない＝叱らない方針）。
-- **どんぐりゲット演出（即フィードバック）**：「いつ どんぐりが増えたか」が伝わらないと達成感が薄いので、
-  クリアで増えた瞬間に「🌰＋N」を噴き上げる。各ゲームは**クリア処理の前後で `Rewards.earned()` の差分**を取り、
-  `gained>0` のときだけ `FX.acornGain(gained, x, y)`（fx.js）を出す＝集計ロジックを変えずに獲得量を逆算する方式。
-  どんぐりの見た目は `.acorn`（room.html）準拠で fx.js が canvas 描画。**増え方はゲームで異なる**点に注意：
-  programming/katachi/pitagora は新レベル初クリアで＋1、manekko/kimari は**自己ベスト更新時のみ**増える
-  （ベスト未更新のクリアは差分0＝演出も出ない＝earned の実態に忠実）。
-  ※ **programming だけは fx.js も rewards.js も持たない自己完結**のため、`!cleared.has(lv)` で初クリア判定し、
-  独自の `acornPop(n)`（DOM＋rAF。CSS `.acorn-fx`/`.acorn-plus`）で同じ演出を出す。
+- **どんぐり（横断通貨）＝全ゲームの「せいこう量（`wins`）」の累計**。`assets/rewards.js`（グローバル `Rewards`）が集計。
+  **クリア／せいかいするたびに増える（再クリアでも増える）。むずかしいステージほど多くもらえる。** 各ゲームが
+  自分の名前空間に `wins`（獲得した どんぐり量の累計）を貯め、`Rewards.earned()` がその合計を返す。**減らない**。
+  - 旧方式（最高記録・初クリア数ベース）で貯めた分は **`legacyBonus`** として room 名前空間に一度だけ確定し、
+    新方式の `wins` 合計に加算（移行してもどんぐりが減らない）。`earned() = legacyBonus + Σ各ゲームの wins`。
+  - **programming だけは rewards.js を持たない自己完結**のため、累積を独自キー `kuma_prog_save_v1.wins` に保存し、
+    rewards.js は `progWins()` でそれを読む（`cleared` 配列を読むのと同じ要領）。
+- **どんぐりゲット演出（即フィードバック）**：クリアした瞬間に「🌰＋N」を噴き上げる。N＝そのステージの獲得量
+  （難しいほど大きい）。各ゲームは成功時に `acGain` を計算 → `Save.set('wins', wins+acGain)` → `FX.acornGain(acGain, x, y)`
+  （fx.js。見た目は `.acorn`＝room.html 準拠の canvas 描画）。**難易度→獲得量の式**：
+  ぴたごら/かたち/プログラミング＝`1 + floor(lvIndex/5)`（5レベルごと段階アップ）、まねっこ＝`1 + floor((段-1)/3)`、
+  きまり＝`difficulty`（1〜6、問が進むほど）。
+  ※ **programming は fx.js も持たない**ので、独自の `acornPop(n)`（DOM＋rAF。CSS `.acorn-fx`/`.acorn-plus`）で同じ演出。
 - **収支**：`balance() = earned() - spent()`。`spent`・所持 `owned`・装備 `wear` は **room 名前空間**
   （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
 - **どんぐりくじ**：1回 `Rewards.PRICE`（=4）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。

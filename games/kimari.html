@@ -488,11 +488,12 @@ function correctAnswer(btn, tok){
   fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:12, color:'#ffd23f'});
   fx('burst', r.left+r.width/2, r.top+r.height/2, {count:16});
   total++; streak++;
-  const acBefore = (window.Rewards?Rewards.earned():0);
   if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
-  const acGain = window.Rewards ? Rewards.earned()-acBefore : 0;
-  if(acGain>0 && window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
+  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficulty は 1〜6。
+  const acGain = difficulty;
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+  if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
   renderStatus();
   streakPill.classList.add('bump'); setTimeout(()=>streakPill.classList.remove('bump'),220);
   hintEl.textContent=pick(['せいかい！','できた！','すごい！','ばっちり！']);

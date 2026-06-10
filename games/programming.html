@@ -398,6 +398,7 @@ let program = [];
 let activeLoop = null;
 let running = false;
 let cleared = new Set();
+let progWins = 0;          // どんぐり用：累積クリア回数（むずかしさぶん。再クリアでも増える）
 let announced = new Set();
 let collected = new Set();
 let gatesOpen = false;
@@ -409,12 +410,12 @@ const board = $('board'), bear = $('bear');
 const wait = ms => new Promise(r=>setTimeout(r,ms));
 
 function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify({cleared:[...cleared], current:lvIndex, announced:[...announced]})); }catch(e){}
+  try{ localStorage.setItem(KEY, JSON.stringify({cleared:[...cleared], current:lvIndex, announced:[...announced], wins:progWins})); }catch(e){}
 }
 function load(){
   try{
     const d = JSON.parse(localStorage.getItem(KEY));
-    if(d){ cleared = new Set(d.cleared||[]); announced = new Set(d.announced||[]); lvIndex = Math.min(Math.max(d.current||0,0), LEVELS.length-1); }
+    if(d){ cleared = new Set(d.cleared||[]); announced = new Set(d.announced||[]); lvIndex = Math.min(Math.max(d.current||0,0), LEVELS.length-1); progWins = d.wins||0; }
   }catch(e){}
 }
 function resetSave(){
@@ -925,9 +926,12 @@ function setButtons(dis){
 }
 
 function win(){
-  const acFresh = !cleared.has(lvIndex);
-  cleared.add(lvIndex); renderStars(); save(); winSound(); confetti();
-  if(acFresh) setTimeout(()=>acornPop(1), 360);
+  cleared.add(lvIndex);
+  // 1レベル クリアごとに どんぐり＋（むずかしいレベルほど多く）。5レベルごとに1段階。再クリアでも増える。
+  const acGain = 1 + Math.floor(lvIndex/5);
+  progWins += acGain;
+  renderStars(); save(); winSound(); confetti();
+  setTimeout(()=>acornPop(acGain), 360);
   const last=lvIndex>=LEVELS.length-1;
   showCard({uni:last?'../assets/uni/purple_wave.png':'../assets/uni/blue_wave.png',title:'やったね！',
     msg:last?'ぜんぶ クリア！ きみは プログラミングはかせ だ！':'ともだちに あえたよ！',
