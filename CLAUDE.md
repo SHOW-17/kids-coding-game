@@ -292,7 +292,10 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
     公開ファイルだけを `www/` に集め（.gitignore 済みの BGM mp3 も同梱）、`npx cap sync android` →
     `cd android && ./gradlew assembleRelease` で署名済みAPK。署名鍵はリポジトリ外 `~/.android-keys/`
     （`asobinomori.jks`＋`asobinomori.keystore.properties`。**紛失すると同一署名で更新できなくなる**）。
-    APK は INTERNET 権限なし＝完全オフライン。appId は `jp.show17.asobinomori`。
+    APK は INTERNET 権限なし＝完全オフライン。appId は `jp.show17.asobinomori`。画面の向きは固定しない
+    （ゲームは横画面2カラム対応のため。webmanifest も `orientation: any`）。
+    BGM はアプリ内（`window.Capacitor` あり）ではタップを待たず即時再生（Capacitor の WebView は
+    自動再生許可済み。bgm.js の `play()` が分岐）。ブラウザは従来どおり初回タップで開始。
     新ゲーム追加時は www/ 再構築 → cap sync → APK 再ビルドも忘れずに。アプリのアイコン/スプラッシュは
     `assets/icons/icon.svg` から生成（`resources/` に sharp で書き出し → `npx @capacitor/assets generate --android`）。
 - 状態管理はメモリ内。永続化は `localStorage`（try/catchでガード済み）。
