@@ -93,6 +93,12 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 .acc img{display:block;width:100%;height:auto;
   filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
 .stage .uni{pointer-events:none;}
+/* ほっぺ（画像でなくCSS図形に戻したやつ） */
+.blush-css{position:relative;width:100%;padding-top:30%;}
+.blush-css .cheek{position:absolute;top:0;width:32%;height:100%;border-radius:50%;
+  background:radial-gradient(circle,#ff8fae 0%,rgba(255,143,174,.65) 45%,rgba(255,143,174,0) 72%);}
+.blush-css .cheek.l{left:1%;}
+.blush-css .cheek.r{right:1%;}
 
 /* ===== くじパネル ===== */
 .panel{margin-top:14px;background:#fffdf7;border-radius:24px;padding:16px 16px 18px;
@@ -306,8 +312,13 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
 function fx(n){ try{ if(window.FX&&FX[n]) return FX[n].apply(FX, [].slice.call(arguments,1)); }catch(e){} }
 
-/* ====== アイテム画像 ====== */
+/* ====== アイテムの見た目 ======
+   原則は画像。ほっぺ(face_blush)だけ画像がいまいちなのでCSS図形で描く。 */
 function itemImg(id){ return '<img src="assets/items/'+id+'.png" alt="" draggable="false">'; }
+function itemInner(id){
+  if(id==='face_blush') return '<div class="blush-css"><div class="cheek l"></div><div class="cheek r"></div></div>';
+  return itemImg(id);
+}
 
 /* ====== じぶんで おいた いち（ドラッグ位置）を ほぞん ====== */
 function roomSave(){ try{ if(window.Save&&Save.game) return Save.game('room'); }catch(e){} return null; }
@@ -434,7 +445,7 @@ function renderUni(){
       var d = document.createElement('div');
       d.className = 'acc';
       d.setAttribute('style', placeStyle(id));
-      d.innerHTML = itemImg(id);
+      d.innerHTML = itemInner(id);
       bobEl.appendChild(d);
       makeDraggable(d, id, 'wear');
     }
@@ -478,7 +489,7 @@ function renderPurse(){
 
 /* ====== ずかん（タブ） ====== */
 var curTab = 'wear';
-function miniPreview(id){ return '<div class="pv">'+itemImg(id)+'</div>'; }
+function miniPreview(id){ return '<div class="pv">'+itemInner(id)+'</div>'; }
 function renderZukan(){
   var box = document.getElementById('zukan');
   var hint = document.getElementById('zukanHint');
@@ -548,7 +559,7 @@ document.getElementById('btnDraw').addEventListener('click', function(){
   if(!item) return;
   pendingPrize = item;
   // たまごの中身を仕込む
-  document.getElementById('gotpv').innerHTML = itemImg(item.id);
+  document.getElementById('gotpv').innerHTML = itemInner(item.id);
   document.getElementById('pname').textContent = item.name + ' を ゲット！';
   document.getElementById('prize').classList.remove('opened');
   // マシンを回す → たまごが出る
