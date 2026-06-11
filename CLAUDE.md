@@ -143,6 +143,13 @@ scripts/
   echoCancellation/noiseSuppression/autoGainControl は **off**（ピッチ検出を歪めるため）。モード中は **Bgm.stop()**
   （マイクがBGMを拾う）。退出時は必ず `stream.getTracks().forEach(stop)`。マイク不可でも聞き分けモードは遊べる構成。
   Android は `RECORD_AUDIO` 権限を AndroidManifest に宣言済み（INTERNETなしは維持）＝**実機での許可フロー要確認**。
+- **うたあそびのお手本は「うた声」合成（uta.html 内の `Voice.sing`）**：ピッ音だと子供がまねできないため、
+  のこぎり波＋「お」のフォルマント（bandpass×2）＋ビブラートで「どー」と歌う声にしている。音名は
+  `SOLF`（ど・れ・み・そ・ら・ど＝NOTES と1対1）で表示：まねうたの階段ラベル＋吹き出し
+  （「『どー』って うたってね！」）、こえでとばそ のリング内。**音量バランスは実機で要調整**。
+- **`Bgm.stop()` は curTrack も忘れる**（bgm.js）：明示停止後にタップで kick() が BGM を勝手に再開しない
+  （うたあそびのマイク中に鳴り出すバグの修正）。音符トグル OFF→ON（setEnabled）は従来どおり同じ曲に復帰。
+  停止した画面で BGM を再開したいときは `Bgm.play(track)` を呼び直す（goMenu がやっている方式）。
 
 ### ごほうびシステム（わたしの おへや＝room.html）
 全ゲーム横断の継続動機。**ゲーム側のコードには一切手を入れず**、既存セーブから通貨を集計する設計（最小構成）。

@@ -257,7 +257,7 @@
       this.nextLead = t0; this.nextBass = t0;
       try { master.gain.cancelScheduledValues(ctx.currentTime); } catch (e) {}
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
-      master.gain.exponentialRampToValueAtTime(0.32, ctx.currentTime + 1.4); // やさしくフェードイン
+      master.gain.exponentialRampToValueAtTime(0.24, ctx.currentTime + 1.4); // やさしくフェードイン（控えめ）
       var self = this;
       this.timer = setInterval(function () { self.schedule(); }, 40);
     },
@@ -279,6 +279,7 @@
      ============================================================ */
   var curTrack = null;
   var audioEl = null;     // mp3 用
+  var MP3_VOL = 0.42;     // BGMは効果音・お手本の「うしろ」に控えめに（うるさい対策）
   var usingMp3 = false;
   var started = false;    // ユーザー操作後に本当に鳴り始めたか
 
@@ -299,8 +300,8 @@
       var fadeIn = function () {
         var step = function () {
           if (!usingMp3 || !audioEl) return;
-          if (audioEl.volume < 0.6) {
-            audioEl.volume = Math.min(0.6, audioEl.volume + 0.04);
+          if (audioEl.volume < MP3_VOL) {
+            audioEl.volume = Math.min(MP3_VOL, audioEl.volume + 0.03);
             setTimeout(step, 60);
           }
         };
@@ -449,7 +450,11 @@
       // タップを待たず即時に開始する。失敗時は従来どおり kick で再試行される。
       if (global.Capacitor) kick();
     },
-    stop: stopPlayback,
+    /* 明示的な stop は curTrack も忘れる。これを忘れると、stop 後の最初の
+       タップで kick() が「再生待ちのトラックがある」と判断して BGM が勝手に
+       復活してしまう（うたあそびのマイク中に BGM が鳴り出すバグの原因）。
+       ※ setEnabled(false) 側は curTrack を保持＝トグルONで同じ曲に戻れる。 */
+    stop: function () { curTrack = null; stopPlayback(); },
     setEnabled: function (b) {
       enabled = !!b; persist(); syncBtn();
       if (!enabled) stopPlayback();
