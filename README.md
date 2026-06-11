@@ -139,7 +139,8 @@ assets/
   uni/                  ユニコーン画像（blue_/green_/purple_*。ゲーム内マスコット）
   bg/                   各ゲームのシーン背景（webp。空＋下1/3の丘を描いた縦長シーン画像）
   tokens/               盤面トークン画像（webp 透過。ほし・はこ・まと・ボタン・とびら・
-                        うずまき・たま・かご）
+                        うずまき・たま・かご・とげボール）
+  pairs/                ぺあさがしのカード絵柄12種（webp 透過。りんご・ほし・はな・ちょう 等）
   icons/               ファビコン・PWA・apple-touch アイコン一式
   fonts/                セルフホストフォント（fonts.css + woff2。オフライン対応）
   audio.js              共通サウンド（効果音。Web Audio）

@@ -135,14 +135,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   display:flex;align-items:flex-end;justify-content:center;}
 .cell.up .actor{transform:translate(-50%,12%);}
 .actor .face{width:100%;display:block;filter:drop-shadow(0 4px 4px rgba(171,44,80,.28));}
-/* とげとげボール（イガグリ）＝CSS図形 */
-.toge{position:relative;width:100%;aspect-ratio:1;display:none;filter:drop-shadow(0 4px 4px rgba(90,40,15,.3));}
-.toge::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#7a5230,#4e3015);
-  clip-path:polygon(50% 0%,59.3% 15.2%,75% 6.7%,75.5% 24.5%,93.3% 25%,84.8% 40.7%,100% 50%,84.8% 59.3%,93.3% 75%,75.5% 75.5%,75% 93.3%,59.3% 84.8%,50% 100%,40.7% 84.8%,25% 93.3%,24.5% 75.5%,6.7% 75%,15.2% 59.3%,0% 50%,15.2% 40.7%,6.7% 25%,24.5% 24.5%,25% 6.7%,40.7% 15.2%);}
-.toge::after{content:"";position:absolute;inset:14%;border-radius:50%;
-  background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.5) 0 11%,rgba(255,255,255,0) 14%),
-    radial-gradient(circle at 38% 30%,#96693c,#6e4525 62%,#573418 100%);
-  box-shadow:inset 0 4px 5px rgba(255,235,210,.3), inset 0 -7px 10px rgba(40,18,4,.4);}
+/* とげとげボール（イガグリ）＝生成画像トークン */
+.toge{position:relative;width:100%;aspect-ratio:1;display:none;filter:drop-shadow(0 4px 4px rgba(90,40,15,.3));
+  background:url('../assets/tokens/thorn_ball.webp') center/contain no-repeat;}
 .cell[data-kind="nogo"] .face{display:none;}
 .cell[data-kind="nogo"] .toge{display:block;}
 /* あな（てまえがわ＝アクターの したを かくす） */

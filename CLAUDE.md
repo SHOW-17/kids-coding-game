@@ -62,8 +62,11 @@ assets/
   bg/                   各ゲームのシーン背景（webp 1024x1536。生成画像＝空＋下1/3だけ丘の縦長シーン。
                         body に center bottom / cover で敷く。中央は余白＝UIが乗る前提の低コントラスト）
   tokens/               盤面トークン画像（webp 透過・余白トリム済み）。programming の
-                        star/box/target/button/gate/warp ＋ pitagora の ball/basket。
+                        star/box/target/button/gate/warp ＋ pitagora の ball/basket ＋ tomare の thorn_ball。
                         CSS図形だったトークンを background-image central/contain で差し替えた
+  pairs/                ぺあさがし専用のカード絵柄12種（webp 320x320 透過。apple/star/flower/
+                        butterfly/car/fish/strawberry/moon/mushroom/balloon/bird/heart）。
+                        pair.html の MOTIFS 配列と1対1対応（新絵柄は両方に足す）
   icons/               ファビコン・PWA・apple-touch アイコン一式
   fonts/                セルフホストフォント（fonts.css + woff2 496個。外部CDN参照は禁止）
   audio.js              共通サウンド（Web Audio。グローバル Sfx）
