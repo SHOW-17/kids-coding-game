@@ -282,10 +282,18 @@
   var MP3_VOL = 0.42;     // BGMは効果音・お手本の「うしろ」に控えめに（うるさい対策）
   var usingMp3 = false;
   var started = false;    // ユーザー操作後に本当に鳴り始めたか
+  /* 再生開始の「世代」トークン。startPlayback の mp3 試行は非同期
+     （play() の Promise →失敗したら次候補）なので、途中で stop される
+     可能性がある。stop のたびに世代を進め、古い世代の続きは何もしない。
+     ※ これが無いと「最初のタップがモードボタン」のとき、
+        pointerdown(kick→再生開始) → click(Bgm.stop) → 保留中の play() が
+        中断エラー → 次候補を再生、で stop 後に BGM が鳴り出してしまう。 */
+  var playSession = 0;
 
   function startPlayback() {
     if (!enabled || !curTrack) return;
     started = true;
+    var sess = ++playSession;
     // まず mp3 を試す
     if (!audioEl) {
       try {
@@ -299,7 +307,7 @@
       audioEl.volume = 0;
       var fadeIn = function () {
         var step = function () {
-          if (!usingMp3 || !audioEl) return;
+          if (sess !== playSession || !usingMp3 || !audioEl) return;
           if (audioEl.volume < MP3_VOL) {
             audioEl.volume = Math.min(MP3_VOL, audioEl.volume + 0.03);
             setTimeout(step, 60);
@@ -318,7 +326,7 @@
         tryNext();
       };
       function tryNext() {
-        if (done) return;
+        if (sess !== playSession || done) return;   // stop 済み（世代が古い）なら何もしない
         if (ci >= cands.length) {            // mp3 が一つも無い → 合成へ
           done = true; usingMp3 = false;
           try { audioEl.pause(); } catch (e) {}
@@ -330,7 +338,11 @@
         audioEl.src = cands[ci++];
         var p = audioEl.play();
         if (p && p.then) {
-          p.then(function () { if (a === attempt) { done = true; fadeIn(); } })
+          p.then(function () {
+             // 再生できた頃には stop 済みかもしれない → 即座に止めて終わる
+             if (sess !== playSession) { try { audioEl.pause(); } catch (e) {} return; }
+             if (a === attempt) { done = true; fadeIn(); }
+           })
            .catch(function () { failCurrent(a); });   // この候補は不可 → 次の候補へ
         } else { done = true; fadeIn(); }
       }
@@ -342,6 +354,7 @@
 
   function stopPlayback() {
     started = false;
+    playSession++;       // 進行中の非同期再生チェーンを無効化
     if (audioEl) { try { audioEl.pause(); } catch (e) {} }
     synth.stop();
   }
@@ -369,6 +382,7 @@
      ============================================================ */
   function pauseForHide() {
     // started は保持（＝復帰時にどのトラックを鳴らすか覚えておく）。
+    playSession++;     // 進行中の再生チェーンが裏で鳴り出さないように
     if (audioEl) { try { audioEl.pause(); } catch (e) {} }
     synth.stop();
   }

@@ -1247,8 +1247,11 @@ const M3 = {
       const target = this.NOTES[k];
       let ok = false;
       if(f>0){
-        const cents = Math.abs(1200*Math.log2(f/target));
-        ok = cents <= 100;                       // ±1半音
+        // オクターブ折りたたみ判定：1オクターブ下（おうちの人の低い声）や
+        // 上の裏声でも、同じ「ど」なら正解にする。許容は従来どおり±1半音。
+        let c = 1200*Math.log2(f/target);
+        c = ((c % 1200) + 1200) % 1200;          // 0〜1200 セントに折りたたむ
+        ok = Math.min(c, 1200 - c) <= 100;
       }
       if(ok) this.hold += dt;
       else this.hold = Math.max(0, this.hold - dt*1.6);
