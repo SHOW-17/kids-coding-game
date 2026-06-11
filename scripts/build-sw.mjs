@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // sw.js を生成する：公開対象ファイルを走査してプリキャッシュ一覧を埋め込む。
 // アセットを追加・更新したら `node scripts/build-sw.mjs` を実行して sw.js を作り直すこと。
-// ※ assets/bgm/ は .gitignore 済みで配信環境に存在しない可能性があるためプリキャッシュから除外
-//   （実行時キャッシュで初回再生後にオフライン化される）。
+// ※ assets/bgm/ のAI生成BGM（mp3）もコミット・配信対象になったためプリキャッシュに含める。
 import { readdirSync, statSync, writeFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
@@ -17,10 +16,9 @@ function walk(dir) {
     const rel = relative(root, p).replaceAll('\\', '/');
     if (statSync(p).isDirectory()) {
       if (['node_modules', '.git', 'scripts', 'android', 'www', 'resources'].includes(rel)) continue;
-      if (rel === 'assets/bgm') continue;
       walk(p);
     } else {
-      if (/\.(html|css|js|webmanifest|png|webp|svg|ico|woff2)$/.test(name)) {
+      if (/\.(html|css|js|webmanifest|png|webp|svg|ico|woff2|mp3)$/.test(name)) {
         if (rel === 'sw.js') continue;
         files.push(rel);
       }

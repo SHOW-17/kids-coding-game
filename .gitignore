@@ -2,11 +2,6 @@
 *.log
 node_modules/
 
-# BGM 音源は公開リポジトリに含めない（市販曲は手元のみ・差し替え運用）
-assets/bgm/*.mp3
-assets/bgm/*.ogg
-assets/bgm/*.m4a
-
 # ビルド生成物（node scripts/build-www.mjs / @capacitor/assets で再生成可能）
 www/
 resources/
