@@ -26,6 +26,11 @@ const PAGES = [
   { name: 'kimari',      url: BASE + '/games/kimari.html' },
   { name: 'katachi',     url: BASE + '/games/katachi.html' },
   { name: 'pitagora',    url: BASE + '/games/pitagora.html' },
+  { name: 'tomare',      url: BASE + '/games/tomare.html' },
+  { name: 'chigai',      url: BASE + '/games/chigai.html' },
+  { name: 'sokkuri',     url: BASE + '/games/sokkuri.html' },
+  { name: 'pair',        url: BASE + '/games/pair.html' },
+  { name: 'uta',         url: BASE + '/games/uta.html' },
 ];
 
 (async () => {

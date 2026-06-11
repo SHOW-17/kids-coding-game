@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>そっくりわけ — あそびのもり</title>
+<meta name="description" content="おなじ なかまの かごに わけよう。ルールが かわる きりかえの あそび。">
+<meta name="theme-color" content="#c95fc2">
+<link rel="icon" href="../assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link href="../assets/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ac:#c95fc2; --ac-d:#a844a1; --ac-sh:#83307d; --ac-soft:#f7ddf5;
+  --ink:#5d3156; --ink-soft:#8c5f85; --ink-faint:#b893b2;
+  --paper:#fdf2fc; --paper2:#f6ddf3;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  background:#f7e6f5 url("../assets/bg/sokkuri.webp") center bottom / cover no-repeat fixed;
+  overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 6px 72px;}
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(168,68,161,.22), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(168,68,161,.22);}
+.home .ic{width:22px;height:22px;background:var(--ac-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:20px;color:var(--ac-d);text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(131,48,125,.3));}
+
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
+  display:flex;flex-direction:column;align-items:center;padding:0 16px;}
+
+.statusbar{display:flex;gap:10px;align-items:center;margin:8px 0 2px;flex-wrap:wrap;justify-content:center;}
+.pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 18px;border-radius:999px;font-size:17px;
+  color:var(--ac-d);box-shadow:0 4px 0 rgba(168,68,161,.18), inset 0 2px 0 #fff;}
+.ok-pill{display:inline-flex;align-items:center;gap:7px;font-family:'M PLUS Rounded 1c';font-weight:800;
+  font-size:14px;color:var(--ink-soft);background:#ffffffcc;padding:9px 15px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(168,68,161,.14), inset 0 2px 0 #fff;}
+.chk{width:16px;height:16px;border-radius:50%;background:linear-gradient(180deg,#79dd97,var(--green));
+  position:relative;box-shadow:inset 0 -2px 2px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.5);}
+.chk::after{content:"";position:absolute;left:4px;top:4px;width:6.5px;height:3.5px;
+  border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg);}
+
+.hint{font-weight:800;font-size:15.5px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px auto 6px;
+  transition:color .2s;width:fit-content;max-width:100%;background:rgba(255,255,255,.88);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(168,68,161,.14), inset 0 2px 0 #fff;}
+.hint.good{color:var(--green-d);}
+.hint.rule{color:var(--ac-d);}
+
+/* ===== stage（ねんどのトレイ） ===== */
+.stage-wrap{position:relative;z-index:2;width:min(88vw,430px);height:clamp(200px,30vh,290px);margin:8px 0 4px;
+  touch-action:none;}  /* z-index:2＝ドラッグ中のアイテムが かごの絵に かくれないように */
+.stage-wrap::before{content:"";position:absolute;inset:0;border-radius:34px;
+  background:radial-gradient(120% 90% at 50% 18%, rgba(255,255,255,.95), rgba(248,224,245,.9) 75%);
+  box-shadow:0 18px 30px -14px rgba(131,48,125,.4), 0 4px 0 rgba(168,68,161,.16),
+    inset 0 4px 0 #fff, inset 0 -12px 18px rgba(168,68,161,.13);}
+/* トレイの すみの かざり（ねんどの まめつぶ） */
+.stage-wrap::after{content:"";position:absolute;left:18px;top:14px;width:10px;height:10px;border-radius:50%;
+  background:var(--ac-soft);box-shadow:inset 0 -2px 2px rgba(168,68,161,.25), inset 0 1px 0 #fff,
+    calc(min(88vw,430px) - 46px) 0 0 var(--ac-soft);}
+#stage{position:absolute;inset:0;}
+/* アイテムが とうじょうする「スポット」（ねんどの くぼみ） */
+#stage::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(60%,190px);aspect-ratio:1.55;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(201,95,194,.13), rgba(201,95,194,.05) 62%, rgba(201,95,194,0) 78%);
+  box-shadow:inset 0 3px 6px rgba(131,48,125,.08), inset 0 -2px 0 rgba(255,255,255,.7);}
+
+/* コンボ */
+.combo{position:absolute;top:-12px;right:-4px;z-index:25;font-family:'Mochiy Pop One';font-size:19px;
+  color:#fff;background:linear-gradient(180deg,#ffca5e,var(--honey));padding:8px 15px;border-radius:999px;
+  box-shadow:0 4px 0 var(--honey-d), inset 0 2px 0 rgba(255,255,255,.55);
+  opacity:0;transform:scale(.4);pointer-events:none;}
+.combo.show{animation:comboPop .45s var(--spring) forwards;}
+@keyframes comboPop{0%{opacity:0;transform:scale(.4) rotate(-10deg);}
+  70%{opacity:1;transform:scale(1.18) rotate(4deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
+
+/* ===== アイテム（ねんどの かたち） ===== */
+.item{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);z-index:20;
+  cursor:grab;touch-action:none;
+  transform:translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px))) scale(var(--sc,1)) rotate(var(--rot,0deg));
+  transition:transform .35s var(--spring);
+  filter:drop-shadow(0 10px 8px rgba(131,48,125,.28));}
+.item.ookii{--s:106px;}
+.item.chiisai{--s:66px;}
+.item.drag{transition:none;--sc:1.13;--rot:-6deg;z-index:30;cursor:grabbing;
+  filter:drop-shadow(0 18px 14px rgba(131,48,125,.34));}
+.item.fly{transition:transform .38s var(--ease), opacity .25s .12s linear;opacity:0;}
+.item.sel::after{content:"";position:absolute;inset:-12px;border-radius:50%;
+  border:4px dashed var(--ac);opacity:.85;animation:selSpin 5s linear infinite;}
+@keyframes selSpin{to{transform:rotate(360deg);}}
+
+.shape{position:absolute;inset:0;background:linear-gradient(180deg,var(--cl),var(--cd));
+  animation:popin .5s var(--spring) backwards;}
+.shape::before{content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(95% 70% at 50% 12%, rgba(255,255,255,.6), rgba(255,255,255,0) 48%),
+    radial-gradient(110% 60% at 50% 108%, rgba(60,10,55,.22), rgba(60,10,55,0) 52%);}
+@keyframes popin{0%{transform:scale(0);}62%{transform:scale(1.14);}100%{transform:scale(1);}}
+.shape.nono{animation:nono .5s var(--ease);}
+@keyframes nono{0%,100%{transform:rotate(0);}18%{transform:rotate(-13deg);}
+  40%{transform:rotate(11deg);}62%{transform:rotate(-8deg);}82%{transform:rotate(5deg);}}
+
+/* かたち（アイテムにも かごのみほんにも つかう） */
+.s-maru{clip-path:circle(49.5%);}
+.s-sankaku{clip-path:polygon(50% 5%, 97% 91%, 3% 91%);}
+.s-hoshi{clip-path:polygon(50% 2%,63% 36%,98% 38%,71% 60%,81% 95%,50% 74%,19% 95%,29% 60%,2% 38%,37% 36%);}
+.s-shikaku{clip-path:inset(4% round 24%);}
+
+/* いろ（ねんどグラデ） */
+.c-aka{--cl:#ff9a8a;--cm:#ff6b6b;--cd:#e84545;}
+.c-kiiro{--cl:#ffe082;--cm:#ffce2e;--cd:#f0a40c;}
+.c-midori{--cl:#92e8aa;--cm:#5fcf80;--cd:#39a35c;}
+.c-ao{--cl:#9fdff2;--cm:#5cc8e8;--cd:#2fa0c9;}
+
+/* ===== かご ===== */
+.baskets{display:flex;gap:clamp(10px,3vw,20px);justify-content:center;align-items:flex-end;
+  margin:24px 0 6px;padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+.basket{position:relative;border:none;background:none;cursor:pointer;touch-action:manipulation;
+  width:clamp(96px,26vw,132px);padding:0;}
+.basket .bimg{display:block;width:100%;transition:transform .16s var(--spring);
+  filter:drop-shadow(0 10px 10px rgba(131,48,125,.3));transform-origin:50% 85%;}
+.basket:active .bimg{transform:scale(.95);}
+.basket.open .bimg{transform:scale(1.15) translateY(-5px);}
+.basket.chomp .bimg{animation:chomp .5s var(--spring);}
+@keyframes chomp{0%{transform:scale(1);}28%{transform:scale(1.18,.78);}
+  58%{transform:scale(.92,1.12);}100%{transform:scale(1);}}
+
+/* かごの みほんバッジ */
+.badge{position:absolute;left:50%;top:-18px;transform:translateX(-50%);z-index:5;font-size:17px;
+  width:2.7em;height:2.7em;border-radius:38%;background:radial-gradient(100% 100% at 50% 20%,#fff,#fdeefb);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 rgba(168,68,161,.28), inset 0 2px 0 #fff, inset 0 -4px 6px rgba(168,68,161,.12);
+  transition:transform .16s var(--spring);}
+.basket.open .badge{transform:translateX(-50%) scale(1.18) translateY(-3px);}
+.badge.plum{background:linear-gradient(180deg,#dd8ad7,var(--ac));
+  box-shadow:0 4px 0 var(--ac-sh), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -4px 6px rgba(0,0,0,.12);}
+.dot{width:1.65em;height:1.65em;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%, var(--cl), var(--cm) 45%, var(--cd));
+  box-shadow:inset 0 -3px 4px rgba(0,0,0,.16), inset 0 2px 2px rgba(255,255,255,.55);}
+.sil{width:1.6em;height:1.6em;background:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));}
+.szd{border-radius:50%;background:radial-gradient(circle at 36% 28%,#dd8ad7,var(--ac-d));
+  box-shadow:inset 0 -3px 4px rgba(0,0,0,.16), inset 0 2px 2px rgba(255,255,255,.5);}
+.szd.big{width:1.8em;height:1.8em;}
+.szd.small{width:.85em;height:.85em;}
+
+/* ===== 横画面（タブレット横）：ステージ左・かご/ステータス右 ===== */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1060px;display:grid;align-items:center;justify-items:center;
+    column-gap:38px;row-gap:10px;
+    grid-template-columns:minmax(380px,1fr) minmax(300px,430px);
+    grid-template-rows:auto auto auto;align-content:center;
+    grid-template-areas:"stage status" "stage hint" "stage baskets";}
+  .statusbar{grid-area:status;align-self:end;}
+  .hint{grid-area:hint;margin:4px 0;}
+  .stage-wrap{grid-area:stage;width:min(46vw,540px);height:min(56vh,400px);}
+  .stage-wrap::after{box-shadow:inset 0 -2px 2px rgba(168,68,161,.25), inset 0 1px 0 #fff,
+    calc(min(46vw,540px) - 46px) 0 0 var(--ac-soft);}
+  .baskets{grid-area:baskets;align-self:start;margin-top:26px;flex-wrap:wrap;}
+  .basket{width:clamp(96px,11vw,126px);}
+  .item.ookii{--s:132px;}
+  .item.chiisai{--s:82px;}
+}
+
+/* ===== カード・モーダル（ねんど） ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:rgba(90,40,85,.4);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,var(--paper));border-radius:30px;max-width:350px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(131,48,125,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:118px;margin:-26px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(131,48,125,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin:4px 0 8px;}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;}
+.dlg .samples{display:flex;gap:18px;justify-content:center;margin:6px 0 20px;font-size:0;}
+.dlg .samples .badge{position:static;transform:none;font-size:30px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;
+  transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:#f6ddf3;color:var(--ac-d);box-shadow:0 4px 0 #e3b9df;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.07s}.enter.d2{animation-delay:.14s}.enter.d3{animation-delay:.21s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .enter{opacity:1;transform:none;animation:none;}
+  .shape{animation:none;}
+  .item{transition:none;}
+  .item.sel::after{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.png" alt="">そっくりわけ</div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="pill" id="roundPill">ラウンド 1</span>
+    <span class="ok-pill" id="okPill"><span class="chk"></span>せいかい 0</span>
+  </div>
+
+  <div class="hint enter d1" id="hint">かごに いれて あげよう</div>
+
+  <div class="stage-wrap enter d2">
+    <div id="stage"></div>
+    <div class="combo" id="combo">×2</div>
+  </div>
+
+  <div class="baskets enter d3" id="baskets"></div>
+</div>
+
+<!-- ルールの あんないカード（はかせ） -->
+<div class="ovl" id="ruleOvl" hidden>
+  <div class="dlg">
+    <img class="uni" src="../assets/uni/green_standing.png" alt="">
+    <h2 id="ruleTitle"></h2>
+    <div class="samples" id="ruleSamples"></div>
+    <p id="ruleNote"></p>
+    <div class="row">
+      <button class="go" id="ruleGo">やってみる！</button>
+    </div>
+  </div>
+</div>
+
+<!-- けっかモーダル（5ラウンドごと） -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlNext">つづける</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
+<script src="../assets/bgm.js"></script>
+<script>
+/* ====== そっくりわけ — ぶんるい＋ルールの きりかえ（にんち の やわらかさ） ====== */
+function S(){ return (window.Save&&Save.game)?Save.game('sokkuri'):{get:(k,d)=>d,set:()=>{}}; }
+const save = S();
+
+/* helpers (Sfx/FX/buzz guarded) */
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+const stage = document.getElementById('stage');
+const basketsEl = document.getElementById('baskets');
+const hint = document.getElementById('hint');
+const roundPill = document.getElementById('roundPill');
+const okPill = document.getElementById('okPill');
+const comboEl = document.getElementById('combo');
+
+/* ----- データ定義 ----- */
+const SHAPES = ['maru','sankaku','hoshi','shikaku'];
+const COLORS = ['aka','kiiro','midori','ao'];
+const SIZES  = ['ookii','chiisai'];
+const DOMAIN = { color:COLORS, shape:SHAPES, size:SIZES };
+const RULE_NAME = { color:'いろ', shape:'かたち', size:'おおきさ' };
+const RULE_HINT = {
+  color:'おなじ いろの かごに いれよう',
+  shape:'おなじ かたちの かごに いれよう',
+  size:'おおきさで わけて いれよう',
+};
+const VAL_NAME = { aka:'あか', kiiro:'きいろ', midori:'みどり', ao:'あお',
+  maru:'まる', sankaku:'さんかく', hoshi:'ほし', shikaku:'しかく',
+  ookii:'おおきい', chiisai:'ちいさい' };
+const ITEMS_PER_ROUND = 8;
+const MIX_SWITCH_AT = 4;          /* ミックスは 4こめの あとで ルールが かわる */
+const ACORN = { color:1, shape:2, size:3 };   /* ミックスは 3 */
+
+/* ----- 状態 ----- */
+let round = 1, idx = 0, okCount = 0, combo = 0;
+let plan = null, segIdx = 0, seg = null, lastRule = null, lastKey = '';
+let baskets = [];                 /* [{val, el}] */
+let item = null, itemEl = null;
+let locked = true;
+let dx = 0, dy = 0;
+
+/* ----- ラウンドの けいかく（ルール進行） ----- */
+function pick(a){ return a[(Math.random()*a.length)|0]; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function roundPlan(r){
+  if(r===1) return {mix:false, segs:[{rule:'color', n:2, from:0}]};
+  if(r===2) return {mix:false, segs:[{rule:'color', n:3, from:0}]};
+  if(r===3) return {mix:false, segs:[{rule:'shape', n:2, from:0}]};
+  if(r===4) return {mix:false, segs:[{rule:'shape', n:3, from:0}]};
+  if(r===5) return {mix:false, segs:[{rule:'size',  n:2, from:0}]};
+  /* 6ラウンドめからは ミックス（とちゅうで ルールが かわる）＝エンドレス */
+  const rules = ['color','shape','size'];
+  const a = pick(rules);
+  let b; do{ b = pick(rules); }while(b===a);
+  const nOf = ru => ru==='size' ? 2 : (Math.random()<.5 ? 2 : 3);
+  return {mix:true, segs:[{rule:a, n:nOf(a), from:0}, {rule:b, n:nOf(b), from:MIX_SWITCH_AT}]};
+}
+
+/* ----- 出題：げんざいの ルールで「ちょうど1つの かご」に はいるか けんしょう ----- */
+function genItem(){
+  const vals = baskets.map(b=>b.val);
+  for(let t=0; t<80; t++){
+    const it = { shape:pick(SHAPES), color:pick(COLORS), size:pick(SIZES) };
+    it[seg.rule] = pick(vals);                       /* かならず どれかの かごに */
+    const fits = vals.filter(v => it[seg.rule]===v).length;
+    if(fits !== 1) continue;                          /* あいまいな 出題は ださない */
+    const key = it.shape + '/' + it.color + '/' + it.size;
+    if(key === lastKey) continue;                     /* おなじ アイテムの れんぞくは さける */
+    lastKey = key;
+    return it;
+  }
+  const it = { shape:SHAPES[0], color:COLORS[0], size:SIZES[0] };
+  it[seg.rule] = vals[0];
+  return it;
+}
+
+/* ----- みほんアイコン（かごのバッジ／案内カードで共用） ----- */
+function sampleHTML(rule, val){
+  if(rule==='color') return '<span class="badge"><span class="dot c-'+val+'"></span></span>';
+  if(rule==='shape') return '<span class="badge plum"><span class="sil s-'+val+'"></span></span>';
+  return '<span class="badge"><span class="szd '+(val==='ookii'?'big':'small')+'"></span></span>';
+}
+
+/* ----- かごを ならべる（vals は セグメント開始時に きめておく） ----- */
+function segVals(s){ if(!s.vals) s.vals = shuffle(DOMAIN[s.rule]).slice(0, s.n); return s.vals; }
+function setupBaskets(){
+  const vals = segVals(seg);
+  basketsEl.innerHTML = '';
+  baskets = vals.map(v=>{
+    const b = document.createElement('button');
+    b.className = 'basket';
+    b.dataset.val = v;
+    b.setAttribute('aria-label', VAL_NAME[v] + ' の かご');
+    b.innerHTML = sampleHTML(seg.rule, v) + '<img class="bimg" src="../assets/tokens/basket.webp" alt="">';
+    b.addEventListener('click', ()=>{ attempt(b); });
+    basketsEl.appendChild(b);
+    return {val:v, el:b};
+  });
+}
+
+/* ----- アイテムの とうじょう（ぽよん） ----- */
+function spawn(){
+  item = genItem();
+  if(itemEl) itemEl.remove();
+  dx = 0; dy = 0;
+  itemEl = document.createElement('div');
+  itemEl.className = 'item ' + item.size + ' c-' + item.color;
+  itemEl.innerHTML = '<div class="shape s-' + item.shape + '"></div>';
+  itemEl.setAttribute('aria-label', VAL_NAME[item.color]+'の '+VAL_NAME[item.shape]);
+  bindDrag(itemEl);
+  stage.appendChild(itemEl);
+  sfx('pop');
+  locked = false;
+}
+
+/* ----- ドラッグ＆タップ（Pointer Events / 9px しきい値） ----- */
+let drag = null;
+function setVars(){
+  itemEl.style.setProperty('--dx', dx+'px');
+  itemEl.style.setProperty('--dy', dy+'px');
+}
+function basketAt(x,y){
+  for(const b of baskets){
+    const r = b.el.getBoundingClientRect();
+    if(x > r.left-8 && x < r.right+8 && y > r.top-16 && y < r.bottom+8) return b.el;
+  }
+  return null;
+}
+function setOpen(bEl){
+  baskets.forEach(b=>b.el.classList.toggle('open', b.el===bEl));
+}
+function deselect(){
+  if(itemEl) itemEl.classList.remove('sel');
+}
+function bindDrag(el){
+  el.addEventListener('pointerdown', e=>{
+    if(locked || drag) return;
+    if(e.button!==undefined && e.button>0) return;
+    drag = {id:e.pointerId, sx:e.clientX, sy:e.clientY, bx:dx, by:dy, moved:false};
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  el.addEventListener('pointermove', e=>{
+    if(!drag || e.pointerId!==drag.id || locked) return;
+    const mx = e.clientX-drag.sx, my = e.clientY-drag.sy;
+    if(!drag.moved){
+      if(Math.hypot(mx,my) < 9) return;
+      drag.moved = true;
+      deselect();
+      el.classList.add('drag');
+      el.style.pointerEvents = 'none';   /* かごの ヒット判定の じゃまをしない */
+      sfx('whoosh'); buzz(8);
+    }
+    dx = drag.bx+mx; dy = drag.by+my; setVars();
+    setOpen(basketAt(e.clientX, e.clientY));
+  });
+  const up = e=>{
+    if(!drag || e.pointerId!==drag.id) return;
+    const d = drag; drag = null;
+    if(!d.moved){
+      /* タップ＝えらぶ（タップ→かごタップ の フォールバック） */
+      if(locked) return;
+      el.classList.add('sel');
+      sfx('tap'); buzz(8);
+      hint.textContent = 'いれたい かごを タップ！'; hint.className = 'hint';
+      return;
+    }
+    el.classList.remove('drag');
+    el.style.pointerEvents = '';
+    setOpen(null);
+    const bEl = basketAt(e.clientX, e.clientY);
+    if(bEl && !locked){ attempt(bEl); }
+    else { goHome(); }
+  };
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', e=>{
+    if(!drag || e.pointerId!==drag.id) return;
+    drag = null;
+    el.classList.remove('drag'); el.style.pointerEvents = '';
+    setOpen(null); goHome();
+  });
+}
+function goHome(){
+  if(!itemEl) return;
+  dx = 0; dy = 0; setVars();
+}
+
+/* ----- こたえあわせ ----- */
+function attempt(bEl){
+  if(locked || !item || !itemEl) return;
+  deselect();
+  if(item[seg.rule] === bEl.dataset.val) correct(bEl);
+  else wrong();
+}
+
+function updateCombo(){
+  if(combo >= 2){
+    comboEl.textContent = '×' + combo;
+    comboEl.classList.remove('show');
+    void comboEl.offsetWidth;            /* アニメを かけなおす */
+    comboEl.classList.add('show');
+  } else {
+    comboEl.classList.remove('show');
+  }
+}
+
+function correct(bEl){
+  locked = true;
+  combo++; okCount++; idx++;
+  okPill.innerHTML = '<span class="chk"></span>せいかい ' + okCount;
+  save.set('cleared', (save.get('cleared',0)||0)+1);
+  const acGain = plan.mix ? 3 : ACORN[seg.rule];
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+
+  /* アイテムが かごへ とんでいく */
+  const ir = itemEl.getBoundingClientRect();
+  const br = bEl.getBoundingClientRect();
+  const bx = br.left+br.width/2, by = br.top+br.height*0.42;
+  dx += bx-(ir.left+ir.width/2); dy += by-(ir.top+ir.height/2);
+  itemEl.classList.add('fly');
+  itemEl.style.setProperty('--sc','0.22');
+  setVars();
+
+  sfx('ding'); buzz(16);
+  setTimeout(()=>{
+    bEl.classList.add('chomp');
+    setTimeout(()=>bEl.classList.remove('chomp'), 520);
+    fx('burst', bx, br.top+8, {count:14});
+    if(window.FX && FX.acornGain){ sfx('sparkle'); FX.acornGain(acGain, bx, br.top, {size:26}); }
+  }, 260);
+  updateCombo();
+  hint.textContent = combo>=2 ? 'れんぞく せいかい！' : 'せいかい！';
+  hint.className = 'hint good';
+
+  setTimeout(()=>{
+    if(itemEl){ itemEl.remove(); itemEl = null; item = null; }
+    nextStep();
+  }, 480);
+}
+
+function wrong(){
+  locked = true;
+  combo = 0; updateCombo();
+  sfx('error'); buzz([26,36,26]);
+  const sh = itemEl.querySelector('.shape');
+  sh.classList.add('nono');
+  goHome();
+  hint.textContent = 'ちがう かごみたい。よく みてみよう！';
+  hint.className = 'hint';
+  setTimeout(()=>{
+    if(sh) sh.classList.remove('nono');
+    hint.textContent = RULE_HINT[seg.rule]; hint.className = 'hint rule';
+    locked = false;
+  }, 600);
+}
+
+/* ----- すすめる ----- */
+function nextStep(){
+  if(plan.mix && segIdx===0 && idx>=plan.segs[1].from){
+    /* ミックス：とちゅうで ルールが かわる */
+    segIdx = 1; seg = plan.segs[1];
+    showRuleCard(true, ()=>{
+      setupBaskets();
+      hint.textContent = RULE_HINT[seg.rule]; hint.className = 'hint rule';
+      spawn();
+    });
+    return;
+  }
+  if(idx >= ITEMS_PER_ROUND){ roundClear(); return; }
+  spawn();
+}
+
+async function roundClear(){
+  sfx('success');
+  fx('confetti', {count:90});
+  hint.textContent = 'ラウンド クリア！ すごい！';
+  hint.className = 'hint good';
+  await wait(900);
+  if(round % 5 === 0){
+    sfx('fanfare'); fx('celebrate');
+    showResult();
+  } else {
+    round++;
+    startRound();
+  }
+}
+
+/* ----- ラウンドの はじまり ----- */
+function startRound(){
+  plan = roundPlan(round);
+  segIdx = 0; seg = plan.segs[0]; idx = 0;
+  roundPill.textContent = 'ラウンド ' + round;
+  const begin = ()=>{
+    setupBaskets();
+    hint.textContent = RULE_HINT[seg.rule]; hint.className = 'hint rule';
+    spawn();
+  };
+  if(seg.rule !== lastRule){
+    showRuleCard(false, begin);
+  } else {
+    begin();
+  }
+}
+
+/* ----- はかせの あんないカード ----- */
+const ruleOvl = document.getElementById('ruleOvl');
+let ruleCb = null;
+function showRuleCard(isSwitch, cb){
+  locked = true;
+  ruleCb = cb;
+  const first = (lastRule === null);
+  lastRule = seg.rule;
+  /* 「こんどは〜」は ながいので、ことばの きれめで 2ぎょうに わける */
+  document.getElementById('ruleTitle').innerHTML = first
+    ? RULE_NAME[seg.rule] + 'で わけよう！'
+    : 'こんどは ' + RULE_NAME[seg.rule] + 'で<br>わけよう！';
+  /* これから ならぶ かごの みほんを そのまま おおきく みせる */
+  document.getElementById('ruleSamples').innerHTML =
+    segVals(seg).map(v=>sampleHTML(seg.rule, v)).join('');
+  document.getElementById('ruleNote').textContent =
+    (plan.mix && !isSwitch) ? 'とちゅうで ルールが かわるかも！' :
+    isSwitch ? 'ルール チェンジ！' : 'みほんの かごに いれてね';
+  ruleOvl.hidden = false;
+  requestAnimationFrame(()=>ruleOvl.classList.add('show'));
+  sfx('sparkle');
+}
+document.getElementById('ruleGo').addEventListener('click', ()=>{
+  sfx('tap');
+  ruleOvl.classList.remove('show');
+  setTimeout(()=>{ ruleOvl.hidden = true; if(ruleCb){ const c=ruleCb; ruleCb=null; c(); } }, 240);
+});
+
+/* ----- けっかモーダル（5ラウンドごと） ----- */
+const ovl = document.getElementById('ovl');
+function showResult(){
+  document.getElementById('ovlTitle').textContent = round + 'ラウンド クリア！';
+  document.getElementById('ovlText').textContent = 'せいかい ' + okCount + 'かい！ そのちょうし！';
+  ovl.hidden = false;
+  requestAnimationFrame(()=>ovl.classList.add('show'));
+}
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlNext').addEventListener('click', ()=>{
+  sfx('tap');
+  ovl.classList.remove('show');
+  setTimeout(()=>{ ovl.hidden = true; round++; startRound(); }, 240);
+});
+
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+/* デバッグ用（ヘッドレステストが ただしい かごを しるため） */
+window.__dbg = ()=>({ round, idx, rule:seg&&seg.rule, mix:plan&&plan.mix,
+  item: item && Object.assign({},item),
+  baskets: baskets.map(b=>b.val), locked,
+  ruleCard: !ruleOvl.hidden, result: !ovl.hidden });
+
+startRound();
+</script>
+<script>Bgm.play('sokkuri');</script>
+</body>
+</html>

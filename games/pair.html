@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ぺあさがし — あそびのもり</title>
+<meta name="description" content="ふせた カードを めくって おなじ えの ペアを さがす あそび。きおく力を そだてる。">
+<meta name="theme-color" content="#6577e0">
+<link rel="icon" href="../assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link href="../assets/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ac:#6577e0; --ac-d:#4a5cc4; --ac-sh:#3a489c; --ac-soft:#e1e5fb; --ac-l:#aab6f5;
+  --ink:#41406b; --ink-soft:#73719c; --ink-faint:#a3a3c8;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --paper:#f0f2fd; --paper2:#dfe4fa;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  background:#e7eafc url("../assets/bg/pair.webp") center bottom / cover no-repeat fixed;
+  overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 6px 72px;}
+/* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(74,92,196,.22), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(74,92,196,.22);}
+.home .ic{width:22px;height:22px;background:var(--ac-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:20px;color:var(--ac-d);text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(70,80,160,.3));}
+
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
+  display:flex;flex-direction:column;align-items:center;padding:0 16px;}
+/* 横画面：盤面を左に大きく、レベル/ヒントは右カラム（タブレット横を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1080px;display:grid;align-items:center;justify-items:center;
+    column-gap:36px;row-gap:14px;
+    grid-template-columns:auto minmax(210px,300px);
+    grid-template-areas:"board status" "board hint";}
+  .statusbar{grid-area:status;align-self:end;flex-direction:column;}
+  .hint{grid-area:hint;align-self:start;margin:0;}
+  .tray{grid-area:board;}
+}
+
+.statusbar{display:flex;gap:10px;align-items:center;margin:8px 0 2px;}
+.pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 18px;border-radius:999px;font-size:18px;
+  color:var(--ac-d);box-shadow:0 4px 0 rgba(74,92,196,.18), inset 0 2px 0 #fff;}
+.pair-pill{display:inline-flex;align-items:center;gap:6px;font-family:'M PLUS Rounded 1c';font-weight:800;
+  font-size:14px;color:var(--ink-soft);background:#ffffffcc;padding:9px 15px;border-radius:999px;
+  box-shadow:0 4px 0 rgba(74,92,196,.14), inset 0 2px 0 #fff;}
+.cstar{width:14px;height:14px;background:var(--honey);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+
+.hint{font-weight:800;font-size:16px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px auto;
+  transition:color .2s;width:fit-content;background:rgba(255,255,255,.85);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(74,92,196,.14), inset 0 2px 0 #fff;}
+.hint.watch{color:var(--ac-d);}
+.hint.good{color:var(--green-d);}
+
+/* ===== ねんどトレイ＋盤面 ===== */
+.tray{position:relative;margin:8px 0 14px;padding:16px;border-radius:30px;
+  background:radial-gradient(120% 90% at 50% 0, rgba(255,255,255,.95), rgba(228,232,252,.9) 78%);
+  box-shadow:0 22px 36px -16px rgba(58,72,156,.45), 0 5px 0 rgba(74,92,196,.16),
+    inset 0 4px 0 #fff, inset 0 -12px 18px rgba(101,119,224,.14);}
+.board{display:grid;gap:10px;}
+
+/* ===== カード（3D flip） ===== */
+.card{position:relative;width:var(--cs,84px);height:var(--cs,84px);border:none;background:transparent;
+  cursor:pointer;perspective:640px;padding:0;transition:transform .12s var(--ease);}
+.card:not(.open):not(.matched):active{transform:translateY(3px) scale(.97);}
+/* 入力ロックちゅう（くばり・チラ見せ・判定）は 押しても へこまない */
+.board.locked .card{cursor:default;}
+.board.locked .card:active{transform:none;}
+.card .inner{position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .5s var(--spring);}
+.card.open .inner{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;border-radius:18px;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;}
+/* うら：テーマ色のねんどに しろい星 */
+.face.back{background:linear-gradient(180deg,#8794ee,var(--ac));
+  box-shadow:0 5px 0 var(--ac-sh), 0 12px 16px -10px rgba(58,72,156,.55),
+    inset 0 3px 0 rgba(255,255,255,.45), inset 0 -9px 12px rgba(58,72,156,.3);}
+.face.back::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:
+    radial-gradient(circle at 14% 14%, rgba(255,255,255,.5) 0 4.5%, transparent 5.5%),
+    radial-gradient(circle at 86% 14%, rgba(255,255,255,.5) 0 4.5%, transparent 5.5%),
+    radial-gradient(circle at 14% 86%, rgba(255,255,255,.5) 0 4.5%, transparent 5.5%),
+    radial-gradient(circle at 86% 86%, rgba(255,255,255,.5) 0 4.5%, transparent 5.5%);}
+.face.back::after{content:"";position:absolute;left:50%;top:50%;width:48%;height:48%;
+  transform:translate(-50%,-52%);background:rgba(255,255,255,.94);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  filter:drop-shadow(0 3px 2px rgba(58,72,156,.4));}
+/* おもて：白ねんど＋えがら（ふちは えがらごとの うすい いろ） */
+.face.front{transform:rotateY(180deg);border:4px solid var(--edge,#dfe4fa);
+  background:radial-gradient(120% 95% at 50% 0,#fff,#f3f5ff);
+  box-shadow:0 5px 0 rgba(74,92,196,.25), 0 12px 16px -10px rgba(58,72,156,.45),
+    inset 0 3px 0 rgba(255,255,255,.95), inset 0 -8px 12px rgba(101,119,224,.1);}
+.face.front img{width:70%;height:70%;object-fit:contain;pointer-events:none;
+  filter:drop-shadow(0 3px 3px rgba(60,60,130,.2));}
+
+/* はずれ：ぷるっと ちいさく ゆれる（やさしく。叱らない） */
+.card.wrong .inner{animation:wiggle .38s var(--ease);}
+@keyframes wiggle{
+  0%,100%{transform:rotateY(180deg);}
+  25%{transform:rotateY(180deg) rotateZ(3.5deg) scale(.96);}
+  75%{transform:rotateY(180deg) rotateZ(-3.5deg) scale(.96);}
+}
+/* あたり：ふわっと うかんで すこし ちぢむ＋星バッジ */
+.card.matched{pointer-events:none;}
+.card.matched .inner{transform:rotateY(180deg) translateY(-5px) scale(.9);}
+.card.matched .face.front{box-shadow:0 9px 0 rgba(74,92,196,.18), 0 14px 18px -10px rgba(58,72,156,.4),
+  inset 0 3px 0 rgba(255,255,255,.95), 0 0 20px rgba(255,210,63,.6);}
+.badge{position:absolute;right:-7px;top:-7px;width:27%;min-width:22px;max-width:32px;aspect-ratio:1;
+  background:var(--honey);z-index:4;transform:scale(0);transition:transform .4s var(--spring) .12s;
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  filter:drop-shadow(0 2px 2px rgba(160,100,20,.45));}
+.card.matched .badge{transform:scale(1);}
+
+/* カードを くばる（1まいずつ 段差で） */
+.card.deal{animation:dealIn .5s var(--spring) backwards;}
+@keyframes dealIn{from{opacity:0;transform:translateY(-30px) scale(.35) rotateZ(-7deg);}to{opacity:1;transform:none;}}
+
+/* ===== result modal (clay) ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:rgba(45,52,100,.42);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,var(--paper));border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(50,60,140,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:118px;margin:-26px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(70,80,160,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:22px;color:var(--ink);margin:4px 0 6px;}
+/* ぴったり度（星1〜3。星1でも まえむきに） */
+.stars{display:flex;gap:10px;justify-content:center;margin:4px 0 10px;}
+.stars .st{width:36px;height:36px;background:#dcdff2;transform:scale(.9);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  transition:transform .4s var(--spring), background .2s;}
+.stars .st.on{background:var(--honey);transform:scale(1.08);
+  filter:drop-shadow(0 3px 2px rgba(180,120,30,.4));}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;
+  transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:var(--ac-soft);color:var(--ac-d);box-shadow:0 4px 0 var(--ac-l);}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.07s}.enter.d2{animation-delay:.14s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .enter{opacity:1;transform:none;animation:none;}
+  .card.deal{animation:none;}
+  .card .inner{transition-duration:.18s;transition-timing-function:linear;}
+  .card.wrong .inner{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.png" alt="">ぺあさがし</div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="pill" id="lvPill">レベル 1</span>
+    <span class="pair-pill" id="pairPill"><span class="cstar"></span>あと 3</span>
+  </div>
+
+  <div class="hint enter d1" id="hint">カードを くばるよ…</div>
+
+  <div class="tray enter d2">
+    <div class="board" id="board" aria-label="カードの ばんめん"></div>
+  </div>
+</div>
+
+<!-- result modal -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <div class="stars" id="ovlStars"><span class="st"></span><span class="st"></span><span class="st"></span></div>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlNext">つぎへ</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
+<script src="../assets/bgm.js"></script>
+<script>
+/* ====== ぺあさがし（神経衰弱）— 視覚空間きおく力 ====== */
+
+/* カードの絵柄＝ペア専用の生成イラスト（assets/pairs/）。
+   edge はカード表面の「うっすら色付きの縁」の色（絵柄の主色に合わせる）。 */
+const MOTIFS = [
+  {id:'apple',      src:'../assets/pairs/apple.webp',      edge:'rgba(229,57,53,.35)'},
+  {id:'star',       src:'../assets/pairs/star.webp',       edge:'rgba(245,179,42,.4)'},
+  {id:'flower',     src:'../assets/pairs/flower.webp',     edge:'rgba(244,143,177,.4)'},
+  {id:'butterfly',  src:'../assets/pairs/butterfly.webp',  edge:'rgba(126,87,194,.35)'},
+  {id:'car',        src:'../assets/pairs/car.webp',        edge:'rgba(66,165,245,.35)'},
+  {id:'fish',       src:'../assets/pairs/fish.webp',       edge:'rgba(38,198,218,.4)'},
+  {id:'strawberry', src:'../assets/pairs/strawberry.webp', edge:'rgba(236,64,122,.35)'},
+  {id:'moon',       src:'../assets/pairs/moon.webp',       edge:'rgba(255,213,79,.4)'},
+  {id:'mushroom',   src:'../assets/pairs/mushroom.webp',   edge:'rgba(239,108,0,.35)'},
+  {id:'balloon',    src:'../assets/pairs/balloon.webp',    edge:'rgba(239,83,80,.35)'},
+  {id:'bird',       src:'../assets/pairs/bird.webp',       edge:'rgba(102,187,106,.4)'},
+  {id:'heart',      src:'../assets/pairs/heart.webp',      edge:'rgba(240,98,146,.4)'},
+];
+
+/* レベル構成：L1=3ペア → L2=4ペア → L3=6ペア → L4=8ペア。L4クリア後は L4 をくりかえす。
+   peek＝はじめに 1.5びょう ぜんぶ みせる（小1への配慮。L1・L2 のみ） */
+const LEVELS = [
+  {pairs:3, peek:true},
+  {pairs:4, peek:true},
+  {pairs:6, peek:false},
+  {pairs:8, peek:false},
+];
+const PEEK_MS = 1500;
+
+function S(){ return (window.Save&&Save.game)?Save.game('pair'):{get:(k,d)=>d,set:()=>{}}; }
+const save = S();
+/* helpers (Sfx/FX/buzz guarded) */
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+
+const board = document.getElementById('board');
+const tray = document.querySelector('.tray');
+const hint = document.getElementById('hint');
+const lvPill = document.getElementById('lvPill');
+const pairPill = document.getElementById('pairPill');
+
+let round = 1;          // レベル番号（L4 をこえても ふえていく）
+let cfg = LEVELS[0];
+let deck = [];          // {m:絵柄, el:カード要素, matched:bool}
+let first = -1;         // 1まいめに めくった index（なければ -1）
+let lock = true;        // 判定ちゅう・くばりちゅうは 入力ロック
+let moves = 0, found = 0;
+let buildId = 0;        // ラウンドをまたいだ setTimeout の打ち消し用
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function setLock(v){ lock = v; board.classList.toggle('locked', v); }
+function setHint(t,cls){ hint.textContent=t; hint.className='hint'+(cls?' '+cls:''); }
+function renderPills(){
+  lvPill.textContent = 'レベル ' + round;
+  pairPill.innerHTML = '<span class="cstar"></span>あと ' + (cfg.pairs - found);
+}
+
+/* ---- 盤面のレイアウト：たて412pxでも よこ1180pxでも 1画面に収まる大きさに ---- */
+function layout(){
+  const n = deck.length;
+  if(!n) return;
+  const land = matchMedia('(orientation:landscape) and (min-width:720px)').matches;
+  const gap = 10, trayPad = 16*2;
+  let availW, availH;
+  if(land){
+    availW = Math.min(window.innerWidth, 1080) - 310 - 36 - 32; // 右カラム＋ガター＋余白
+    availH = window.innerHeight - 92 - 28;                      // topbar＋余白
+  }else{
+    const top = hint.getBoundingClientRect().bottom + 16;       // ステータス＋ヒントの下から
+    availW = Math.min(window.innerWidth, 480) - 32;
+    availH = window.innerHeight - top - 22;
+  }
+  availW -= trayPad; availH -= trayPad;
+  let best = {cs:0, c:2};
+  for(let c=2; c<=n/2; c++){
+    if(n % c) continue;
+    const r = n/c;
+    const cs = Math.min((availW - gap*(c-1))/c, (availH - gap*(r-1))/r);
+    if(cs > best.cs) best = {cs, c};
+  }
+  const cs = Math.max(64, Math.min(150, Math.floor(best.cs)));   // 最低64px角
+  board.style.setProperty('--cs', cs+'px');
+  board.style.gridTemplateColumns = 'repeat(' + best.c + ', var(--cs))';
+}
+window.addEventListener('resize', layout, {passive:true});
+
+/* ---- 1レベルぶんの 盤面を つくる ---- */
+function build(){
+  const my = ++buildId;
+  cfg = LEVELS[Math.min(round-1, LEVELS.length-1)];
+  const motifs = shuffle(MOTIFS.slice()).slice(0, cfg.pairs);   // 毎回ランダムに絵柄を選ぶ
+  deck = shuffle(motifs.concat(motifs).map(m=>({m, matched:false})));
+  first = -1; setLock(true); moves = 0; found = 0;
+  renderPills();
+  setHint('カードを くばるよ…');
+  board.innerHTML = '';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  deck.forEach((card, i)=>{
+    const b = document.createElement('button');
+    b.className = 'card deal';
+    b.style.animationDelay = (i*0.06)+'s';
+    b.setAttribute('aria-label', 'カード ' + (i+1));
+    b.innerHTML =
+      '<div class="inner">'+
+        '<div class="face back"></div>'+
+        '<div class="face front" style="--edge:'+card.m.edge+'"><img src="'+card.m.src+'" alt=""></div>'+
+      '</div><span class="badge"></span>';
+    b.addEventListener('click', ()=>onCard(i));
+    card.el = b;
+    board.appendChild(b);
+  });
+  layout();
+  sfx('whoosh');
+  const dealDone = reduce ? 200 : deck.length*60 + 520;
+  setTimeout(()=>{
+    if(my !== buildId) return;
+    if(cfg.peek) peekAll(my);
+    else { setLock(false); setHint('おなじ えの ペアを さがそう'); }
+  }, dealDone);
+}
+
+/* ---- チラ見せ（L1・L2）：ぜんぶ 1.5びょう みせて いっせいに うらがえす ---- */
+function peekAll(my){
+  setHint('どこに なにが あるか おぼえてね！','watch');
+  sfx('sparkle');
+  deck.forEach(c=>c.el.classList.add('open'));
+  setTimeout(()=>{
+    if(my !== buildId) return;
+    sfx('whoosh');
+    deck.forEach(c=>c.el.classList.remove('open'));
+    setTimeout(()=>{
+      if(my !== buildId) return;
+      setLock(false);
+      setHint('おなじ えの ペアを さがそう');
+    }, 420);
+  }, PEEK_MS);
+}
+
+/* ---- カードを めくる（連続タップ・3まいめは ロックで ガード） ---- */
+function onCard(i){
+  const card = deck[i];
+  if(lock || card.matched || card.el.classList.contains('open')) return;
+  const my = buildId;
+  sfx('pop'); buzz(12);
+  card.el.classList.add('open');
+  if(first < 0){ first = i; return; }
+  const a = first, b = i;
+  first = -1; moves++; setLock(true);                           // 判定ちゅうは 入力ロック
+  if(deck[a].m.id === deck[b].m.id){
+    setTimeout(()=>{ if(my===buildId) onMatch(a,b); }, 430);    // flip を見せてから
+  }else{
+    setTimeout(()=>{ if(my===buildId) onMiss(a,b); }, 750);     // 2まいとも しばらく 見せる
+  }
+}
+
+function onMatch(a,b){
+  sfx('ding'); buzz([14,30,14]);
+  [a,b].forEach(idx=>{
+    const c = deck[idx];
+    c.matched = true;
+    c.el.classList.add('matched');
+    const r = c.el.getBoundingClientRect();
+    fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:8, color:'#ffd23f'});
+  });
+  found++;
+  renderPills();
+  setHint('ペア みっけ！','good');
+  if(found === cfg.pairs){ boardClear(); return; }
+  setTimeout(()=>{ if(found<cfg.pairs) setHint('おなじ えの ペアを さがそう'); }, 900);
+  setLock(false);
+}
+
+function onMiss(a,b){
+  const my = buildId;
+  sfx('step'); buzz(20);                                        // やわらかい音。叱らない
+  deck[a].el.classList.add('wrong');
+  deck[b].el.classList.add('wrong');
+  setHint('ちがった！ ばしょを おぼえよう','watch');
+  setTimeout(()=>{
+    if(my !== buildId) return;
+    [a,b].forEach(idx=>{
+      deck[idx].el.classList.remove('wrong');
+      deck[idx].el.classList.remove('open');
+    });
+    setTimeout(()=>{
+      if(my !== buildId) return;
+      setLock(false);
+      setHint('おなじ えの ペアを さがそう');
+    }, 400);
+  }, 400);
+}
+
+/* ---- ぴったり度（めくった回数 → 星1〜3。星1でも まえむき） ---- */
+function rate(){
+  if(moves <= Math.ceil(cfg.pairs*1.5)) return 3;
+  if(moves <= Math.ceil(cfg.pairs*2.3)) return 2;
+  return 1;
+}
+
+function boardClear(){
+  setLock(true);
+  save.set('cleared', (save.get('cleared',0)||0)+1);
+  const acGain = Math.min(round, 4);                            // L1=1 … L4=4（くりかえしは 4）
+  save.set('wins', (save.get('wins',0)||0)+acGain);
+  const r = tray.getBoundingClientRect();
+  sfx('fanfare');
+  fx('celebrate');
+  fx('acornGain', acGain, r.left+r.width/2, r.top+r.height*0.35);
+  const stars = rate();
+  setTimeout(()=>showResult(stars), 1000);
+}
+
+/* ---- result modal ---- */
+const ovl = document.getElementById('ovl');
+const STAR_TEXT = {
+  3:'ぴったり みつけられたね！てんさい！',
+  2:'よく おぼえてたね！いい ちょうし！',
+  1:'さいごまで みつけられたね！',
+};
+function showResult(stars){
+  document.getElementById('ovlTitle').textContent = 'クリア！すごい！';
+  document.getElementById('ovlText').textContent = STAR_TEXT[stars];
+  const sts = [...document.getElementById('ovlStars').children];
+  sts.forEach(s=>s.classList.remove('on'));
+  ovl.hidden = false;
+  requestAnimationFrame(()=>ovl.classList.add('show'));
+  for(let i=0; i<stars; i++){
+    setTimeout(()=>{ sts[i].classList.add('on'); sfx('note', 523+i*131, .18, 'triangle'); }, 350+i*220);
+  }
+}
+function hideResult(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlNext').addEventListener('click', ()=>{
+  sfx('tap'); hideResult();
+  round++;                                                      // L4 のあとも レベル数は ふえる（盤面は L4）
+  setTimeout(build, 260);
+});
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+build();
+</script>
+<script>Bgm.play('pair');</script>
+</body>
+</html>

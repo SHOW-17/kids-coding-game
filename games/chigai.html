@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>どこちがう — あそびのもり</title>
+<meta name="description" content="おなじ えを 2まい みくらべて ちがいを さがす あそび。かんさつの ちから。">
+<meta name="theme-color" content="#2cb1a0">
+<link rel="icon" href="../assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link href="../assets/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#1f4f44; --ink-soft:#4d7f73; --ink-faint:#8db5aa;
+  --ac:#2cb1a0; --ac-d:#1f9183; --ac-sh:#15715f; --ac-soft:#d3f3ec;
+  --honey:#ffb43d; --honey-d:#f59312;
+  --green:#5fcf80; --green-d:#3fae62;
+  --paper:#eefaf6; --paper2:#d9f2ea;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  background:#e2f5ef url("../assets/bg/chigai.webp") center bottom / cover no-repeat fixed;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:520px;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 4px 72px;}
+/* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(31,145,131,.24), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(31,145,131,.24);}
+.home .ic{width:22px;height:22px;background:var(--ac-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:20px;color:var(--ac-d);text-shadow:0 2px 0 #fff;}
+.ttl .uni{height:34px;vertical-align:-9px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(21,113,95,.3));}
+
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
+  display:flex;flex-direction:column;align-items:center;padding:0 14px 90px;}
+.statusbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:6px 0 2px;}
+.pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 18px;border-radius:999px;font-size:17px;
+  color:var(--ac-d);box-shadow:0 4px 0 rgba(31,145,131,.18), inset 0 2px 0 #fff;}
+.pill.slots{display:inline-flex;gap:8px;align-items:center;padding:13px 16px;}
+.slot{width:15px;height:15px;border-radius:50%;background:#fff;
+  box-shadow:inset 0 0 0 3px var(--ac-soft), inset 0 2px 3px rgba(21,113,95,.2);
+  transition:transform .25s var(--spring), background .2s, box-shadow .2s;}
+.slot.on{background:radial-gradient(circle at 50% 32%,#5fd9c6,var(--ac));
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5), 0 2px 4px rgba(21,113,95,.3);transform:scale(1.18);}
+
+.hint{font-weight:800;font-size:15.5px;color:var(--ac-sh);min-height:26px;text-align:center;margin:10px auto 8px;
+  width:fit-content;background:rgba(255,255,255,.88);
+  padding:8px 18px;border-radius:999px;box-shadow:0 3px 0 rgba(31,145,131,.14), inset 0 2px 0 #fff;}
+
+/* ===== panels（ねんどトレイ）===== */
+.panels{position:relative;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;}
+.panel{position:relative;border-radius:26px;overflow:hidden;cursor:pointer;touch-action:manipulation;
+  width:min(92vw, 420px, calc((100dvh - 318px)*0.7));aspect-ratio:7/5;
+  background:linear-gradient(180deg,#fbfffd,#e2f4ec);
+  box-shadow:0 14px 26px -12px rgba(21,113,95,.38), 0 3px 0 rgba(21,113,95,.10),
+    inset 0 3px 0 rgba(255,255,255,.95), inset 0 -10px 16px rgba(44,150,130,.12);}
+/* 横画面：2まいを 左右に（タブレット横を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1100px;}
+  .panels{flex-direction:row;gap:22px;}
+  .panel{width:min(44vw, 470px, calc((100dvh - 248px)*1.4));}
+}
+
+/* ===== ねんどオブジェクト ===== */
+.obj{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none;
+  filter:drop-shadow(0 4px 5px rgba(20,90,75,.26));
+  animation:objpop .45s var(--spring) backwards;}
+@keyframes objpop{from{opacity:0;transform:translate(-50%,-50%) scale(.25);}to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+.ob{position:absolute;inset:0;display:block;}
+.ob.flip{transform:scaleX(-1);}
+.obj i{position:absolute;display:block;}
+.cl{box-shadow:inset 0 3px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(0,0,0,.12);}
+
+/* おはな */
+.o-flower .petal{left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:var(--c1);}
+.o-flower .core{left:50%;top:50%;width:36%;height:36%;margin:-18% 0 0 -18%;border-radius:50%;background:#ffdf6b;}
+/* きのこ */
+.o-mush .cap{left:2%;top:4%;width:96%;height:54%;background:var(--c1);
+  border-radius:50% 50% 14% 14% / 92% 92% 20% 20%;}
+.o-mush .stem{left:32%;top:50%;width:36%;height:44%;background:#fff3e0;
+  border-radius:32% 32% 42% 42% / 24% 24% 52% 52%;}
+.o-mush .dot{background:rgba(255,255,255,.92);border-radius:50%;}
+/* くも */
+.o-cloud .puff{border-radius:50%;background:var(--c1);}
+/* ほし */
+.o-star .body{inset:3%;background:var(--c1);
+  clip-path:polygon(50% 2%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+/* き */
+.o-tree .trunk{left:40%;top:52%;width:20%;height:44%;background:#a9712f;border-radius:30% 30% 40% 40%/12% 12% 30% 30%;}
+.o-tree .can{left:6%;top:0;width:88%;height:64%;background:var(--c1);
+  border-radius:50% 46% 48% 52% / 55% 58% 42% 45%;}
+.o-tree .fr{background:#fff;border-radius:50%;opacity:.95;}
+/* いえ */
+.o-house .roof{left:4%;top:0;width:92%;height:42%;background:var(--c2);clip-path:polygon(50% 0,100% 100%,0 100%);}
+.o-house .bd{left:12%;top:40%;width:76%;height:56%;background:var(--c1);border-radius:4% 4% 12% 12%;}
+.o-house .door{left:24%;top:60%;width:17%;height:36%;background:#9c672f;border-radius:40% 40% 10% 10%;}
+.o-house .win{left:58%;top:52%;width:18%;height:18%;background:#fff;border-radius:28%;
+  box-shadow:inset 0 0 0 2px rgba(60,40,20,.12);}
+/* ちょうちょ */
+.o-bfly .w{width:42%;height:56%;background:var(--c1);border-radius:70% 70% 45% 45%;}
+.o-bfly .wd{width:13%;height:13%;border-radius:50%;background:rgba(255,255,255,.75);}
+.o-bfly .bd2{left:46%;top:16%;width:8%;height:64%;background:#5b4a3a;border-radius:999px;}
+.o-bfly .at{width:4%;height:18%;background:#5b4a3a;border-radius:999px;top:4%;}
+/* ふうせん */
+.o-bln .bl{left:24%;top:2%;width:52%;height:60%;background:var(--c1);
+  border-radius:50% 50% 46% 46% / 54% 54% 46% 46%;}
+.o-bln .kn{left:44%;top:60%;width:12%;height:8%;background:var(--c1);clip-path:polygon(50% 0,100% 100%,0 100%);}
+.o-bln .str{left:48.5%;top:67%;width:3%;height:30%;background:rgba(110,85,60,.5);border-radius:999px;}
+/* ハート */
+.o-heart .body{inset:6%;background:var(--c1);
+  clip-path:polygon(50% 96%,10% 56%,2% 36%,6% 16%,22% 4%,38% 6%,50% 20%,62% 6%,78% 4%,94% 16%,98% 36%,90% 56%);}
+/* ことり */
+.o-bird .bd{left:6%;top:24%;width:68%;height:56%;background:var(--c1);
+  border-radius:52% 48% 46% 54% / 56% 56% 44% 44%;}
+.o-bird .tail{left:0;top:28%;width:16%;height:22%;background:var(--c1);clip-path:polygon(100% 50%,0 0,0 100%);}
+.o-bird .wing{left:18%;top:42%;width:28%;height:22%;background:rgba(255,255,255,.55);border-radius:60% 40% 60% 40%;}
+.o-bird .eye{left:54%;top:36%;width:9%;height:9%;background:#41372c;border-radius:50%;}
+.o-bird .beak{left:72%;top:44%;width:20%;height:15%;background:#ffb43d;clip-path:polygon(0 8%,100% 50%,0 92%);}
+
+/* ===== みつけた◯リング ===== */
+.mark{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:5;
+  border:5px solid #fff;
+  box-shadow:0 0 0 4px var(--ac), inset 0 0 0 4px var(--ac), 0 5px 10px rgba(21,113,95,.35), inset 0 3px 4px rgba(21,113,95,.2);
+  animation:markpop .5s var(--spring);}
+@keyframes markpop{from{transform:translate(-50%,-50%) scale(.2);opacity:0;}}
+
+/* はずれ：やさしい波紋＋うーん */
+.ripple{position:absolute;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;
+  border:4px solid rgba(44,177,160,.6);pointer-events:none;z-index:6;animation:rip .55s ease-out forwards;}
+@keyframes rip{from{width:16px;height:16px;opacity:1;}to{width:84px;height:84px;opacity:0;}}
+.oops{position:absolute;transform:translate(-50%,-120%);z-index:7;pointer-events:none;
+  font-weight:800;font-size:13px;color:var(--ac-sh);background:rgba(255,255,255,.95);
+  padding:4px 12px;border-radius:999px;box-shadow:0 3px 0 rgba(21,113,95,.16);
+  animation:oopsf 1s ease-out forwards;}
+@keyframes oopsf{0%{opacity:0;transform:translate(-50%,-90%);}18%{opacity:1;}100%{opacity:0;transform:translate(-50%,-230%);}}
+
+/* ヒントの ひかる円 */
+.hglow{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:4;
+  border:7px solid rgba(255,196,61,.8);background:radial-gradient(circle, rgba(255,210,63,.16), rgba(255,210,63,0) 70%);
+  filter:blur(1.5px);animation:hg 2s ease-in-out forwards;}
+@keyframes hg{0%{opacity:0;}20%,75%{opacity:1;}100%{opacity:0;}}
+
+/* ヒントボタン（はかせ） */
+.hintbtn{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:30;width:76px;height:76px;border:none;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 50% 30%,#fff,#e7f8f0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 6px 0 #bfe3d3, inset 0 2px 0 #fff, 0 12px 20px rgba(21,113,95,.3);
+  animation:hbpop .55s var(--spring);transition:transform .12s var(--ease);}
+.hintbtn[hidden]{display:none;}
+.hintbtn:active{transform:translateY(3px);}
+.hintbtn img{width:44px;filter:drop-shadow(0 2px 2px rgba(21,113,95,.25));}
+.hintbtn span{font-family:'Mochiy Pop One';font-size:10px;color:var(--green-d);margin-top:-2px;}
+@keyframes hbpop{from{transform:scale(0);}}
+
+/* クリアのおいわい（パネルのあいだに ぴょこっ） */
+.cheer{position:absolute;left:50%;top:50%;width:108px;z-index:7;pointer-events:none;opacity:0;
+  transform:translate(-50%,-40%) scale(.3);filter:drop-shadow(0 8px 8px rgba(21,113,95,.3));}
+.cheer.show{animation:cheerp .9s var(--spring) forwards;}
+@keyframes cheerp{0%{opacity:0;transform:translate(-50%,-26%) scale(.25);}25%{opacity:1;}
+  60%{transform:translate(-50%,-58%) scale(1.04);}100%{opacity:1;transform:translate(-50%,-52%) scale(1);}}
+
+/* ===== result modal (clay) ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,70,60,.4);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}
+.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,#eefaf6);border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  box-shadow:0 28px 56px -18px rgba(15,90,75,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:118px;margin:-26px auto 2px;display:block;filter:drop-shadow(0 10px 8px rgba(21,113,95,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:21px;color:var(--ink);margin:4px 0 8px;}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;border:none;border-radius:999px;cursor:pointer;
+  transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg .ghost{background:#dcf2ea;color:var(--ac-d);box-shadow:0 4px 0 #bfe3d3;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.07s}.enter.d2{animation-delay:.14s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .enter{opacity:1;transform:none;animation:none;}
+  .obj{animation:none;}
+  .mark{animation:none;}
+  .hintbtn{animation:none;}
+  .cheer.show{animation:none;opacity:1;transform:translate(-50%,-52%) scale(1);}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/green_face.png" alt="">どこちがう</div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <span class="pill" id="stagePill">ステージ 1</span>
+    <span class="pill slots" id="slots"></span>
+  </div>
+
+  <div class="hint enter d1" id="hint">2まいの え、どこが ちがうかな？</div>
+
+  <div class="panels enter d2" id="panels">
+    <div class="panel" id="pa" aria-label="うえの え"></div>
+    <div class="panel" id="pb" aria-label="したの え"></div>
+    <img class="cheer" id="cheer" src="../assets/uni/purple_wave.png" alt="">
+  </div>
+</div>
+
+<button class="hintbtn" id="hintBtn" hidden aria-label="ヒント">
+  <img src="../assets/uni/green_face.png" alt=""><span>ヒント</span>
+</button>
+
+<!-- result modal -->
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
+    <h2 id="ovlTitle"></h2>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlNext">つづける</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
+<script src="../assets/bgm.js"></script>
+<script>
+/* ====== どこちがう（まちがいさがし）— かんさつ力 ====== */
+function S(){ return (window.Save&&Save.game)?Save.game('chigai'):{get:(k,d)=>d,set:()=>{}}; }
+const save = S();
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+const pa = document.getElementById('pa');
+const pb = document.getElementById('pb');
+const hintEl = document.getElementById('hint');
+const stagePill = document.getElementById('stagePill');
+const slotsEl = document.getElementById('slots');
+const hintBtn = document.getElementById('hintBtn');
+const cheer = document.getElementById('cheer');
+
+/* パネル座標系：よこ100ユニット、たて H_UNITS（パネルは 7:5） */
+const H_UNITS = 500/7;
+const HINT_WAIT = 20000;
+
+let stage = save.get('stage',0)||0;
+let cleared = save.get('cleared',0)||0;
+let scene = null, found = [], locked = false, lastPanel = null, hintTimer = null;
+
+/* ---------- シード付き乱数（mulberry32） ---------- */
+function rngFactory(seed){
+  let a = seed>>>0;
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a>>>15, 1 | a);
+    t = t + Math.imul(t ^ t>>>7, 61 | t) ^ t;
+    return ((t ^ t>>>14)>>>0) / 4294967296;
+  };
+}
+function shuffleR(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=(rng()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* ---------- ねんどオブジェクト定義（CSS図形・絵文字なし） ----------
+   flip:true は左右非対称（むき反転のちがいに使える）。vars は色相のはっきり違うバリエーション。 */
+const TYPES = {
+  flower:{flip:false, vars:['#ff7d9c','#ffc23d','#7cc6ff','#b58cff'],
+    html(){ let h=''; for(let k=0;k<6;k++) h+='<i class="petal cl" style="transform:rotate('+(k*60)+'deg) translate(0,-72%)"></i>'; return h+'<i class="core cl"></i>'; }},
+  mush:{flip:true, vars:['#ff6b6b','#5cc8e8','#b58cff','#ff9f43'],
+    html(){ return '<i class="cap cl"></i><i class="stem cl"></i>'+
+      '<i class="dot" style="left:14%;top:16%;width:20%;height:20%"></i>'+
+      '<i class="dot" style="left:58%;top:11%;width:12%;height:12%"></i>'+
+      '<i class="dot" style="left:68%;top:32%;width:10%;height:10%"></i>'; }},
+  cloud:{flip:false, mul:1.22, vars:['#ffc6dd','#a8dcff','#cdbcff','#ffe9a8'],
+    html(){ return '<i class="puff cl" style="left:6%;top:34%;width:38%;height:34%"></i>'+
+      '<i class="puff cl" style="left:56%;top:33%;width:36%;height:34%"></i>'+
+      '<i class="puff cl" style="left:28%;top:20%;width:44%;height:44%"></i>'+
+      '<i class="puff cl" style="left:10%;top:44%;width:80%;height:30%;border-radius:999px"></i>'; }},
+  star:{flip:false, vars:['#ffd23f','#ff8fb8','#6fd3f0','#b58cff'],
+    html(){ return '<i class="body cl"></i>'; }},
+  tree:{flip:true, vars:['#58c472','#f5a23c','#f7a8c8','#b58cff'],
+    html(){ return '<i class="trunk cl"></i><i class="can cl"></i>'+
+      '<i class="fr" style="left:18%;top:16%;width:13%;height:13%"></i>'+
+      '<i class="fr" style="left:32%;top:38%;width:11%;height:11%"></i>'; }},
+  house:{flip:true, vars:[['#fff1d6','#ff8a80'],['#ffe2ef','#9b7cf0'],['#e0f3ff','#2fa6cc'],['#fff7c2','#f5a23c']],
+    html(){ return '<i class="bd cl"></i><i class="roof cl"></i><i class="door cl"></i><i class="win"></i>'; }},
+  bfly:{flip:false, vars:['#ff8fb8','#6fd3f0','#ffd23f','#b58cff'],
+    html(){ return '<i class="w cl" style="left:1%;top:16%;transform:rotate(-26deg)"></i>'+
+      '<i class="w cl" style="left:57%;top:16%;transform:rotate(26deg)"></i>'+
+      '<i class="at" style="left:38%;transform:rotate(-22deg)"></i>'+
+      '<i class="at" style="left:58%;transform:rotate(22deg)"></i>'+
+      '<i class="bd2 cl"></i>'+
+      '<i class="wd" style="left:14%;top:34%"></i><i class="wd" style="left:73%;top:34%"></i>'; }},
+  bln:{flip:false, vars:['#ff6b6b','#5cc8e8','#ffd23f','#5fcf80'],
+    html(){ return '<i class="str"></i><i class="kn"></i><i class="bl cl"></i>'; }},
+  heart:{flip:false, vars:['#ff6b8a','#ffb13d','#b58cff','#5cc8e8'],
+    html(){ return '<i class="body cl"></i>'; }},
+  bird:{flip:true, vars:['#6fd3f0','#ff8fb8','#ffd23f','#8fd460'],
+    html(){ return '<i class="tail cl"></i><i class="bd cl"></i><i class="wing"></i><i class="eye"></i><i class="beak cl"></i>'; }}
+};
+
+/* ---------- ジェネレータ ---------- */
+function diffCountFor(st){ return st<=0 ? 1 : (st<3 ? 2 : 3); }
+
+function tryGen(st, nObj, rng){
+  const nDiff = Math.min(diffCountFor(st), nObj);
+  const typeKeys = shuffleR(Object.keys(TYPES), rng).slice(0, nObj);
+  const baseS = [21,20,18.5,17.5,16.5][nObj-4] || 16.5;
+
+  /* ちがいの わりあて（さいしょの nDiff 個。タイプはシャッフル済み＝ランダム） */
+  const diffs = [], usedKinds = [];
+  for(let k=0;k<nDiff;k++){
+    const t = TYPES[typeKeys[k]];
+    let avail = (st===0) ? ['color','size'] : ['color','size','miss'];
+    if(st>0 && t.flip) avail = avail.concat(['flip']);
+    let pool = avail.filter(x=>!usedKinds.includes(x));
+    if(!pool.length) pool = avail;
+    const kind = pool[(rng()*pool.length)|0];
+    usedKinds.push(kind);
+    diffs.push({ i:k, kind, side: rng()<0.5?'a':'b' });
+  }
+
+  /* はいち（重ならないよう・最低距離つき） */
+  const objs = [];
+  for(let i=0;i<nObj;i++){
+    const type = typeKeys[i], T = TYPES[type];
+    const s = (baseS + (rng()*3-1.5)) * (T.mul||1);
+    const d = diffs.find(x=>x.i===i);
+    const eff = (d && d.kind==='size') ? s*1.5 : s;
+    const mx = eff/2 + 3, my = eff/2 + 3;
+    let placed = false;
+    for(let t=0;t<240;t++){
+      const x = mx + rng()*(100-2*mx);
+      const y = my + rng()*(H_UNITS-2*my);
+      let ok = true;
+      for(const o of objs){
+        const dx=x-o.x, dy=y-o.y, need=(eff+o.eff)/2 + 2;
+        if(dx*dx+dy*dy < need*need){ ok=false; break; }
+      }
+      if(ok){ objs.push({type, vi:(rng()*T.vars.length)|0, x, y, s, eff}); placed=true; break; }
+    }
+    if(!placed) return null;
+  }
+
+  /* 色ちがいの「べつの色」を決める（必ず元と違う） */
+  for(const d of diffs){
+    if(d.kind==='color'){
+      const o = objs[d.i], n = TYPES[o.type].vars.length;
+      d.vi2 = (o.vi + 1 + ((rng()*(n-1))|0)) % n;
+    }
+  }
+  return { objs, diffs, nDiff };
+}
+
+/* けんしょう：ちがいN個ちょうど・タップ48px以上・はみ出しなし・重なりなし */
+function validateScene(sc, panelW){
+  if(!sc || !sc.diffs || sc.diffs.length !== sc.nDiff) return false;
+  const seen = new Set();
+  for(const d of sc.diffs){
+    if(seen.has(d.i)) return false;
+    seen.add(d.i);
+    const o = sc.objs[d.i];
+    if(!o) return false;
+    const T = TYPES[o.type];
+    if(d.kind==='color'){ if(d.vi2==null || d.vi2===o.vi || T.vars[d.vi2]==null) return false; }
+    else if(d.kind==='flip'){ if(!T.flip) return false; }
+    else if(d.kind!=='size' && d.kind!=='miss') return false;
+    const eff = d.kind==='size' ? o.s*1.5 : o.s;
+    const hitPx = 2 * Math.max(eff*0.62, 2600/panelW) * panelW/100;
+    if(hitPx < 48) return false;
+  }
+  for(let i=0;i<sc.objs.length;i++){
+    const a = sc.objs[i];
+    if(a.x-a.eff/2 < 0.5 || a.x+a.eff/2 > 99.5 || a.y-a.eff/2 < 0.5 || a.y+a.eff/2 > H_UNITS-0.5) return false;
+    for(let j=i+1;j<sc.objs.length;j++){
+      const b = sc.objs[j];
+      const dx=a.x-b.x, dy=a.y-b.y, need=(a.eff+b.eff)/2;
+      if(dx*dx+dy*dy < need*need) return false;
+    }
+  }
+  return true;
+}
+
+function genScene(st){
+  const panelW = pa.clientWidth || 360;
+  let nObj = Math.min(8, 4 + Math.floor((st+1)/2));
+  for(let att=0; att<150; att++){
+    const rng = rngFactory((Math.random()*0xffffffff)>>>0);
+    const sc = tryGen(st, nObj, rng);
+    if(sc && validateScene(sc, panelW)) return sc;
+    if(att%30===29 && nObj>4) nObj--;   // どうしても置けないときは数を減らして再挑戦
+  }
+  /* さいごの保険（ここに来ることは想定しない） */
+  const keys = Object.keys(TYPES);
+  const objs = [[27,20],[73,20],[27,50],[73,50]].map((p,i)=>({type:keys[i], vi:0, x:p[0], y:p[1], s:20, eff:20}));
+  return { objs, diffs:[{i:0,kind:'color',vi2:1,side:'b'}], nDiff:1 };
+}
+
+/* ---------- レンダラ（2まいとも完全に同一・ちがいだけ差分適用） ---------- */
+function makeObj(o, idx, vi, s, flip){
+  const T = TYPES[o.type];
+  const el = document.createElement('div');
+  el.className = 'obj o-' + o.type;
+  el.style.left = o.x + '%';
+  el.style.top = (o.y / H_UNITS * 100) + '%';
+  el.style.width = s + '%';
+  el.style.animationDelay = (idx*0.05) + 's';
+  const v = T.vars[vi];
+  el.style.setProperty('--c1', Array.isArray(v) ? v[0] : v);
+  if(Array.isArray(v)) el.style.setProperty('--c2', v[1]);
+  el.innerHTML = '<span class="ob' + (flip?' flip':'') + '">' + T.html() + '</span>';
+  return el;
+}
+function renderScene(panel, sc, side){
+  panel.innerHTML = '';
+  sc.objs.forEach((o,i)=>{
+    const d = sc.diffs.find(x=>x.i===i);
+    let vi = o.vi, s = o.s, flip = false;
+    if(d && side===d.side){
+      if(d.kind==='miss') return;
+      if(d.kind==='color') vi = d.vi2;
+      if(d.kind==='size') s = o.s*1.5;
+      if(d.kind==='flip') flip = true;
+    }
+    panel.appendChild(makeObj(o, i, vi, s, flip));
+  });
+}
+function renderPanels(sc){ renderScene(pa, sc, 'a'); renderScene(pb, sc, 'b'); }
+
+/* ---------- ステージ進行 ---------- */
+function setHint(msg){ hintEl.textContent = msg; }
+function renderSlots(){
+  slotsEl.innerHTML = '';
+  for(let i=0;i<scene.diffs.length;i++){
+    const sl = document.createElement('span');
+    sl.className = 'slot' + (i<found.length ? ' on' : '');
+    slotsEl.appendChild(sl);
+  }
+}
+function startStage(){
+  locked = false; found = []; lastPanel = null;
+  scene = genScene(stage);
+  renderPanels(scene);
+  renderSlots();
+  stagePill.textContent = 'ステージ ' + (stage+1);
+  setHint(scene.diffs.length===1 ? 'ちがいを 1つ さがして タッチ！'
+                                 : 'ちがいを ' + scene.diffs.length + 'つ さがして タッチ！');
+  armHintTimer();
+}
+
+/* ---------- タップ判定（どちらのパネルでもOK） ---------- */
+function hitRadius(d, panelW){
+  const o = scene.objs[d.i];
+  const eff = d.kind==='size' ? o.s*1.5 : o.s;
+  return Math.max(eff*0.62, 2600/panelW);   // 直径48px以上を保証
+}
+[pa,pb].forEach(panel=>{
+  panel.addEventListener('pointerdown', e=>{
+    if(locked || !scene) return;
+    const r = panel.getBoundingClientRect();
+    const ux = (e.clientX - r.left) / r.width * 100;
+    const uy = (e.clientY - r.top) / r.height * H_UNITS;
+    lastPanel = panel;
+    let best = null, bd = 1e9;
+    for(const d of scene.diffs){
+      if(found.includes(d)) continue;
+      const o = scene.objs[d.i];
+      const dist = Math.hypot(ux-o.x, uy-o.y);
+      if(dist <= hitRadius(d, r.width) && dist < bd){ bd = dist; best = d; }
+    }
+    if(best){ onFound(best, e); return; }
+    for(const d of found){
+      const o = scene.objs[d.i];
+      if(Math.hypot(ux-o.x, uy-o.y) <= hitRadius(d, r.width)){ sfx('pop'); return; }  // みつけ済み＝おとがめなし
+    }
+    onMiss(panel, ux, uy);
+  });
+});
+
+function addMark(panel, o, d){
+  const m = document.createElement('div');
+  m.className = 'mark';
+  m.style.left = o.x + '%';
+  m.style.top = (o.y / H_UNITS * 100) + '%';
+  m.style.width = ((d.kind==='size' ? o.s*1.5 : o.s) * 1.28) + '%';
+  panel.appendChild(m);
+}
+function onFound(d, e){
+  found.push(d);
+  const o = scene.objs[d.i];
+  sfx('ding'); sfx('sparkle'); buzz(16);
+  addMark(pa, o, d); addMark(pb, o, d);   // ◯は両方のパネルに
+  fx('sparkles', e.clientX, e.clientY, {count:12, color:'#ffd23f'});
+  renderSlots();
+  clearHintAids();
+  if(found.length >= scene.diffs.length){ stageClear(); }
+  else{
+    setHint(pick(['みつけた！','せいかい！','その ちょうし！']) + ' あと ' + (scene.diffs.length-found.length) + 'つ！');
+    armHintTimer();
+  }
+}
+function onMiss(panel, ux, uy){
+  sfx('note', 196, 0.16, 'sine'); buzz(10);
+  const rp = document.createElement('div'); rp.className = 'ripple';
+  rp.style.left = ux + '%'; rp.style.top = (uy/H_UNITS*100) + '%';
+  panel.appendChild(rp); setTimeout(()=>rp.remove(), 650);
+  const op = document.createElement('div'); op.className = 'oops'; op.textContent = 'うーん';
+  op.style.left = ux + '%'; op.style.top = (uy/H_UNITS*100) + '%';
+  panel.appendChild(op); setTimeout(()=>op.remove(), 1050);
+}
+
+/* ---------- クリア ---------- */
+function stageClear(){
+  locked = true;
+  clearHintAids(); clearTimeout(hintTimer);
+  sfx('success');
+  const r = (lastPanel||pb).getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  fx('burst', cx, cy, {count:20});
+  cheer.classList.add('show');
+  setHint(pick(['やったね！ ぜんぶ みつけた！','すごい！ ばっちり！','ぜんぶ はっけん！ えらい！']));
+  cleared++; save.set('cleared', cleared);
+  // どんぐり：むずかしいステージほど多く（5ステージごとに段階アップ・上限あり）
+  const acGain = 1 + Math.min(4, Math.floor(stage/5));
+  save.set('wins', (save.get('wins',0)||0) + acGain);
+  fx('acornGain', acGain, cx, cy - r.height*0.18);
+  stage++; save.set('stage', stage);
+  setTimeout(()=>{
+    cheer.classList.remove('show');
+    if(cleared % 5 === 0){ milestone(); }
+    else{ sfx('whoosh'); startStage(); }
+  }, 1650);
+}
+
+/* ---------- 5ステージごとの ひとくぎり ---------- */
+const ovl = document.getElementById('ovl');
+function milestone(){
+  sfx('fanfare'); fx('celebrate');
+  document.getElementById('ovlTitle').textContent = 'すごい！ ' + stage + 'ステージ クリア！';
+  document.getElementById('ovlText').innerHTML = 'ちがいを たくさん みつけたね！<br>かんさつの めいじんだ！';
+  ovl.hidden = false;
+  requestAnimationFrame(()=>ovl.classList.add('show'));
+}
+function closeOvl(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
+document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+document.getElementById('ovlNext').addEventListener('click', ()=>{ sfx('whoosh'); closeOvl(); startStage(); });
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+
+/* ---------- ヒント（20びょう みつからないと はかせ登場） ---------- */
+function armHintTimer(){
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(()=>{ if(!locked && hintBtn.hidden){ hintBtn.hidden=false; sfx('pop'); } }, HINT_WAIT);
+}
+function clearHintAids(){
+  hintBtn.hidden = true;
+  document.querySelectorAll('.hglow').forEach(x=>x.remove());
+}
+hintBtn.addEventListener('click', ()=>{
+  hintBtn.hidden = true;
+  if(locked || !scene) return;
+  const rem = scene.diffs.filter(d=>!found.includes(d));
+  if(!rem.length) return;
+  sfx('sparkle');
+  const d = rem[(Math.random()*rem.length)|0];
+  const o = scene.objs[d.i];
+  const R = 42;                                  // 大きな円＝こたえを示しすぎない
+  const gx = Math.min(92, Math.max(8, o.x + (Math.random()*16-8)));
+  const gy = Math.min(H_UNITS-5, Math.max(5, o.y + (Math.random()*12-6)));
+  [pa,pb].forEach(p=>{
+    const gEl = document.createElement('div'); gEl.className = 'hglow';
+    gEl.style.left = gx + '%'; gEl.style.top = (gy/H_UNITS*100) + '%'; gEl.style.width = R + '%';
+    p.appendChild(gEl); setTimeout(()=>gEl.remove(), 2100);
+  });
+  armHintTimer();
+});
+
+/* スタート */
+startStage();
+</script>
+<script>Bgm.play('chigai');</script>
+</body>
+</html>
