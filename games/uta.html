@@ -182,6 +182,10 @@ section[hidden]{display:none!important;}
 @keyframes ringPop{40%{transform:scale(1.25);opacity:1}100%{transform:scale(1.7);opacity:0}}
 .ring.miss .in{animation:ringMiss .5s ease forwards;}
 @keyframes ringMiss{to{transform:scale(.8);opacity:0}}
+/* リングの中の音名（ど・れ・み…）＝どの高さの声か一目で分かる */
+.ring .rl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Mochiy Pop One';font-size:30px;color:#c2701f;
+  text-shadow:0 2px 0 rgba(255,255,255,.9), 0 0 8px rgba(255,255,255,.8);pointer-events:none;}
 
 /* ===== ③ まねうた ===== */
 #scrM3{max-width:520px;}
@@ -198,6 +202,19 @@ section[hidden]{display:none!important;}
 .step.aim{animation:aimPulse 1.1s ease-in-out infinite;}
 @keyframes aimPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3) saturate(1.18)}}
 .step.hit{filter:brightness(1.5);transform:translateY(-5px);}
+/* 段の上の音名（ど・れ・み・そ・ら・ど） */
+.step .lbl{position:absolute;top:6px;left:0;right:0;text-align:center;pointer-events:none;
+  font-family:'Mochiy Pop One';font-size:clamp(15px,4.4vw,24px);color:#fff;
+  text-shadow:0 2px 0 rgba(0,0,0,.18);}
+/* いま うたう音名の吹き出し（おてほん中・うたう番の両方で使う） */
+#solfBig{position:absolute;top:2.5%;left:50%;z-index:6;pointer-events:none;
+  transform:translateX(-50%) scale(0);transition:transform .28s var(--spring);
+  min-width:96px;padding:8px 22px;border-radius:999px;text-align:center;
+  font-family:'Mochiy Pop One';font-size:clamp(24px,6vw,34px);color:#fff;
+  background:linear-gradient(180deg,#ff9a80,var(--ac));
+  box-shadow:0 5px 0 rgba(0,0,0,.14), inset 0 3px 0 rgba(255,255,255,.45);
+  text-shadow:0 2px 0 rgba(0,0,0,.15);}
+#solfBig.on{transform:translateX(-50%) scale(1);}
 .actor{position:absolute;width:62px;left:7%;bottom:7%;transform:translateX(-50%);z-index:4;
   transition:left .48s var(--spring), bottom .48s var(--spring), opacity .3s;
   filter:drop-shadow(0 7px 6px rgba(189,69,40,.28));}
@@ -298,7 +315,7 @@ section[hidden]{display:none!important;}
         <span class="mb-ic ic3"><span class="st s1"></span><span class="st s2"></span><span class="st s3"></span><span class="msk note"></span></span>
         <span class="mb-tx">
           <span class="mb-name">まねうた</span>
-          <span class="mb-sub">おてほんを まねして うたおう</span>
+          <span class="mb-sub">どれみを まねして うたおう</span>
         </span>
         <span class="mic-badge"><span class="msk mic"></span></span>
       </button>
@@ -350,6 +367,7 @@ section[hidden]{display:none!important;}
     </div>
     <div class="hint enter d1" id="m3Hint">おてほんを きいてね</div>
     <div class="stairs-tray enter d2" id="stairsTray">
+      <div id="solfBig" aria-hidden="true"></div>
       <div class="stairs" id="stairs"></div>
       <img id="walker" class="actor" src="../assets/uni/purple_standing.png" alt="">
       <img id="player3" class="actor" src="../assets/uni/blue_standing.png" alt="">
@@ -407,12 +425,87 @@ function S(){ return (window.Save&&Save.game)?Save.game('uta')
   :{get:(k,d)=>d,set:()=>{},bestMax:()=>false}; }
 const save = S();
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
-function sfxTone(o){ try{ if(window.Sfx&&Sfx.tone) Sfx.tone(o); }catch(e){} }
 function fx(n,a,b,c){ try{ if(window.FX&&FX[n]) FX[n](a,b,c); }catch(e){} }
 function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
 function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
 function midiHz(m){ return 440*Math.pow(2,(m-69)/12); }
+
+/* ---- ドレミ（NOTES C4 D4 E4 G4 A4 C5 と1対1） ---- */
+const SOLF = ['ど','れ','み','そ','ら','ど'];
+
+/* ============================================================
+   お手本の「うた声」合成（Voice.sing）
+   - ピッ音（三角波）だと子供が「どんな声を出せばいいか」分からない。
+     「どー」と歌っている風の声にして、まねの手がかりにする。
+   - 作り：のこぎり波＋サイン（声帯）→「お」のフォルマント帯
+     （bandpass×2）＋ローパス（声道）。出だしは下からすくい上げ、
+     途中からゆるいビブラート＝人の歌い方に寄せる。
+   - 失敗しても落ちない（try/catch）。音量バランスは実機で要確認。
+   ============================================================ */
+const Voice = {
+  ctx:null, master:null,
+  ensure(){
+    if(this.ctx) return this.ctx;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.85;
+      this.master.connect(this.ctx.destination);
+    }catch(e){ this.ctx = null; }
+    return this.ctx;
+  },
+  sing(freq, dur){
+    const c = this.ensure(); if(!c || !freq) return;
+    if(c.state==='suspended'){ try{ c.resume(); }catch(e){} }
+    dur = Math.max(0.35, dur || 0.7);
+    try{
+      const t0 = c.currentTime + 0.01;
+
+      // 声帯：のこぎり波（倍音）＋サイン（芯）。出だしは少し下から
+      const saw = c.createOscillator();  saw.type = 'sawtooth';
+      const fund = c.createOscillator(); fund.type = 'sine';
+      [saw, fund].forEach(o=>{
+        o.frequency.setValueAtTime(freq*0.93, t0);
+        o.frequency.exponentialRampToValueAtTime(freq, t0+0.08);
+      });
+
+      // ビブラート（5.3Hz。歌い出しは無し→だんだん深く）
+      const vib = c.createOscillator(); vib.frequency.value = 5.3;
+      const vibG = c.createGain();
+      vibG.gain.setValueAtTime(0, t0);
+      vibG.gain.linearRampToValueAtTime(freq*0.011, t0 + Math.min(0.35, dur*0.55));
+      vib.connect(vibG);
+      vibG.connect(saw.frequency); vibG.connect(fund.frequency);
+
+      // 「お」の口の形（フォルマント）＋声道のまるみ
+      const f1 = c.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value=480;  f1.Q.value=6;
+      const f2 = c.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=920;  f2.Q.value=8;
+      const lp = c.createBiquadFilter(); lp.type='lowpass';  lp.frequency.value=2400;
+      const g1 = c.createGain(); g1.gain.value = 1.5;
+      const g2 = c.createGain(); g2.gain.value = 0.8;
+      const gf = c.createGain(); gf.gain.value = 0.45;
+      saw.connect(f1); saw.connect(f2);
+      f1.connect(g1); f2.connect(g2); fund.connect(gf);
+      g1.connect(lp); g2.connect(lp); gf.connect(lp);
+
+      // 音量包絡：ふわっと立ち上がり→のばし→すっと消える
+      const env = c.createGain();
+      env.gain.setValueAtTime(0.0001, t0);
+      env.gain.exponentialRampToValueAtTime(0.8, t0+0.07);
+      env.gain.setValueAtTime(0.8, t0 + dur*0.72);
+      env.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      lp.connect(env); env.connect(this.master);
+
+      [saw, fund, vib].forEach(o=>{ o.start(t0); o.stop(t0 + dur + 0.08); });
+      saw.onended = ()=>{ try{
+        [saw,fund,vib,vibG,f1,f2,lp,g1,g2,gf,env].forEach(n=>n.disconnect());
+      }catch(e){} };
+    }catch(e){}
+  }
+};
 
 /* ============================================================
    ピッチ検出（正規化自己相関＝McLeod系の簡易版）
@@ -701,7 +794,7 @@ const M1 = {
   async sing(side, dur){
     const el = this.el[side];
     el.classList.remove('sing'); void el.offsetWidth; el.classList.add('sing');
-    sfxTone({ freq: midiHz(this.midi[side]), dur: dur||0.6, type:'triangle', vol:0.5 });
+    Voice.sing(midiHz(this.midi[side]), dur||0.72);
     await wait(880);
     el.classList.remove('sing');
   },
@@ -854,15 +947,17 @@ const M2 = {
     if(this.idx >= this.TOTAL){ this.end(); return; }
     this.idx++;
     this.pills();
-    const f = this.NOTES[Math.floor(Math.random()*this.NOTES.length)];
+    const ni = Math.floor(Math.random()*this.NOTES.length);
+    const f = this.NOTES[ni];
     const el = document.createElement('div');
     el.className = 'ring';
-    el.innerHTML = '<span class="in"><span class="body"></span><span class="fill"></span></span>';
+    el.innerHTML = '<span class="in"><span class="body"></span><span class="fill"></span>' +
+      '<span class="rl">' + SOLF[ni] + '</span></span>';   // リングの中に音名（ど・れ・み…）
     this.el.sky.appendChild(el);
     const W = this.el.sky.clientWidth;
     const yC = this.yFor(f) + this.uniH()/2;     // リング中心＝その音で歌うユニコーンの中心
     this.ring = { el, fill: el.querySelector('.fill'), x: W+70, y: yC, f, acc:0, done:false };
-    sfxTone({ freq:f, dur:0.55, type:'triangle', vol:0.5 });   // まねする手がかり音
+    Voice.sing(f, 0.6);                          // まねする手がかり＝「どー」と歌う声
   },
   resolveRing(pop){
     const ring = this.ring;
@@ -968,7 +1063,7 @@ const M3 = {
   el:{
     tray: document.getElementById('stairsTray'), stairs: document.getElementById('stairs'),
     walker: document.getElementById('walker'), player: document.getElementById('player3'),
-    vox: document.getElementById('vox'),
+    vox: document.getElementById('vox'), solf: document.getElementById('solfBig'),
     f: document.getElementById('m3F'), hint: document.getElementById('m3Hint'),
     replay: document.getElementById('m3Replay'),
   },
@@ -983,9 +1078,22 @@ const M3 = {
       const hold = document.createElement('span');
       hold.className = 'hold';
       st.appendChild(hold);
+      const lbl = document.createElement('span');   // 段の上に音名（ど・れ・み…）
+      lbl.className = 'lbl';
+      lbl.textContent = SOLF[k];
+      st.appendChild(lbl);
       this.el.stairs.appendChild(st);
       this.steps.push(st); this.holds.push(hold);
     }
+  },
+  /* 音名を大きく見せる吹き出し（おてほん中＆うたう番の「いまの音」） */
+  solf(k){
+    const el = this.el.solf;
+    if(k==null || k<0){ el.classList.remove('on'); return; }
+    el.textContent = SOLF[k] + 'ー';
+    el.style.background = 'linear-gradient(180deg,' + this.COLORS[k] + ',' + this.COLORS[k] + 'd9)';
+    el.classList.remove('on'); void el.offsetWidth;   // 同じ音が続いてもポップし直す
+    el.classList.add('on');
   },
   /* 段 k の上に立つ座標（トレイの%）。0.80 ＝ stairs の高さ（top14%/bottom6%） */
   posLeft(k){ return 6 + 88*(k+0.5)/6; },
@@ -999,7 +1107,14 @@ const M3 = {
   hint(t, cls){ this.el.hint.textContent = t; this.el.hint.className = 'hint' + (cls?' '+cls:''); },
   setAim(i){
     this.steps.forEach(s=>s.classList.remove('aim'));
-    if(i>=0 && this.phrase[i]!=null) this.steps[this.phrase[i]].classList.add('aim');
+    if(i>=0 && this.phrase[i]!=null){
+      const k = this.phrase[i];
+      this.steps[k].classList.add('aim');
+      this.solf(k);                                  // いま出す音を大きく見せる
+      this.hint('「' + SOLF[k] + 'ー」って うたってね！', 'go');
+    }else{
+      this.solf(-1);
+    }
   },
   /* フレーズ生成：レベルが進むほど 長く・音程差が狭く */
   genPhrase(p){
@@ -1039,6 +1154,7 @@ const M3 = {
     this.steps.forEach(s=>s.classList.remove('aim','hit'));
     this.el.replay.classList.remove('show');
     this.el.vox.classList.remove('on');
+    this.solf(-1);
   },
   nextPhrase(){
     this.phrase = this.genPhrase(this.pi);
@@ -1063,7 +1179,8 @@ const M3 = {
       if(my!==this.runId) return;
       const st = this.steps[k];
       st.classList.add('hit');
-      sfxTone({ freq:this.NOTES[k], dur:0.55, type:'triangle', vol:0.5 });
+      this.solf(k);                                  // 「どー」と音名を見せながら
+      Voice.sing(this.NOTES[k], 0.6);                // 歌声で おてほん
       await wait(480);
       if(my!==this.runId) return;
       st.classList.remove('hit');
@@ -1073,9 +1190,8 @@ const M3 = {
     this.el.walker.classList.add('dim');
     this.phase = 'play';
     this.hold = 0;
-    this.hint('まねして うたってね！', 'go');
     this.el.replay.classList.add('show');
-    this.setAim(this.ni);
+    this.setAim(this.ni);                            // ヒントは setAim が「ど〜って うたってね！」を出す
   },
   noteHit(){
     const k = this.phrase[this.ni];
@@ -1083,7 +1199,7 @@ const M3 = {
     st.classList.remove('aim');
     st.classList.add('hit');
     this.holds[k].style.transform = 'scaleY(0)';
-    sfxTone({ freq:this.NOTES[k], dur:0.5, type:'triangle', vol:0.5 });
+    Voice.sing(this.NOTES[k], 0.5);                  // とれた音も歌声で確認
     sfx('pop'); buzz(16);
     const r = st.getBoundingClientRect();
     fx('ring', r.left+r.width/2, r.top+8, {color:'#fff', vr:6, life:20, lw:5});
