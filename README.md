@@ -78,6 +78,15 @@
 
 ## 起動方法
 
+### 公開サイト（GitHub Pages・いちばん簡単）
+
+**https://show-17.github.io/kids-coding-game/** にアクセスするだけで遊べる。
+iPhone/iPad は Safari で開いて「ホーム画面に追加」、Android は Chrome の「アプリをインストール」で
+PWA としてインストールでき、2回目以降はオフラインでも動く（Service Worker が全ファイルをキャッシュ）。
+master ブランチに push すると自動で反映される。
+
+### ローカルで動かす
+
 ビルド不要。次のいずれかで `index.html` を開く。
 
 ```bash
@@ -149,7 +158,7 @@ assets/
   rewards.js            ごほうび管理（どんぐり集計・くじ抽選・所持/装備。index と room で共有）
   shell.js              共通UI（ヘッダー・トースト・モーダル・画面遷移）
   bgm.js                共通BGM（画面ごとにループ再生。mp3優先・無ければ合成）
-  bgm/                  BGM音源置き場（mp3。.gitignore 済み＝公開しない）
+  bgm/                  BGM音源置き場（mp3。AI生成曲をコミット済み。権利クリアな音源のみ可）
 sw.js                   Service Worker（自動生成。直接編集しない）
 capacitor.config.json   Capacitor 設定（Androidアプリ化）
 android/                Android ネイティブプロジェクト（Capacitor 生成・Gradle）
@@ -181,7 +190,8 @@ scripts/
   - メニュー（`index`）とおへや（`room`）も横画面で横幅を活かし、カード／ずかんを多カラム化してスクロールを削減。
 - BGM：画面ごとに割り当ててループ再生（`assets/bgm.js`）。右上の音符ボタンで ON/OFF（全画面共通で保存）。
   `assets/bgm/<画面名>.mp3` を置けばその曲を優先再生、無ければやさしい合成ループを暫定で鳴らす。
-  音源 mp3 は `.gitignore` 済み（公開リポジトリに市販曲を入れない）。詳細は [`assets/bgm/README.md`](assets/bgm/README.md)。
+  現在は AI生成の `_default.mp3` をコミット済み。**公開リポジトリのため権利クリアな音源のみ**置けること
+  （市販曲は不可）。詳細は [`assets/bgm/README.md`](assets/bgm/README.md)。
 - 永続化：`localStorage`（ゲーム別の名前空間。使えない環境ではメモリに自動フォールバック）。
   メニュー左上の「せってい」（歯車）→「きろくを ぜんぶ けす」で全消去（子どもが誤操作しないよう設定内に格納）。
 - アクセシビリティ：`prefers-reduced-motion` を尊重。色だけに頼らない表現。

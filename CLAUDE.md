@@ -75,7 +75,7 @@ assets/
   rewards.js            ごほうび管理（どんぐり集計・くじ抽選・所持/装備。グローバル Rewards。index と room で共有）
   shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
   bgm.js                共通BGM（画面ごとにループ再生。グローバル Bgm。右上に音符トグルを自動設置）
-  bgm/                  BGM音源置き場（mp3。.gitignore済み＝公開リポジトリに入れない）
+  bgm/                  BGM音源置き場（mp3。AI生成曲をコミット済み。公開リポジトリのため権利クリアな音源のみ）
                         優先順位：<画面名>.mp3 → _default.mp3（全画面共通）→ 合成ループ。
                         全画面同じ曲なら _default.mp3 を1つ置くだけ。
 sw.js                   Service Worker（scripts/build-sw.mjs で自動生成。直接編集しない）
@@ -313,8 +313,11 @@ L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご
   - **PWA**：`sw.js`（Service Worker）が全公開ファイルをプリキャッシュ。`sw.js` は自動生成＝直接編集せず、
     **アセット・ページを追加/変更したら `node scripts/build-sw.mjs` で再生成**（キャッシュ版数が中身ハッシュで変わる）。
     登録は index.html 末尾（Capacitor 内では `window.Capacitor` 検出でスキップ）。
+  - **GitHub Pages**：リポジトリは public で、master へ push すると
+    https://show-17.github.io/kids-coding-game/ に自動公開される（iPhone/iPad はここから
+    「ホーム画面に追加」でPWAとして利用）。公開対象になるため秘密情報・権利未クリア素材は絶対にコミットしない。
   - **Androidアプリ（Capacitor）**：`capacitor.config.json`＋`android/`。`node scripts/build-www.mjs` で
-    公開ファイルだけを `www/` に集め（.gitignore 済みの BGM mp3 も同梱）、`npx cap sync android` →
+    公開ファイルだけを `www/` に集め（BGM mp3 も同梱）、`npx cap sync android` →
     `cd android && ./gradlew assembleRelease` で署名済みAPK。署名鍵はリポジトリ外 `~/.android-keys/`
     （`asobinomori.jks`＋`asobinomori.keystore.properties`。**紛失すると同一署名で更新できなくなる**）。
     APK は INTERNET 権限なし＝完全オフライン。appId は `jp.show17.asobinomori`。画面の向きは固定しない
