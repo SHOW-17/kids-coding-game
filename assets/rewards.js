@@ -18,7 +18,7 @@
   'use strict';
 
   var ROOM_NS = 'room';
-  var PRICE = 4;            // くじ1かい＝どんぐり4こ
+  var PRICE = 8;            // くじ1かい＝どんぐり8こ（コンプ総額＝8×22＝176。ゆるすぎ調整）
 
   // ごほうび図鑑（順序＝図鑑の並び）。見た目（CSS図形）は room.html 側で描画。
   // cat: 'hat'（あたま）/ 'face'（かお）/ 'neck'（くび）/ 'room'（かぐ）

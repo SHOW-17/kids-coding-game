@@ -547,8 +547,8 @@ function stageClear(){
   cheer.classList.add('show');
   setHint(pick(['やったね！ ぜんぶ みつけた！','すごい！ ばっちり！','ぜんぶ はっけん！ えらい！']));
   cleared++; save.set('cleared', cleared);
-  // どんぐり：むずかしいステージほど多く（5ステージごとに段階アップ・上限あり）
-  const acGain = 1 + Math.min(4, Math.floor(stage/5));
+  // どんぐり：むずかしいステージほど多く（8ステージごとに段階アップ・上限あり）
+  const acGain = 1 + Math.min(2, Math.floor(stage/8));
   save.set('wins', (save.get('wins',0)||0) + acGain);
   fx('acornGain', acGain, cx, cy - r.height*0.18);
   stage++; save.set('stage', stage);

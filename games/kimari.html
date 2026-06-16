@@ -492,8 +492,8 @@ function correctAnswer(btn, tok){
   total++; streak++;
   if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
-  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficultyNow() は 1〜6。
-  const acGain = difficultyNow();
+  // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficultyNow() は 1〜6 → 半分にして 1〜3。
+  const acGain = Math.ceil(difficultyNow()/2);
   save.set('wins', (save.get('wins',0)||0)+acGain);
   if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
   renderStatus();

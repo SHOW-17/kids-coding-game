@@ -908,8 +908,8 @@ function setButtons(dis){
 
 function win(){
   cleared.add(lvIndex);
-  // 1レベル クリアごとに どんぐり＋（むずかしいレベルほど多く）。5レベルごとに1段階。再クリアでも増える。
-  const acGain = 1 + Math.floor(lvIndex/5);
+  // 1レベル クリアごとに どんぐり＋（むずかしいレベルほど多く）。8レベルごとに1段階。再クリアでも増える。
+  const acGain = 1 + Math.floor(lvIndex/8);
   progWins += acGain;
   renderStars(); save(); winSound(); confetti();
   setTimeout(()=>acornPop(acGain), 360);

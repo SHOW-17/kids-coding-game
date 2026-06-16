@@ -170,12 +170,14 @@ scripts/
 - **どんぐりゲット演出（即フィードバック）**：クリアした瞬間に「🌰＋N」を噴き上げる。N＝そのステージの獲得量
   （難しいほど大きい）。各ゲームは成功時に `acGain` を計算 → `Save.set('wins', wins+acGain)` → `FX.acornGain(acGain, x, y)`
   （fx.js。見た目は `.acorn`＝room.html 準拠の canvas 描画）。**難易度→獲得量の式**：
-  ぴたごら/かたち/プログラミング＝`1 + floor(lvIndex/5)`（5レベルごと段階アップ）、まねっこ＝`1 + floor((段-1)/3)`、
-  きまり＝`difficulty`（1〜6、問が進むほど）。
+  ぴたごら/かたち/プログラミング＝`1 + floor(lvIndex/8)`（8レベルごと段階アップ・最大3）、まねっこ＝`1 + floor((段-1)/5)`、
+  きまり＝`ceil(difficulty/2)`（1〜3、問が進むほど）。その他＝どこちがう`1 + min(2, floor(stage/8))`、とまれ`min(3, 1 + floor(score/12))`、
+  そっくり`{color:1,shape:1,size:2}`・mix=2、ぺあ`max(1, round-1)`、うた`floor(score/4)`/`ceil(popped/3)`/`min(3, done)`。
+  ※ **ベースは必ず1（最低でも どんぐり1こ）で即フィードバックを担保し、難易度ボーナスの上限は概ね3に揃える**（ゆるすぎ調整・2026-06）。
   ※ **programming は fx.js も持たない**ので、独自の `acornPop(n)`（DOM＋rAF。CSS `.acorn-fx`/`.acorn-plus`）で同じ演出。
 - **収支**：`balance() = earned() - spent()`。`spent`・所持 `owned`・装備 `wear` は **room 名前空間**
   （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
-- **どんぐりくじ**：1回 `Rewards.PRICE`（=4）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。
+- **どんぐりくじ**：1回 `Rewards.PRICE`（=8）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。
   着せ替え系（hat/face/neck）は当選時に自動装備、かぐ（room）は部屋に並ぶ。全部そろうと `allCollected()`。
 - **ごほうび図鑑** = `Rewards.ITEMS`（`{id,cat,name}`）。**見た目は画像アセット**（`assets/items/<id>.png`。
   ユニコーンと同じつやつやクレイ調の透過PNG）。room.html 側は `itemImg(id)` が `<img>` を返すだけ
