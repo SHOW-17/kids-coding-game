@@ -498,7 +498,7 @@ function endRound(){
   if(score > 0){
     sfx('success');
     // どんぐりゲット（むずかしく なるほど おおく）
-    const acGain = Math.min(5, 1 + Math.floor(score/8));
+    const acGain = Math.min(3, 1 + Math.floor(score/12));
     save.set('wins', (save.get('wins',0)||0) + acGain);
     sfx('sparkle');
     fx('acornGain', acGain, window.innerWidth/2, window.innerHeight*0.42);

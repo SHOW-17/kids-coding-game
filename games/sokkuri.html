@@ -300,7 +300,7 @@ const VAL_NAME = { aka:'あか', kiiro:'きいろ', midori:'みどり', ao:'あ�
   ookii:'おおきい', chiisai:'ちいさい' };
 const ITEMS_PER_ROUND = 8;
 const MIX_SWITCH_AT = 4;          /* ミックスは 4こめの あとで ルールが かわる */
-const ACORN = { color:1, shape:2, size:3 };   /* ミックスは 3 */
+const ACORN = { color:1, shape:1, size:2 };   /* ミックスは 2 */
 
 /* ----- 状態 ----- */
 let round = 1, idx = 0, okCount = 0, combo = 0;
@@ -479,7 +479,7 @@ function correct(bEl){
   combo++; okCount++; idx++;
   okPill.innerHTML = '<span class="chk"></span>せいかい ' + okCount;
   save.set('cleared', (save.get('cleared',0)||0)+1);
-  const acGain = plan.mix ? 3 : ACORN[seg.rule];
+  const acGain = plan.mix ? 2 : ACORN[seg.rule];
   save.set('wins', (save.get('wins',0)||0)+acGain);
 
   /* アイテムが かごへ とんでいく */

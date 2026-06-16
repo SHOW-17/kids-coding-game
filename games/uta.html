@@ -863,7 +863,7 @@ const M1 = {
     this.lock(true);
     const score = this.score;
     const isBest = save.bestMax('best1', score);
-    const acGain = Math.max(1, Math.floor(score/3));
+    const acGain = Math.max(1, Math.floor(score/4));
     roundReward(acGain);
     const title = score>=10 ? 'パーフェクト！' :
                   score>=7  ? 'すごい みみだね！' :
@@ -1029,7 +1029,7 @@ const M2 = {
     this.stopGame();
     const popped = this.popped;
     save.bestMax('best2', popped);
-    const acGain = Math.max(1, Math.ceil(popped/2));
+    const acGain = Math.max(1, Math.ceil(popped/3));
     roundReward(acGain);
     let dots = '';
     for(let i=0;i<this.TOTAL;i++) dots += '<span class="dot' + (i<popped?' on':'') + '"></span>';
@@ -1263,7 +1263,7 @@ const M3 = {
   end(){
     const done = this.done;
     this.stopGame();
-    const acGain = Math.min(5, Math.max(1, done));
+    const acGain = Math.min(3, Math.max(1, done));
     roundReward(acGain);
     showResult({
       win: true,

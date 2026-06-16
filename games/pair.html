@@ -419,7 +419,7 @@ function rate(){
 function boardClear(){
   setLock(true);
   save.set('cleared', (save.get('cleared',0)||0)+1);
-  const acGain = Math.min(round, 4);                            // L1=1 … L4=4（くりかえしは 4）
+  const acGain = Math.max(1, round-1);                          // L1=1 L2=1 L3=2 L4=3（くりかえしは 3）
   save.set('wins', (save.get('wins',0)||0)+acGain);
   const r = tray.getBoundingClientRect();
   sfx('fanfare');
