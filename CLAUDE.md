@@ -1,14 +1,22 @@
 # kids-coding-game ＝「あそびのもり」
 
 小学校1年生（6〜7歳）が、**文字を読まずに**遊びながら賢くなれる、こども向けのミニゲーム集（アーケード）。
-オープニング（`index.html`）でゲームを選び、それぞれの遊びに入る。第1弾はプログラミング学習ゲーム
-「プログラミング」。以降、知育になるゲームを増やしていく。
+オープニング（`index.html`）でゲームを選び、それぞれの遊びに入る。以降、知育になるゲームを増やしていく。
 
-> **デザインテーマ「ねんどの森」（ねんど／フェルト質感・マスコットはユニコーン）に全面リデザイン済み。**
+> デザインテーマは「ねんどの森」（ねんど／フェルト質感・マスコットはユニコーン）。
 > 視覚言語の定義は **[Design.md](Design.md) が本体**。新画面・新ゲームはまず Design.md に従うこと。
-> 旧テーマ（クマ🐻・絵文字アイコン）からの変更点：**キャラは `assets/uni/` のユニコーン画像、アイコンは
-> CSS図形で表現し、原則 絵文字を使わない**（UIの矢印など機能アイコンを除く）。スタイルは各HTMLにインライン
-> （旧 `assets/arcade.css` は未使用＝廃止）。
+> キャラは `assets/uni/` のユニコーン画像、アイコンは CSS図形で表現し、原則 絵文字を使わない
+> （UIの矢印など機能アイコンを除く）。スタイルは各HTMLにインライン（旧 `assets/arcade.css` は廃止）。
+
+## ドキュメント・スキル一覧（詳細はこちらが正本）
+
+- `Design.md` — デザインシステム「ねんどの森」（視覚言語の本体・必読）
+- `docs/programming-game.md` — プログラミングの詳細（概念・UNLOCKS・ブロック制限・全19レベル・データ構造・保存キー・拡張アイデア）
+- `docs/rewards-system.md` — ごほうびシステム（どんぐり経済・くじ・きせかえ・おへや）
+- `docs/game-notes.md` — 各ゲームの実装メモ（落とし穴回避）・ゲーム一覧表・アセット規約
+- `docs/build-release.md` — PWA / GitHub Pages / Android APK のビルド・公開手順
+- `.claude/skills/new-game/` — 新ゲーム追加の手順（/new-game）
+- `.claude/skills/build-release/` — 公開・APKビルドの手順（/build-release）
 
 ---
 
@@ -24,8 +32,6 @@
   「ここは画像があるとプロっぽくなる」箇所は遠慮なくユーザーに依頼してよい。
 - 上記は全ゲーム共通。新ゲーム追加時もこの方針を必ず引き継ぐ。
 
----
-
 ## いちばん大事なこと（設計の前提・絶対に崩さない）
 
 - **対象は小1。** 漢字はまだ読めない前提。**UIテキストはひらがな＋やじるし等のアイコンのみ。漢字を使わない。**
@@ -35,333 +41,71 @@
 - **達成感を強く。** クリア時は効果音・アニメ・紙吹雪などで「できた！」を演出。
 - **集中力が短い前提。** 1レベルは短く、結果がすぐ見える（即フィードバック）。
 - **新要素は段階的に。** 新しい命令はレベルが進むと1つずつ解禁。一度に全部見せない。
+- **対象年齢を上げる拡張（関数・マイコマンド等）は、実装前に必ずユーザーに確認する。**
 
 ---
 
-## アーケード構成（あそびのもり）
+## ファイル構成
 
-### ファイル構成
 ```
-index.html              アーケード選択画面（オープニング／PWAのホーム）
-room.html               わたしの おへや（ごほうび画面。どんぐりくじ・きせかえ・かぐ）
-Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体・必読）
+index.html              アーケード選択画面（オープニング／PWAのホーム。実体でありシンボリックリンクではない）
+room.html               わたしの おへや（ごほうび画面。→ docs/rewards-system.md）
+Design.md               デザインシステム「ねんどの森」（視覚言語の本体・必読）
 manifest.webmanifest    PWAマニフェスト
 games/
-  programming.html      プログラミング（第1弾。🏠でindexへ戻る。assets JS 不要の自己完結）
-  manekko.html          まねっこ（サイモン）
-  kimari.html           きまりあそび（パターン推理）
-  katachi.html          かたちづくり（タングラム＝かげあわせ方式）
-  pitagora.html         ぴたごら（たまころがし＝決定論グリッドsim）
-  tomare.html           とまれあそび（Go/No-Go＝がまん力・抑制制御）
-  chigai.html           どこちがう（まちがいさがし＝シーン自動生成＋検証）
-  sokkuri.html          そっくりわけ（属性分類＋ルール切り替え）
-  pair.html             ぺあさがし（神経衰弱）
-  uta.html              うたあそび（音程トレーニング。聞き分け＋マイクで声の高さ判定）
-assets/
-  uni/                  ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）
-  bg/                   各ゲームのシーン背景（webp 1024x1536。生成画像＝空＋下1/3だけ丘の縦長シーン。
-                        body に center bottom / cover で敷く。中央は余白＝UIが乗る前提の低コントラスト）
-  tokens/               盤面トークン画像（webp 透過・余白トリム済み）。programming の
-                        star/box/target/button/gate/warp ＋ pitagora の ball/basket ＋ tomare の thorn_ball。
-                        CSS図形だったトークンを background-image central/contain で差し替えた
-  pairs/                ぺあさがし専用のカード絵柄12種（webp 320x320 透過。apple/star/flower/
-                        butterfly/car/fish/strawberry/moon/mushroom/balloon/bird/heart）。
-                        pair.html の MOTIFS 配列と1対1対応（新絵柄は両方に足す）
-  icons/               ファビコン・PWA・apple-touch アイコン一式
-  fonts/                セルフホストフォント（fonts.css + woff2 496個。外部CDN参照は禁止）
-  audio.js              共通サウンド（Web Audio。グローバル Sfx）
-  fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク。グローバル FX）
-  save.js               共通セーブ（ゲーム別localStorage名前空間。グローバル Save）
-  rewards.js            ごほうび管理（どんぐり集計・くじ抽選・所持/装備。グローバル Rewards。index と room で共有）
-  shell.js              共通UI（ヘッダー/トースト/モーダル/画面遷移。グローバル App）
-  bgm.js                共通BGM（画面ごとにループ再生。グローバル Bgm。右上に音符トグルを自動設置）
-  bgm/                  BGM音源置き場（mp3。AI生成曲をコミット済み。公開リポジトリのため権利クリアな音源のみ）
-                        優先順位：<画面名>.mp3 → _default.mp3（全画面共通）→ 合成ループ。
-                        全画面同じ曲なら _default.mp3 を1つ置くだけ。
+  programming.html      プログラミング（第1弾。→ docs/programming-game.md）
+  manekko.html          まねっこ（サイモン）        kimari.html    きまりあそび（パターン推理）
+  katachi.html          かたちづくり（タングラム）   pitagora.html  ぴたごら（たまころがし）
+  tomare.html           とまれあそび（Go/No-Go）     chigai.html    どこちがう（まちがいさがし）
+  sokkuri.html          そっくりわけ（属性分類）     pair.html      ぺあさがし（神経衰弱）
+  uta.html              うたあそび（音程トレーニング）
+assets/                 画像・音・共通JS（置き場の規約 → docs/game-notes.md §アセット規約）
+  audio.js / fx.js / save.js / rewards.js / shell.js / bgm.js   共通基盤（下記）
+  uni/ bg/ tokens/ pairs/ items/ gacha/ room/ icons/ fonts/ bgm/
 sw.js                   Service Worker（scripts/build-sw.mjs で自動生成。直接編集しない）
-capacitor.config.json   Capacitor 設定（Androidアプリ化。appId: jp.show17.asobinomori）
-android/                Android ネイティブプロジェクト（Capacitor 生成。詳細は「技術メモ」）
-scripts/
-  test-games.js         ヘッドレス・スモークテスト（console error/例外/はみ出し検査）
-  build-sw.mjs          sw.js 生成（アセット追加・変更時に実行）
-  build-www.mjs         Capacitor 用 www/ 組み立て（APKビルド前に実行）
-  gen-placeholder-art.mjs  新ゲーム用プレースホルダー画像の生成（bg/banner/card をヘッドレス
-                        Chromeで描画。本番の生成画像が来たら同名ファイルを上書きするだけ）
+capacitor.config.json   Capacitor 設定（appId: jp.show17.asobinomori）
+android/                Android ネイティブプロジェクト（→ docs/build-release.md）
+scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-placeholder-art.mjs（→ docs/build-release.md）
 ```
-※ `index.html` はもうシンボリックリンクではなく実体（アーケード）。各ゲームは個別HTML。
-※ 見た目のルール（ねんどカード・カラー・タイポ）は各HTMLにインラインで持つ。共通定義は Design.md 参照。
-※ プログラミングの保存キーは `kuma_prog_save_v1`（JS内の定数で、ファイル名・パスに依存しない）。
-  旧 `kuma-programming.html` から `games/programming.html` へ移動・改名済みだが、localStorage は
-  オリジン単位のため保存データはそのまま引き継がれる。保存キー自体は互換のため変更しない。
 
-### 共通基盤の使い方（新ゲームは Sfx/FX/Save に必ず乗せる＝統一感とプロ品質の担保）
+各ゲームは独立した単一HTMLファイル・バニラJS・ビルド不要。見た目のルール（ねんどカード・カラー・タイポ）は各HTMLにインラインで持つ（共通定義は Design.md）。
+
+## 共通基盤の使い方（新ゲームは Sfx/FX/Save に必ず乗せる＝統一感とプロ品質の担保）
+
 - **Sfx**（audio.js）：`Sfx.tap()/pop()/step()/ding()/success()/fanfare()/error()/whoosh()/sparkle()/note(freq)`。操作ごとに必ず鳴らす。
-- **FX**（fx.js）：`FX.confetti()/burst(x,y)/sparkles(x,y)/ring(x,y)/floatEmoji(x,y,text)/shake(el)/celebrate()`。
+- **FX**（fx.js）：`FX.confetti()/burst(x,y)/sparkles(x,y)/ring(x,y)/floatEmoji(x,y,text)/shake(el)/celebrate()`＋`FX.acornGain(n,x,y)`。
 - **Save**（save.js）：`const save = Save.game('ゲーム名'); save.get(k,def); save.set(k,v); save.bestMax/bestMin(k,v)`。localStorage不可環境はメモリに自動フォールバック。
-- 上記 **Sfx/FX/Save の3本は新ゲームで必須**（manekko/kimari/katachi/pitagora が踏襲）。
-  ※ **プログラミング（programming.html）だけは歴史的経緯で効果音/セーブ系の assets JS を読み込まない完全自己完結**（独自の beep/confetti/toast/localStorage を内蔵）＝例外。新ゲームは self-contained にせず3本に乗せること。
-  ※ ただし **BGM は全画面共通方針のため、programming.html も `bgm.js` だけは例外的に末尾で読み込み** `Bgm.play('programming')` する。
-- **App**（shell.js）：`App.go(href)`／`App.toast(msg)`／`App.showModal({...})`／`App.el()` など。**現状は index.html 専用**。
-  各ゲームは shell.js を読み込まず、**topbar・結果モーダル・トーストをテーマに合わせて自前実装**している
-  （色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先した結果）。新ゲームもこの方式に倣う
-  ＝ `audio.js / fx.js / save.js` を読み込み、UI ガワは各HTMLにインライン。`App.showModal` は絵文字を
-  渡せる API だが「絵文字を使わない」方針のため使わない。
-  ※ さらに各ゲームは **`rewards.js` も読み込む**（save.js の後）。クリアで どんぐりが増えた瞬間に
-  「🌰＋N」を見せる即フィードバックのため（後述の「どんぐりゲット演出」）。`rewards.js` は副作用なく
-  どんぐりを集計するだけなので安全に読める。programming だけは自己完結方針を守り、読み込まず独自実装。
+- 上記 **Sfx/FX/Save の3本＋rewards.js（save.js の後に読む）は新ゲームで必須**。
+  ※ **programming.html だけは歴史的経緯で完全自己完結の例外**（bgm.js のみ読む。詳細 → docs/programming-game.md）。新ゲームは self-contained にしないこと。
+  ※ **BGM は全画面共通方針**：`bgm.js` を読み込み `Bgm.play('画面名')`。
+- **App**（shell.js）は**現状 index.html 専用**。各ゲームは topbar・結果モーダル・トーストをテーマに合わせて
+  自前インライン実装する（色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先）。
+  `App.showModal` は絵文字を渡せる API だが「絵文字を使わない」方針のため使わない。
 - 見た目は `:root` で `--accent / --accent-d / --accent-l` をゲームごとに上書きし、背景グラデも合わせる。入場は `.enter .d1..d6`。
-- **アーケードのトップ（index.html）が各ゲームの進捗を読む。** カードに進捗を出すため、各ゲームは規定キーを保存すること：
-  - manekko → `Save.game('manekko').set('best', 最高だん数)`
-  - kimari / katachi / pitagora → `Save.game('ns').set('cleared', クリア/正解 数)`
-  - tomare → `Save.game('tomare').set('best', 最高スコア)`
-  - chigai / sokkuri / pair / uta → `Save.game('ns').set('cleared', クリア/正解/ラウンド 数)`
-  - プログラミングは独自キー `kuma_prog_save_v1`（`{cleared:[...]}`。キー名は互換のため kuma_ のまま）。index.html はこれも読む。
-  ※ 新ゲームを足したら index.html の GAMES 配列・doReset の名前空間リスト・rewards.js の
-    `earned()`（wins 集計）・scripts/test-games.js の PAGES の4か所も必ず更新する。
-
-### ゲーム一覧と知育のねらい
-| ゲーム | 仕組み | 育てる力 | アクセント色 |
-|---|---|---|---|
-| プログラミング | 命令を並べて動かす | シーケンス・デバッグ・論理 | ハニー橙 |
-| まねっこ（サイモン） | 光った順番を記憶して再現 | きおく力（記憶・集中・やりぬく） | パープル |
-| きまりあそび | 並びの「つぎ」を当てる | すいり力（規則性発見・推理） | スカイ青 |
-| かたちづくり | ピースを影にはめる（回転なし） | かたち力（空間認識・創造性） | グリーン |
-| ぴたごら | 坂を置いて玉をゴールへ | くふう力（因果・計画・試行錯誤） | オレンジ |
-| とまれあそび | ユニコーンはタップ・とげとげは がまん（Go/No-Go） | がまん力（抑制制御・実行機能） | ローズ |
-| どこちがう | 2枚のシーンの ちがいを探す | かんさつ力（観察・注意） | ティール |
-| そっくりわけ | いろ/かたち/おおきさで かごへ分類（ルール切替あり） | きりかえ力（分類・認知的柔軟性） | プラム |
-| ぺあさがし | 神経衰弱（ペアめくり） | おぼえる力（視覚空間記憶） | インディゴ |
-| うたあそび | 音の高低の聞き分け＋マイクで声の音程合わせ | おんかん力（聴覚弁別・発声フィードバック） | コーラル |
-
-### 実装メモ（落とし穴回避）
-- **かたちづくりは回転なしの「かげあわせ」方式**：完成形の各ピースの薄い影を最初から表示し、対応ピースを近づけるとスナップ。1対1対応なので必ず解け、回転ロジックのバグを避ける。
-- **ぴたごらは物理を使わず決定論グリッドsim**：玉は1マスずつ落下、坂(╱╲)で斜めにずれる、壁/枠で停止＝失敗（やさしく自動リスタート・置いた坂は残す＝デバッグ）。レベルは必ず解の存在を確認してから追加（プログラミングの BFS 確認と同じ思想。`scripts/` のレベル検証も活用）。
-- **きまりは出題ジェネレータ＋検証**：「3択・正解ちょうど1つ・重複なし」を生成後に必ず検証。文字（数字以外）は使わず絵文字・図形・ドットで表現。
-- **どこちがうもジェネレータ＋検証**：シーンを合成→「ちがいがちょうどN個・タップ領域48px以上・オブジェクト非重複」を検証してから出題。2枚のパネルは同一レンダラで描き、差分だけを適用（ズレ＝バグ）。
-- **そっくりわけは出題の一意性検証**：現在のルールで「ちょうど1つのかごに属する」アイテムだけを出す。
-- **うたあそびのマイクは getUserMedia＋自己相関**（AnalyserNode・正規化自己相関・中央値平滑化・130〜700Hzクランプ）。
-  echoCancellation/noiseSuppression/autoGainControl は **off**（ピッチ検出を歪めるため）。モード中は **Bgm.stop()**
-  （マイクがBGMを拾う）。退出時は必ず `stream.getTracks().forEach(stop)`。マイク不可でも聞き分けモードは遊べる構成。
-  Android は `RECORD_AUDIO` 権限を AndroidManifest に宣言済み（INTERNETなしは維持）＝**実機での許可フロー要確認**。
-- **うたあそびのお手本は「うた声」合成（uta.html 内の `Voice.sing`）**：ピッ音だと子供がまねできないため、
-  のこぎり波＋「お」のフォルマント（bandpass×2）＋ビブラートで「どー」と歌う声にしている。音名は
-  `SOLF`（ど・れ・み・そ・ら・ど＝NOTES と1対1）で表示：まねうたの階段ラベル＋吹き出し
-  （「『どー』って うたってね！」）、こえでとばそ のリング内。**音量バランスは実機で要調整**。
-  まねうたの正誤判定は**オクターブ折りたたみ**（±1半音、1オクターブ違いは同じ音とみなす＝
-  おうちの人の低い声でも遊べる）。こえでとばそは「高さ＝位置」のゲームなので折りたたまない（厳密一致）。
-- **`Bgm.stop()` は curTrack も忘れる**（bgm.js）：明示停止後にタップで kick() が BGM を勝手に再開しない
-  （うたあそびのマイク中に鳴り出すバグの修正）。音符トグル OFF→ON（setEnabled）は従来どおり同じ曲に復帰。
-  停止した画面で BGM を再開したいときは `Bgm.play(track)` を呼び直す（goMenu がやっている方式）。
-  さらに **世代トークン `playSession`** で stop 後の非同期チェーンも無効化：mp3 再生は
-  play() の Promise →失敗したら次候補、と非同期に進むため、「最初のタップがモードボタン」だと
-  pointerdown(kick→開始) → click(stop) → 保留中の play() が中断 → **次候補を再生**して鳴り続けるバグがあった。
-  stop のたびに世代を進め、古い世代の続き（tryNext / then / fadeIn）は何もしない。
-
-### ごほうびシステム（わたしの おへや＝room.html）
-全ゲーム横断の継続動機。**ゲーム側のコードには一切手を入れず**、既存セーブから通貨を集計する設計（最小構成）。
-
-- **どんぐり（横断通貨）＝全ゲームの「せいこう量（`wins`）」の累計**。`assets/rewards.js`（グローバル `Rewards`）が集計。
-  **クリア／せいかいするたびに増える（再クリアでも増える）。むずかしいステージほど多くもらえる。** 各ゲームが
-  自分の名前空間に `wins`（獲得した どんぐり量の累計）を貯め、`Rewards.earned()` がその合計を返す。**減らない**。
-  - 旧方式（最高記録・初クリア数ベース）で貯めた分は **`legacyBonus`** として room 名前空間に一度だけ確定し、
-    新方式の `wins` 合計に加算（移行してもどんぐりが減らない）。`earned() = legacyBonus + Σ各ゲームの wins`。
-  - **programming だけは rewards.js を持たない自己完結**のため、累積を独自キー `kuma_prog_save_v1.wins` に保存し、
-    rewards.js は `progWins()` でそれを読む（`cleared` 配列を読むのと同じ要領）。
-- **どんぐりゲット演出（即フィードバック）**：クリアした瞬間に「🌰＋N」を噴き上げる。N＝そのステージの獲得量
-  （難しいほど大きい）。各ゲームは成功時に `acGain` を計算 → `Save.set('wins', wins+acGain)` → `FX.acornGain(acGain, x, y)`
-  （fx.js。見た目は `.acorn`＝room.html 準拠の canvas 描画）。**難易度→獲得量の式**：
-  ぴたごら/かたち/プログラミング＝`1 + floor(lvIndex/8)`（8レベルごと段階アップ・最大3）、まねっこ＝`1 + floor((段-1)/5)`、
-  きまり＝`ceil(difficulty/2)`（1〜3、問が進むほど）。その他＝どこちがう`1 + min(2, floor(stage/8))`、とまれ`min(3, 1 + floor(score/12))`、
-  そっくり`{color:1,shape:1,size:2}`・mix=2、ぺあ`max(1, round-1)`、うた`floor(score/4)`/`ceil(popped/3)`/`min(3, done)`。
-  ※ **ベースは必ず1（最低でも どんぐり1こ）で即フィードバックを担保し、難易度ボーナスの上限は概ね3に揃える**（ゆるすぎ調整・2026-06）。
-  ※ **programming は fx.js も持たない**ので、独自の `acornPop(n)`（DOM＋rAF。CSS `.acorn-fx`/`.acorn-plus`）で同じ演出。
-- **収支**：`balance() = earned() - spent()`。`spent`・所持 `owned`・装備 `wear` は **room 名前空間**
-  （`Save.game('room')`）に保存。`index.html` のリセット（ぜんぶ けす）も `room` を含めて消す。
-- **どんぐりくじ**：1回 `Rewards.PRICE`（=8）。`Rewards.draw()` が **未所持プールからランダム1つ**（ダブりなし）。
-  着せ替え系（hat/face/neck）は当選時に自動装備、かぐ（room）は部屋に並ぶ。全部そろうと `allCollected()`。
-- **ごほうび図鑑** = `Rewards.ITEMS`（`{id,cat,name}`）。**見た目は画像アセット**（`assets/items/<id>.png`。
-  ユニコーンと同じつやつやクレイ調の透過PNG）。room.html 側は `itemImg(id)` が `<img>` を返すだけ
-  （rewards.js はデータとロジックのみ＝関心の分離）。新ごほうびは ITEMS に1行足し、同名のPNGを
-  `assets/items/` に置けば増える（着せ替えなら `PLACE` に重ね位置、かぐなら `FURNI` に配置を1行追加）。
-  ※ アイテムPNGは中身を中央に置いた正方形→透明余白をトリムして使う（床置き家具を下端で揃えるため）。
-  ※ 見た目は `itemInner(id)` 経由（原則 `<img>`）。**ほっぺ(`face_blush`)だけは画像がいまいちなのでCSS図形**
-    （`.blush-css`）で描く例外。画像がいまいちなアイテムは同様に itemInner で個別にCSSへ逃がせる。
-- **アバター＝自分のユニコーン**（`assets/uni/blue_standing.png`）に着せ替え画像を絶対配置で重ねる方式。
-  重ね位置の**初期値**は room.html の `PLACE` マップ（`{cx,cy,w,z}`＝ステージ%で中心位置・幅・重ね）。
-  新キャラは作らずマスコットを流用＝世界観を崩さない。重ね順は くび→かお→あたま。
-  ユニコーン＋着せ替えは共通ラッパー `.bob` に入れて一緒にふわふわ上下させる（影 `.pad` は外＝固定）。
-- **ドラッグで自由配置**：きせかえ（`.acc`）も かぐ（`.furni`）も Pointer Events でつかんで動かせる。
-  着せ替えの基準は `.bob`、家具の基準は `#room`。動かした座標（中心%）は `Save.game('room').set('pos', {<id>:{x,y}})`
-  に保存し、`placeStyle`/`furniStyle` が **カスタム位置があればそれを、無ければ `PLACE`/`FURNI` の初期値**を使う。
-  ドラッグ中は `.bob` の bob を止めて座標を安定させる。`index.html` のリセットは `pos` も含めて消える。
-- **index 連携**：ホームに「わたしの おへや」入口。`Rewards.balance()` を表示し、`Rewards.canDraw()` なら
-  「！」バッジ。index も `rewards.js` を読み込む（save.js の後）。
-- **文字を読ませない**：くじは どんぐりガチャマシン（`assets/gacha/machine.png`）が回り、虹色のたまご
-  （`egg_closed`→タップで`egg_open`）が割れてごほうびが飛び出す演出＋紙吹雪＋効果音だけで伝わる。
-- **おへや背景**＝`assets/room/room_bg.png`（家具なしの空っぽの部屋）。家具は手前に重ねる。
-  どんぐり通貨アイコンだけは従来どおり CSS図形（`.acorn`）。
-- room.html は新ゲームと同じく `audio.js / fx.js / save.js`（＋ `rewards.js` / `bgm.js`）を読み込み、UIは自前インライン。
-
-### 新ゲームを追加する手順
-1. `games/新ゲーム.html` を作る。**必ず `audio.js / fx.js / save.js` を読み込み（Sfx/FX/Save）、manekko.html を品質・構成の参照基準にする。**
-2. `index.html` の `GAMES` 配列にカードを足す（href・名前ひらがな・アクセント色・看板アート・進捗キー）。
-3. ゲーム内に自前の topbar（CSS mask の家アイコン。manekko/kimari 等を踏襲）で `../index.html` へ戻る導線。進捗は規定キーで保存。
-4. ヘッドレス確認（`google-chrome-stable` + puppeteer-core で各ページの console error / 例外 / 横スクロールはみ出しを検査。`scripts/test-games.js` 参照。新ゲーム追加時は PAGES 配列にも足す）。
-5. 動作OKなら README も更新。
-
----
+- **アーケードのトップ（index.html）が各ゲームの進捗を読む。** 各ゲームは規定キーで保存すること：
+  - manekko / tomare → `set('best', 最高記録)`、その他 → `set('cleared', クリア/正解 数)`
+  - programming は独自キー `kuma_prog_save_v1`（互換のため変更しない。index.html はこれも読む）
+- **新ゲームを足したら4か所を必ず更新**：index.html の `GAMES` 配列・`doReset` の名前空間リスト・
+  rewards.js の `earned()`（wins 集計）・scripts/test-games.js の `PAGES`。手順の全体は /new-game スキル参照。
+- **どんぐり（ごほうび通貨）**：クリア時に `wins` を加算し `FX.acornGain()` で「🌰＋N」演出。
+  獲得量の式・くじ・きせかえの仕様は docs/rewards-system.md。
 
 ## キャラクター・テーマについて（重要）
 
 - **マスコットはユニコーン**（旧・仮のクマ🐻から差し替え済み）。画像は `assets/uni/`。配役は Design.md §2：
   ブルー＝主役（プレイヤー／案内）、グリーン＝はかせ（ヒント・新要素説明）、パープル＝ごほうび（ゴール・クリア祝い）。
 - **ゲームロジックはキャラに一切依存させない。** ゴール・壁・プレイヤーは「テーマ用の見た目」。
-  プログラミングのゴールはパープルのユニコーン、壁・はこ等は CSS図形で表現。
 - 名前・文言も特定キャラに寄せない（「くまさん」等のハードコードを増やさない。ゲーム名は「プログラミング」）。
 - **アイコンは原則 絵文字でなく CSS図形**（Design.md §5）。UIの機能アイコン（矢印・ループ等の命令チップ）はこの限りでない。
 
----
+## 技術メモ（コア）
 
-## 教えている概念と進行（プログラミングレベルの段階的向上）
-
-1. **シーケンス（順番に命令する）** ＝ 核
-2. **デバッグ（間違えたら直す）** ＝ 失敗→修正→再実行
-3. **ループ（くりかえし）** ＝ 同じ動きをまとめる
-4. **コマンドの種類（ジャンプ）** ＝ 動きには種類がある
-5. **計画・段取り（いちご収集）** ＝ 寄り道してアイテムを集めてからゴール
-6. **状態・因果（ボタン＆とびら）** ＝ 押す→開く。原因と結果
-7. **空間把握（ワープ）** ＝ 入口に入ると対の出口へ瞬間移動
-8. **因果・取り返しのつかなさ（はこおし）** ＝ 箱を🎯へ。押し込みすぎると詰む→やり直す＝デバッグの核
-9. （今後）**関数／マイコマンド** ＝ 自作の命令を再利用 ＝ 抽象化（対象年齢↑のため要確認）
-
-※ 5〜8は「新しいコマンド（ボタン）」ではなく**盤面の仕掛け**として導入。既存の移動命令で遊べるためUIは増えていない。
-
-### コマンド解禁スケジュール（UNLOCKS）
-
-| 命令 | 解禁レベル |
-|---|---|
-| ➡ みぎ | L1 |
-| ⬆ うえ | L2 |
-| ⬇ した / ⬅ ひだり | L3 |
-| 🔁 くりかえし（ループ） | L5 |
-| 🦘 ジャンプ（2マス進んで壁越え） | L7 |
-
-新コマンド解禁時は「レベルアップ！」の案内カードを出す。
-L11以降は新コマンドは増えず、**盤面の仕掛け**（🍓いちご／🔘ボタン＆🚪とびら／🌀ワープ／📦はこ）が初登場するレベルで案内カードを出す（INTRO の L11/L13/L15/L17）。
-
----
-
-## ブロック制限（ループ・ジャンプに「使う理由」を持たせる仕組み）
-
-道具は「使わないとクリアできない」状況でこそ意味を持つ。そこで一部レベルに**使えるブロック数の上限**を設けている。
-
-- 個別に矢印を並べると上限を超える → 🔁でまとめる／🦘で近道するしかない、という状況を作る。
-- 足りなくなったら「ブロックが たりない！🔁くりかえし で まとめよう」とその場で誘導。
-- 制限はループ解禁（L5）とセットで初登場し、「新しい挑戦」として提示する。
-- L1〜4は制限なしで自由にのびのび。
-- 制限つきレベル：L5=3 / L6=7 / L9=8 / L10=8（**要・実機での難易度調整**。キツすぎ/ゆるすぎは要観察）。
-
-ブロックの数え方：移動1個=1、ループ=ヘッダ1＋中身の数、ジャンプも移動と同じ1。
-
----
-
-## レベル構成（全19レベル）
-
-| Lv | 概要 | 制限 |
-|---|---|---|
-| 1 | ➡だけ。順番に並べる基礎 | なし |
-| 2 | ⬆解禁。L字 | なし |
-| 3 | ⬇⬅解禁。壁を1つ迂回 | なし |
-| 4 | 全方向。少し複雑な迷路 | なし |
-| 5 | 🔁解禁。直線をループでまとめる | 3 |
-| 6 | 壁あり迷路＋ループ | 7 |
-| 7 | 🦘解禁。1列の壁＝飛ぶしかない | なし |
-| 8 | 壁2か所＝ジャンプ2回 | なし |
-| 9 | 登り＋壁ジャンプ＋ループ | 8 |
-| 10 | 8×7のステージ。命令系の全部入り | 8 |
-| 11 | 🍓いちご入門。寄り道して1つ拾う | なし |
-| 12 | 🍓いちご2つをコの字に回って拾う | なし |
-| 13 | 🔘ボタン＆🚪とびら入門。押すと開く | なし |
-| 14 | 🔘ボタンがゴールと反対側＝寄り道して押す | なし |
-| 15 | 🌀ワープ入門。壁をワープで越える | なし |
-| 16 | 🌀ワープ＋登り。分断盤面をつなぐ | なし |
-| 17 | 📦はこおし入門。右へ押して🎯に乗せる | なし |
-| 18 | 📦箱を上へ2マス押す | なし |
-| 19 | 📦箱2つ。回り込んで両方🎯に乗せる | なし |
-
-※ L7以降の壁は「縦1列まるごと」塞ぐ形にして迂回不可にし、ジャンプを必須化している。
-※ レベルは `LEVELS` 配列で定義。基本は `{w,h,start,goal,walls,budget?}`。仕掛けレベルは追加で
-  `items:[{x,y}]`（いちご）／`gates:[{x,y}]`＋`switches:[{x,y}]`（とびら＆ボタン）／
-  `warps:[{a:{x,y},b:{x,y}}]`（ワープ対）／`boxes:[{x,y}]`＋`targets:[{x,y}]`（はこ＆目標）を持つ。
-  **箱レベルは `goal` を持たず**、クリア条件は「全 `boxes` が `targets` に乗る」こと。
-※ レベル追加・難易度変更時は **必ず解の存在を確認**。BFS で「move＋jump（＋仕掛け）で到達可能」かをチェックする。
-  仕掛けレベルは BFS の状態に **いちご回収マスク・とびら開閉・箱の位置** を含めること（ジャンプ必須レベルは「moveだけでは解けない」ことも併せて確認）。
-
----
-
-## 実装済みの機能
-
-- **自動リスタート**：壁・枠・押せない箱にぶつかったら自動でスタート地点へ。命令はそのまま残す（直して再実行＝デバッグ練習）。
-- **オートセーブ**：クリア状況・現在レベル・解禁した案内を `localStorage` に保存。続きから遊べる。「さいしょ」ボタンで初期化。
-- **段階的解禁**：上記スケジュールどおりに命令を1つずつ解放。
-- **レベルアップ案内**：新命令・新しい仕掛け・最終ステージで案内カードを表示。
-- **ブロック制限カウンタ**：制限つきレベルで残ブロック数を表示。
-- **盤面の仕掛け**：🍓いちご収集（全部拾うまでゴール無効）／🔘ボタンで🚪とびらが開く／🌀ワープ／📦はこおし（🎯に乗せる）。いずれも実行のたびに状態リセット。
-- **演出強化**：通った道に🐾の足あと／ぶつかった壁を赤くフラッシュ。
-- **めいれい枠は中身に合わせて伸びる**：ブロックが2行以上になっても枠ごと拡張して全部見える（枠内スクロールは廃止。旧 `max-height:32vh` + `overflow-y:auto` は行が切れて見づらかった）。
-- **ドラッグ＆ドロップ操作**（ScratchJr方式・Pointer Events で touch/mouse 統一）：
-  - チップ・くりかえし枠・パレットのボタンをドラッグして、ならびかえ／くりかえしへの出し入れ／好きな位置へ挿入。挿入位置は点滅インジケータで表示。
-  - ドラッグ中だけ画面下にゴミ箱が出現。落とすとその1個だけ削除（途中のブロックを直せる）。ゴミ箱以外の場外ドロップはキャンセル＝誤削除しない。
-  - タップ（動かさず離す）は従来どおり click 扱い。9px 動いたらドラッグ開始、ドラッグ後の click は `justDragged` フラグで抑止。
-  - `activeLoop` は配列インデックスでなく**ループオブジェクトへの参照**（ドラッグで並び順が変わってもズレないため）。
-- **くりかえしの回数は −/＋ステッパー**（2〜8。旧仕様のタップ循環は廃止）。くりかえし枠自体をタップすると ひらく/とじる をトグル。ひらいている間は枠内に点滅カーソル（次に入る場所）を表示。
-
----
-
-## 技術メモ
-
-- 各ゲームは独立した単一HTMLファイル（`index.html` はアーケード実体、`games/*.html`）。バニラJS、ビルド不要。ブラウザで開けば動く。スタイルは各HTMLにインライン。
-- フォント: Mochiy Pop One / M PLUS Rounded 1c。**`assets/fonts/` にセルフホスト**（fonts.css + woff2）。
-  **外部CDN（fonts.googleapis.com 等）への参照を復活させないこと**＝オフライン動作の前提。新ページは
-  `assets/fonts/fonts.css` を読む（games/ からは `../assets/fonts/fonts.css`）。
-- **オフライン対応（Android）**：
-  - **PWA**：`sw.js`（Service Worker）が全公開ファイルをプリキャッシュ。`sw.js` は自動生成＝直接編集せず、
-    **アセット・ページを追加/変更したら `node scripts/build-sw.mjs` で再生成**（キャッシュ版数が中身ハッシュで変わる）。
-    登録は index.html 末尾（Capacitor 内では `window.Capacitor` 検出でスキップ）。
-  - **GitHub Pages**：リポジトリは public で、master へ push すると
-    https://show-17.github.io/kids-coding-game/ に自動公開される（iPhone/iPad はここから
-    「ホーム画面に追加」でPWAとして利用）。公開対象になるため秘密情報・権利未クリア素材は絶対にコミットしない。
-  - **Androidアプリ（Capacitor）**：`capacitor.config.json`＋`android/`。`node scripts/build-www.mjs` で
-    公開ファイルだけを `www/` に集め（BGM mp3 も同梱）、`npx cap sync android` →
-    `cd android && ./gradlew assembleRelease` で署名済みAPK。署名鍵はリポジトリ外 `~/.android-keys/`
-    （`asobinomori.jks`＋`asobinomori.keystore.properties`。**紛失すると同一署名で更新できなくなる**）。
-    APK は INTERNET 権限なし＝完全オフライン。appId は `jp.show17.asobinomori`。画面の向きは固定しない
-    （ゲームは横画面2カラム対応のため。webmanifest も `orientation: any`）。
-    BGM はアプリ内（`window.Capacitor` あり）ではタップを待たず即時再生（Capacitor の WebView は
-    自動再生許可済み。bgm.js の `play()` が分岐）。ブラウザは従来どおり初回タップで開始。
-    新ゲーム追加時は www/ 再構築 → cap sync → APK 再ビルドも忘れずに。アプリのアイコン/スプラッシュは
-    `assets/icons/icon.svg` から生成（`resources/` に sharp で書き出し → `npx @capacitor/assets generate --android`）。
+- フォント: Mochiy Pop One / M PLUS Rounded 1c。**`assets/fonts/` にセルフホスト**。
+  **外部CDN（fonts.googleapis.com 等）への参照を復活させないこと**＝オフライン動作の前提。
+  新ページは `assets/fonts/fonts.css` を読む（games/ からは `../assets/fonts/fonts.css`）。
+- **公開リポジトリ**（GitHub Pages で自動公開）のため、**秘密情報・権利未クリア素材は絶対にコミットしない**。
+- オフライン対応（PWA / GitHub Pages / Capacitor APK）のビルド・公開手順は docs/build-release.md（/build-release スキル）。
 - 状態管理はメモリ内。永続化は `localStorage`（try/catchでガード済み）。
-  - 注意：Claude.aiのプレビューiframe等では `localStorage` が保存されないことがある。実機ブラウザでは正常動作。
-- キャラは絶対配置のトークン。cellサイズは画面幅から動的計算（スマホ対応）。
-- 効果音は Web Audio で生成（try/catchでガード）。
-- プログラムのデータ構造：
-  - `program`: `{kind:'move',dir,jump?}` または `{kind:'loop',count,body:[{dir,jump?}]}` の配列
-  - ループの中身は移動のみ（ネストなし）。
-  - 実行時は flatten してから1ステップずつ動かす。
-- 仕掛けの実行時状態：`collected`（拾ったいちご）／`gatesOpen`（とびら開閉）／`boxPos`・`boxEls`（箱の現在位置とDOM）。run開始時に全リセット。
-- 箱はプレイヤー（コード上の `#bear` トークン）と同じく絶対配置トークン。押下判定は「進む先が箱なら、その先が空きかを見て一緒に動かす」。
-
----
-
-## 今後の拡張アイデア
-
-- **ネストループ**：くりかえしの中にくりかえし（既存ループの自然な発展）。
-- **おえかき（タートルグラフィックス）**：進むと線を引き、お手本の形をなぞる。ループの威力が映える。
-- **マイコマンド（関数）**：自作の命令列を登録して1ブロックで呼び出す＝抽象化・再利用。ループの先の概念。※対象年齢↑のため、やるなら「はかせコース」として隔離し、先に確認。
-- **キャラクター選択／差し替え**（テーマのデータ化が前提。キャラ画像・色・名前（コード上の `#bear` 等の旧称含む）を1か所に集約するリファクタが先）。
-- レベルエディタ（親・先生がマップを自作）。
-- 音声読み上げ（未就学児対応）。
-- レベルデータの外部JSON化。
-
-拡張で対象年齢を上げる要素を足す場合は、先に確認すること（小1の前提を崩さないため）。
+  Claude.aiのプレビューiframe等では `localStorage` が保存されないことがある（実機ブラウザでは正常動作）。
+- キャラは絶対配置のトークン。cellサイズは画面幅から動的計算（スマホ対応）。効果音は Web Audio で生成（try/catchでガード）。
+- アセット・ページを追加/変更したら `node scripts/build-sw.mjs` で sw.js を再生成する（直接編集しない）。

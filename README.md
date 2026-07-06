@@ -29,7 +29,8 @@
 | **ぺあさがし**（神経衰弱） | カードをめくって同じ絵のペアを探す | 視覚空間記憶 |
 | **うたあそび** | 音の高さを聞き分け、マイクに歌って音程を合わせる | 音感（聴覚弁別＋発声フィードバック） |
 
-「プログラミング」のレベル構成や設計詳細は [CLAUDE.md](CLAUDE.md) を参照。
+「プログラミング」のレベル構成や設計詳細は [docs/programming-game.md](docs/programming-game.md) を参照
+（ごほうびシステムは [docs/rewards-system.md](docs/rewards-system.md)、各ゲームの実装メモは [docs/game-notes.md](docs/game-notes.md)、ビルド・公開手順は [docs/build-release.md](docs/build-release.md)）。
 
 #### プログラミングのブロック操作（ドラッグ＆ドロップ対応）
 
@@ -129,6 +130,7 @@ Service Worker（`sw.js`）が全ファイルをキャッシュし、2回目以�
 index.html              アーケード選択画面（オープニング／PWAのホーム）
 room.html               わたしの おへや（ごほうび＝どんぐりくじ・きせかえ・かぐ）
 Design.md               デザインシステム「ねんどの森」の定義（視覚言語の本体）
+docs/                   詳細ドキュメント（programming-game / rewards-system / game-notes / build-release）
 manifest.webmanifest    PWAマニフェスト
 games/
   programming.html      プログラミング（🏠でアーケードへ戻る。assets JS 不要の自己完結）
