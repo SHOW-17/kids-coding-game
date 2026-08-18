@@ -83,7 +83,7 @@ scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-place
   `App.showModal` は絵文字を渡せる API だが「絵文字を使わない」方針のため使わない。
 - 見た目は `:root` で `--accent / --accent-d / --accent-l` をゲームごとに上書きし、背景グラデも合わせる。入場は `.enter .d1..d6`。
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** 各ゲームは規定キーで保存すること：
-  - manekko / tomare → `set('best', 最高記録)`、その他 → `set('cleared', クリア/正解 数)`
+  - manekko / kimari / tomare → `set('best', 最高記録)`（kimari は れんぞく さいこう）、その他 → `set('cleared', クリア/正解 数)`
   - programming は独自キー `kuma_prog_save_v1`（互換のため変更しない。index.html はこれも読む）
 - **新ゲームを足したら4か所を必ず更新**：index.html の `GAMES` 配列・`doReset` の名前空間リスト・
   rewards.js の `earned()`（wins 集計）・scripts/test-games.js の `PAGES`。手順の全体は /new-game スキル参照。

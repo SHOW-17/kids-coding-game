@@ -17,7 +17,7 @@
 
 ## 2. マスコット（ユニコーン）
 
-森の住人。画像アセットは `assets/uni/`（実機）/ `assets/uni/`（このプロジェクト）。
+森の住人。画像アセットは `assets/uni/`（blue_/green_/purple_*）。
 **絵文字は使わない** — キャラは必ずこのユニコーン画像で表現する。
 
 | 役 | 色 | 性格 | おもな出番 |
@@ -60,6 +60,11 @@
 | きまり | スカイ `#2fa6cc` | `#1a6c8a` | すいり力 |
 | かたち | グリーン `#389355` | `#2c7544` | かたち力 |
 | ぴたごら | オレンジ `#e57e1c` | `#a4540b` | くふう力 |
+| とまれあそび | ローズ `#e8567c` | `#ab2c50` | がまん力 |
+| どこちがう | ティール `#2cb1a0` | `#15715f` | かんさつ力 |
+| そっくりわけ | プラム `#c95fc2` | `#83307d` | きりかえ力 |
+| ぺあさがし | インディゴ `#6577e0` | `#3a489c` | おぼえる力 |
+| うたあそび | コーラル `#ff7e62` | `#bd4528` | おんかん力 |
 
 > 新しい色が必要なときは、ゼロから作らず **oklch でこのパレットと同じ明度・彩度帯**から起こす。
 
@@ -152,18 +157,31 @@ games/
   kimari.html              ← きまり
   katachi.html             ← かたち
   pitagora.html            ← ぴたごら
+  tomare.html              ← とまれあそび
+  chigai.html              ← どこちがう
+  sokkuri.html             ← そっくりわけ
+  pair.html                ← ぺあさがし
+  uta.html                 ← うたあそび
 assets/
   uni/                     ← ユニコーン画像（blue_/green_/purple_*）
+  menu/                    ← トップ画面の画像素材
+  bg/                      ← 各ゲームのシーン背景
+  tokens/                  ← 盤面トークン
+  pairs/                   ← ぺあさがしのカード絵柄
+  items/ gacha/ room/      ← ごほうび関連
   icons/                   ← ファビコン・PWA・apple-touch アイコン一式
-  audio.js fx.js save.js rewards.js shell.js  ← 共通基盤（実機は本物、プレビューは軽量フォールバック）
+  fonts/                   ← セルフホストフォント
+  bgm/                     ← BGM音源
+  audio.js fx.js save.js rewards.js shell.js bgm.js  ← 共通基盤（実機は本物、プレビューは軽量フォールバック）
 ```
 
 ### 共通基盤の契約（グローバル）
 - `Sfx`：`tap/pop/step/ding/note/success/fanfare/error/whoosh/sparkle`
-- `FX`：`ring/burst/sparkles/confetti(celebrate)/shake`
+- `FX`：`ring/burst/sparkles/confetti(celebrate)/shake/floatEmoji/acornGain`
 - `Save.game(ns)`：`get/set/bestMax/bestMin`、`Save.resetAll([ns…])`
 - `App`（shell.js）：`go(href)/toast/showModal/el` — **現状は index.html 専用**。
   各ゲームは shell.js を読み込まず、トップバー・結果モーダル・トーストをテーマに合わせて**自前実装**する。
+- `Bgm`（bgm.js）：`play(track)/stop()/setEnabled(b)` — 右上に音符トグルを自動設置。
 
 > ゲーム側は `Sfx/FX/Save` を `try/catch` でガードして呼ぶ（基盤が無くても落ちない）。
 
@@ -180,4 +198,3 @@ assets/
 - [ ] 成功＝キラッ＋音、失敗＝やさしく揺れ＋励まし文
 - [ ] ヒット 44px 以上、`prefers-reduced-motion` 対応
 - [ ] おうち導線、進捗の保存、トップとの連動
-```

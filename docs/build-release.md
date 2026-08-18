@@ -20,10 +20,12 @@ CLAUDE.md から分離した正本（2026-07-06〜）。ビルド手順・公開
 
 - 設定：`capacitor.config.json`＋`android/`。appId は `jp.show17.asobinomori`。
 - ビルド手順（要：JDK 21・Android SDK）：
-  1. `node scripts/build-www.mjs` で公開ファイルだけを `www/` に集める（BGM mp3 も同梱）
-  2. `npx cap sync android`
-  3. `cd android && ./gradlew assembleRelease` で署名済みAPK
+  1. `node scripts/build-sw.mjs` で sw.js（プリキャッシュ一覧・キャッシュ版数）を再生成
+  2. `node scripts/build-www.mjs` で公開ファイルだけを `www/` に集める（BGM mp3 も同梱）
+  3. `npx cap sync android`
+  4. `cd android && ./gradlew assembleRelease` で署名済みAPK
      （→ `android/app/build/outputs/apk/release/app-release.apk`）
+  - `npm run build:apk` で 1〜4 を一括実行できる。
 - 署名鍵はリポジトリ外 `~/.android-keys/`（`asobinomori.jks`＋`asobinomori.keystore.properties`。
   **紛失すると同一署名で更新できなくなる**）。
 - APK は INTERNET 権限なし＝完全オフライン（uta あそび用の `RECORD_AUDIO` のみ宣言）。

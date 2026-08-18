@@ -18,11 +18,17 @@
 | ファイル | 流れる画面 |
 |---|---|
 | `home.mp3`        | アーケード（index.html） |
+| `room.mp3`        | わたしの おへや（room.html） |
 | `programming.mp3` | プログラミング |
 | `manekko.mp3`     | まねっこ |
 | `kimari.mp3`      | きまりあそび |
 | `katachi.mp3`     | かたちづくり |
 | `pitagora.mp3`    | ぴたごら |
+| `tomare.mp3`      | とまれあそび |
+| `chigai.mp3`      | どこちがう |
+| `sokkuri.mp3`     | そっくりわけ |
+| `pair.mp3`        | ぺあさがし |
+| `uta.mp3`         | うたあそび |
 
 - 優先順位：`<画面名>.mp3` → `_default.mp3` → 合成ループ（`bgm.js` 内蔵）。
 - ファイルを置いて画面を開くだけ。差し替えも上書きするだけ（コード変更不要）。

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Capacitor 用の www/ を組み立てる：公開対象（HTML・manifest・assets）だけをコピーする。
 // node_modules や android/ を webDir に含めないための分離。APK には assets/bgm/ の
-// mp3（.gitignore 済み）も同梱する。
+// mp3（コミット済み・配信対象）も同梱する。
 import { cpSync, rmSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';

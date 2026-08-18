@@ -1,13 +1,11 @@
 /* ============================================================
    rewards.js — あそびのもり 共通ごほうび管理（どんぐり経済）
    ------------------------------------------------------------
-   ・どんぐり（通貨）は「全ゲームのがんばり合計」から自動計算する。
-     各ゲームのセーブには一切手を入れない＝最小構成で横断集計。
-       programming … クリアしたレベル数（一意化）
-       manekko     … さいこう だん数（best）
-       kimari      … れんぞく さいこう（best）
-       katachi     … かんせい数（cleared）
-       pitagora    … クリア数（cleared）
+   ・どんぐり（通貨）＝全ゲームの「せいこう量（wins）」の累計。各ゲームが自分の名前空間に
+     wins を貯め、earned() が合計する（programming だけは独自キー
+     kuma_prog_save_v1.wins を progWins() で読む）。
+   ・旧方式（最高記録・初クリア数ベース）の分は legacyEarned() を一度だけ
+     legacyBonus として確定して加算する。
    ・つかった どんぐり（spent）・もっているアイテム（owned）・きている
      もの（wear）は room 名前空間に保存する（Save.game('room')）。
    ・くじ（draw）は「まだ持っていないアイテム」からランダムに1つ。
@@ -18,9 +16,9 @@
   'use strict';
 
   var ROOM_NS = 'room';
-  var PRICE = 8;            // くじ1かい＝どんぐり8こ（コンプ総額＝8×22＝176。ゆるすぎ調整）
+  var PRICE = 8;            // くじ1かい＝どんぐり8こ（コンプ総額＝8×21＝168。ゆるすぎ調整）
 
-  // ごほうび図鑑（順序＝図鑑の並び）。見た目（CSS図形）は room.html 側で描画。
+  // ごほうび図鑑（順序＝図鑑の並び）。見た目は画像 assets/items/<id>.png を room.html の itemImg() が描画（face_blush だけ CSS図形の例外）。
   // cat: 'hat'（あたま）/ 'face'（かお）/ 'neck'（くび）/ 'room'（かぐ）
   var ITEMS = [
     { id: 'hat_party',   cat: 'hat',  name: 'とんがりぼうし' },
