@@ -17,6 +17,7 @@
 - `docs/build-release.md` — PWA / GitHub Pages / Android APK のビルド・公開手順
 - `.claude/skills/new-game/` — 新ゲーム追加の手順（/new-game）
 - `.claude/skills/build-release/` — 公開・APKビルドの手順（/build-release）
+- `.agents/skills` は `.claude/skills` へのローカル用シンボリックリンク（Codex 等から参照するため）
 
 ---
 
