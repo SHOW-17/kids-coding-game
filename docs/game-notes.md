@@ -71,7 +71,7 @@ CLAUDE.md から分離した正本（2026-07-06〜）。各ゲーム固有の落
 - manekko → `Save.game('manekko').set('best', 最高だん数)`
 - kimari → `Save.game('kimari').bestMax('best', れんぞく さいこう)`（index はこれを読む。`cleared` も保存するがホーム表示には未使用）
 - katachi / pitagora → `Save.game('ns').set('cleared', クリア数)`
-- tomare → `Save.game('tomare').set('best', 最高スコア)`
+- tomare → `Save.game('tomare').bestMax('best', 最高スコア)`
 - chigai / sokkuri / pair / uta → `Save.game('ns').set('cleared', クリア/正解/ラウンド 数)`
 - プログラミングは独自キー `kuma_prog_save_v1`（`{cleared:[...], wins}`。キー名は互換のため kuma_ のまま）。index.html はこれも読む。
 - 旧 `assets/arcade.css` は未使用＝廃止（スタイルは各HTMLにインライン）。

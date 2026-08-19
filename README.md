@@ -154,6 +154,9 @@ assets/
   pairs/                ぺあさがしのカード絵柄12種（webp 透過。りんご・ほし・はな・ちょう 等）
   icons/               ファビコン・PWA・apple-touch アイコン一式
   fonts/                セルフホストフォント（fonts.css + woff2。オフライン対応）
+  items/                きせかえ・おへやアイテム画像（ぼうし・くび・かお・おへや かざり）
+  gacha/                くじ演出の画像（ガチャマシン・たまご）
+  room/                 おへや背景画像
   audio.js              共通サウンド（効果音。Web Audio）
   fx.js                 共通エフェクト（紙吹雪・キラキラ・シェイク）
   save.js               共通セーブ（ゲーム別 localStorage）
@@ -168,6 +171,7 @@ scripts/
   test-games.js         ヘッドレス・スモークテスト
   build-sw.mjs          sw.js 生成（プリキャッシュ一覧の更新）
   build-www.mjs         Capacitor 用 www/ の組み立て
+  gen-placeholder-art.mjs  新ゲーム用プレースホルダー画像の生成
 ```
 
 > スタイルは各HTMLに**インライン**で持つ（共通の見た目ルールは [Design.md](Design.md)）。
