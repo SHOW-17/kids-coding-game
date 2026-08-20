@@ -133,7 +133,7 @@ Design.md               デザインシステム「ねんどの森」の定義�
 docs/                   詳細ドキュメント（programming-game / rewards-system / game-notes / build-release）
 manifest.webmanifest    PWAマニフェスト
 games/
-  programming.html      プログラミング（🏠でアーケードへ戻る。assets JS 不要の自己完結）
+  programming.html      プログラミング（🏠でアーケードへ戻る。bgm.js 以外の assets JS を使わない自己完結）
   manekko.html          まねっこ（サイモン）
   kimari.html           きまりあそび（パターン推理）
   katachi.html          かたちづくり（タングラム＝かげあわせ方式）

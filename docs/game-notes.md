@@ -44,6 +44,9 @@ CLAUDE.md から分離した正本（2026-07-06〜）。各ゲーム固有の落
 
 ## アセット規約（assets/ 配下の置き場ルール）
 
+- `menu/` — トップ画面（index.html）専用の画像素材（webp。背景 `bg` / ロゴ `logo` /
+  ユニコーン `uni_*` / ボタン `btn_*` / ゲーム看板 `banner_<id>` / カードアート `card_<id>`）。
+  **banner_/card_ は index.html の `GAMES` 配列と1対1対応（新ゲームは両方に足す）**。
 - `uni/` — ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）。
 - `bg/` — 各ゲームのシーン背景（webp 1024x1536。生成画像＝空＋下1/3だけ丘の縦長シーン。
   body に center bottom / cover で敷く。中央は余白＝UIが乗る前提の低コントラスト）。

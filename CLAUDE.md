@@ -62,7 +62,7 @@ games/
   uta.html              うたあそび（音程トレーニング）
 assets/                 画像・音・共通JS（置き場の規約 → docs/game-notes.md §アセット規約）
   audio.js / fx.js / save.js / rewards.js / shell.js / bgm.js   共通基盤（下記）
-  uni/ bg/ tokens/ pairs/ items/ gacha/ room/ icons/ fonts/ bgm/
+  menu/ uni/ bg/ tokens/ pairs/ items/ gacha/ room/ icons/ fonts/ bgm/
 sw.js                   Service Worker（scripts/build-sw.mjs で自動生成。直接編集しない）
 capacitor.config.json   Capacitor 設定（appId: jp.show17.asobinomori）
 android/                Android ネイティブプロジェクト（→ docs/build-release.md）

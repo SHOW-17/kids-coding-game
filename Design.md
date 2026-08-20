@@ -152,7 +152,7 @@ box-shadow:
 index.html                 ← トップ（あそびのもり）
 room.html                  ← わたしの おへや（ごほうび。どんぐりくじ・きせかえ・かぐ）
 games/
-  programming.html         ← プログラミング（自己完結／assets JS不要）
+  programming.html         ← プログラミング（自己完結／bgm.js 以外の assets JS は不要）
   manekko.html             ← まねっこ
   kimari.html              ← きまり
   katachi.html             ← かたち
