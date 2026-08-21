@@ -82,7 +82,9 @@ scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-place
 - **App**（shell.js）は**現状 index.html 専用**。各ゲームは topbar・結果モーダル・トーストをテーマに合わせて
   自前インライン実装する（色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先）。
   `App.showModal` は絵文字を渡せる API だが「絵文字を使わない」方針のため使わない。
-- 見た目は `:root` で `--accent / --accent-d / --accent-l` をゲームごとに上書きし、背景グラデも合わせる。入場は `.enter .d1..d6`。
+- 見た目は `:root` にゲームごとのアクセント色を定義し、背景グラデも合わせる。入場は `.enter .d1..d6`。
+  新しいゲーム（tomare/chigai/sokkuri/pair/uta）は `--ac / --ac-d / --ac-sh / --ac-soft` の4つ（index.html の
+  カードと同じ命名）。旧ゲーム（programming/manekko/kimari/katachi/pitagora）は色名変数（`--purple` 等）のまま。
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** 各ゲームは規定キーで保存すること：
   - manekko / kimari / tomare → `set('best', 最高記録)`（kimari は れんぞく さいこう）、その他 → `set('cleared', クリア/正解 数)`
   - programming は独自キー `kuma_prog_save_v1`（互換のため変更しない。index.html はこれも読む）
