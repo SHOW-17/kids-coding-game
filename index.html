@@ -69,8 +69,33 @@ body{
 .cast .pad{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
   width:38%;max-width:170px;height:20px;border-radius:50%;background:rgba(110,80,40,.18);filter:blur(7px);}
 @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-9px)}}
+/* じぶんの ユニコーン（おへやで きせかえした すがた。タップで おへやへ） */
+.cast .me{position:absolute;bottom:0;left:50%;z-index:3;width:calc(178px * 258 / 374);cursor:pointer;
+  border:none;background:none;padding:0;animation:bob 3s var(--ease) infinite;}
+.cast .me .bd{position:relative;width:100%;z-index:0;}
+.cast .me img.uni{position:static;display:block;width:100%;height:auto;filter:drop-shadow(0 12px 8px rgba(90,55,15,.32));}
+.cast .me .acc{position:absolute;transform:translate(-50%,-50%);pointer-events:none;}
+.cast .me .acc img{position:static;display:block;width:100%;height:auto;filter:drop-shadow(0 2px 2px rgba(80,45,10,.22));}
+.cast .me .blush-css{position:relative;width:100%;padding-top:30%;}
+.cast .me .blush-css i{position:absolute;top:0;width:32%;height:100%;border-radius:50%;
+  background:radial-gradient(circle,#ff8fae 0%,rgba(255,143,174,.65) 45%,rgba(255,143,174,0) 72%);}
+.cast .me .blush-css i:first-child{left:1%}.cast .me .blush-css i:last-child{right:1%}
+/* ぼうしを かぶっているときは キャッチコピーに かさならないよう すこし さげる */
+.cast.hat{margin-top:30px;}
+/* スマホ縦：ヒーローを ちいさくして「きょうの 3つ」を はやく見せる */
+@media (orientation:portrait) and (max-width:520px){
+  .hero{padding-top:calc(50px + env(safe-area-inset-top));}
+  .logo-img{width:min(62%,330px);}
+  .tagline{font-size:13px;padding:5px 14px;}
+  .cast{height:146px;margin-top:4px;}
+  .cast.hat{margin-top:26px;}
+  .cast .blue{height:142px;}
+  .cast .me{width:calc(142px * 258 / 374);}
+  .cast .green{height:96px;}
+  .cast .purple{height:98px;}
+}
 @keyframes bobSide{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@media (prefers-reduced-motion: reduce){ .cast img{animation:none!important;} }
+@media (prefers-reduced-motion: reduce){ .cast img,.cast .me{animation:none!important;} }
 
 /* ===== おへや 入口 ===== */
 .room-entry{position:relative;display:flex;align-items:center;gap:13px;width:100%;
@@ -208,11 +233,69 @@ body{
 .credit{font-size:11px;color:var(--ink-soft);font-weight:700;
   background:rgba(255,255,255,.55);display:inline-block;padding:5px 14px;border-radius:999px;}
 
+
+/* ===== きょうの 3つ（まいにちの スタンプ） ===== */
+.today{position:relative;overflow:hidden;margin:14px 0 4px;padding:14px 14px 12px;border-radius:26px;
+  background:linear-gradient(180deg,#fffaf0,#fff1d6);
+  box-shadow:0 16px 28px -14px rgba(120,75,20,.5),0 3px 0 rgba(120,80,30,.12),
+    inset 0 3px 0 rgba(255,255,255,.95),inset 0 -8px 14px rgba(190,150,90,.14);}
+.today-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.today-h b{font-family:'Mochiy Pop One';font-size:17px;color:var(--ink);}
+.today-h .sun{width:26px;height:26px;border-radius:50%;flex:0 0 auto;
+  background:radial-gradient(circle at 40% 35%,#fff3b0,#ffc83d 60%,#f59f12);
+  box-shadow:0 0 0 4px rgba(255,200,61,.25),0 2px 0 #d9851f;}
+.today-h .sub{font-size:12px;font-weight:800;color:var(--ink-soft);margin-left:auto;}
+.today-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:11px;}
+.tslot{position:relative;border:none;padding:0;cursor:pointer;background:none;font:inherit;color:inherit;
+  border-radius:20px;transition:transform .16s var(--ease);}
+.tslot:active{transform:translateY(3px) scale(.97);}
+.tslot .pic{display:block;position:relative;aspect-ratio:1/1;border-radius:20px;overflow:hidden;
+  background:#f3ead7;box-shadow:0 7px 0 var(--ac-sh,#d9851f),0 12px 18px -8px rgba(90,55,15,.45),inset 0 2px 0 rgba(255,255,255,.6);}
+.tslot .pic img{width:100%;height:100%;object-fit:cover;display:block;}
+.tslot .nm{display:block;margin-top:10px;font-family:'Mochiy Pop One';font-size:12.5px;color:var(--ac-d,#9a6420);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.tslot .stamp{position:absolute;right:-6px;top:-8px;width:40%;aspect-ratio:1;z-index:2;
+  border-radius:50%;background:rgba(255,255,255,.6);border:3px dashed rgba(214,180,120,.75);
+  display:flex;align-items:center;justify-content:center;}
+.tslot .stamp img{width:118%;height:118%;object-fit:contain;opacity:0;}
+.tslot.done .stamp{background:none;border-color:transparent;}
+.tslot.done .stamp img{opacity:1;transform:none;}
+.tslot.pop .stamp img{animation:stampIn .7s cubic-bezier(.34,1.56,.64,1) both;}
+.tslot.done .pic::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.18);}
+@keyframes stampIn{from{opacity:0;transform:scale(2.4) rotate(-40deg)}to{opacity:1;transform:none}}
+.week{display:flex;justify-content:center;gap:6px;margin-top:12px;}
+.week .d{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--ink-faint);min-width:30px;}
+.week .d i{width:24px;height:24px;border-radius:50%;background:#f0e2c6;box-shadow:inset 0 2px 3px rgba(150,110,60,.22);
+  background-size:cover;background-position:center;}
+.week .d.has i{background-color:transparent;box-shadow:none;}
+.week .d.part i{opacity:.55;}
+.week .d.now{color:var(--ink);}
+.week .d.now i{outline:3px solid var(--honey);outline-offset:2px;}
+.acorn-mini{width:14px;height:15px;display:inline-block;position:relative;}
+.acorn-mini::before{content:"";position:absolute;top:0;left:0;width:14px;height:7px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#a9712f,#7d4f17);}
+.acorn-mini::after{content:"";position:absolute;bottom:0;left:1.5px;width:11px;height:10px;border-radius:6px 6px 6px 6px/4px 4px 8px 8px;background:linear-gradient(180deg,#e6b25a,#cf8b2c);}
+.today .bonus{display:inline-flex;align-items:center;gap:5px;font-family:'Mochiy Pop One';font-size:12.5px;color:#9a6420;
+  background:#fffdf7;padding:4px 11px 4px 8px;border-radius:999px;box-shadow:inset 0 2px 0 #fff,0 2px 0 rgba(150,100,40,.18);}
+@media (prefers-reduced-motion: reduce){ .tslot.pop .stamp img{animation:none;} }
+
+/* ===== おうちの ひと パネル ===== */
+.pset{text-align:left;margin:4px 0 16px;display:flex;flex-direction:column;gap:14px;}
+.pset h3{font-family:'Mochiy Pop One';font-size:14px;color:var(--ink);margin-bottom:7px;}
+.pset .note{font-size:12px;font-weight:700;color:var(--ink-faint);margin-top:6px;}
+.seg{display:flex;flex-wrap:wrap;gap:6px;}
+#segLimit{display:grid;grid-template-columns:repeat(5,1fr);}
+#segLimit button{font-size:12.5px;padding:8px 2px;white-space:nowrap;}
+.dlg .seg button{min-width:0;}
+.dlg .seg button{flex:1 1 auto;min-width:52px;min-height:44px;padding:8px 6px;font-size:14px;
+  background:#f6eddc;color:var(--ink-soft);box-shadow:0 3px 0 rgba(150,110,60,.2);}
+.dlg .seg button.on{background:linear-gradient(180deg,var(--honey),var(--honey-d));color:#fff;box-shadow:0 3px 0 #d9851f;}
+
 /* ===== dialogs ===== */
 .ovl{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   background:rgba(50,35,15,.46);backdrop-filter:blur(2px);padding:24px;}
 .ovl[hidden]{display:none;}
 .dlg{background:#fffdf7;border-radius:28px;max-width:340px;width:100%;padding:24px 22px;text-align:center;
+  max-height:calc(100dvh - 32px);overflow-y:auto;
   box-shadow:0 26px 50px -16px rgba(90,55,15,.6),inset 0 3px 0 rgba(255,255,255,.95);
   animation:pop .28s var(--ease);}
 @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
@@ -233,7 +316,7 @@ body{
 <div class="scrim" aria-hidden="true"></div>
 <div class="screen">
 
-  <button class="iconbtn enter d1" id="btnSettings" aria-label="せってい">
+  <button class="iconbtn enter d1" id="btnSettings" aria-label="おうちの ひと メニュー">
     <img src="assets/menu/btn_settings.webp" alt="" draggable="false">
   </button>
 
@@ -247,6 +330,13 @@ body{
       <img class="blue"   src="assets/menu/uni_blue.webp"   alt="" draggable="false">
     </div>
   </header>
+
+  <section class="today enter d3" id="today" hidden>
+    <div class="today-h"><span class="sun" aria-hidden="true"></span><b>きょうの 3つ</b>
+      <span class="sub" id="todaySub">あそんで スタンプを あつめよう</span></div>
+    <div class="today-row" id="todayRow"></div>
+    <div class="week" id="week" aria-label="あそんだ ひ"></div>
+  </section>
 
   <button class="room-entry enter d3" id="roomEntry" aria-label="わたしの おへや へ いく">
     <span class="door"><span class="roof"></span><span class="wall"></span></span>
@@ -269,8 +359,26 @@ body{
 <div class="ovl" id="ovlSet" hidden>
   <div class="dlg">
     <div class="ic"><img src="assets/menu/btn_settings.webp" alt=""></div>
-    <h2>せってい</h2>
-    <p>おうちの ひとが つかう ボタンだよ。</p>
+    <h2>おうちの ひと メニュー</h2>
+    <div class="pset">
+      <div>
+        <h3>あそぶ じかん（1にち）</h3>
+        <div class="seg" id="segLimit">
+          <button data-m="0">なし</button><button data-m="15">15ふん</button><button data-m="30">30ふん</button>
+          <button data-m="45">45ふん</button><button data-m="60">60ふん</button>
+        </div>
+        <div class="note" id="usedNote"></div>
+      </div>
+      <div>
+        <h3>こうかおん</h3>
+        <div class="seg" id="segSfx"><button data-v="1">オン</button><button data-v="0">オフ</button></div>
+      </div>
+      <div id="talkRow">
+        <h3>こえの あんない（よみあげ）</h3>
+        <div class="seg" id="segTalk"><button data-v="1">オン</button><button data-v="0">オフ</button></div>
+        <div class="note" id="talkNote"></div>
+      </div>
+    </div>
     <div class="col">
       <button class="danger" id="setReset">きろくを ぜんぶ けす</button>
       <button class="ghost" id="setClose">とじる</button>
@@ -298,6 +406,8 @@ body{
 <script src="assets/rewards.js"></script>
 <script src="assets/shell.js"></script>
 <script src="assets/bgm.js"></script>
+<script src="assets/talk.js"></script>
+<script src="assets/guard.js"></script>
 <script>
 /* ===== ゲーム定義（看板・カードは画像素材を使用） ===== */
 const GAMES = [
@@ -305,7 +415,7 @@ const GAMES = [
     id:'kuma', feature:true, href:'games/programming.html',
     name:'プログラミング', desc:'やじるしを ならべて、<br>ゴールまで すすもう。',
     ac:'#ffb43d', acd:'#f59312', acsh:'#d9851f', acsoft:'#ffe9c6',
-    ribbon:'にんき No.1', total:19,
+    ribbon:'まずは ここから', total:19,
     banner:'assets/menu/banner_programming.webp',
     scene:'assets/menu/card_programming.webp'
   },
@@ -349,7 +459,7 @@ const GAMES = [
     id:'tomare', href:'games/tomare.html', ns:'tomare',
     name:'とまれあそび', desc:'ユニコーンは タップ、<br>とげとげは がまん！',
     ac:'#e8567c', acd:'#d13b64', acsh:'#ab2c50', acsoft:'#ffdce7',
-    tag:'がまん力', ribbon:'しんさく！',
+    tag:'がまん力',
     progressKey:'best', bestLabel:v=>v>0?('さいこう '+v+'てん'):null,
     banner:'assets/menu/banner_tomare.webp',
     scene:'assets/menu/card_tomare.webp'
@@ -358,7 +468,7 @@ const GAMES = [
     id:'chigai', href:'games/chigai.html', ns:'chigai',
     name:'どこちがう', desc:'2まいの え、<br>ちがう ところは どこ？',
     ac:'#2cb1a0', acd:'#1f9183', acsh:'#15715f', acsoft:'#d3f3ec',
-    tag:'かんさつ力', ribbon:'しんさく！',
+    tag:'かんさつ力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'もん クリア'):null,
     banner:'assets/menu/banner_chigai.webp',
     scene:'assets/menu/card_chigai.webp'
@@ -367,7 +477,7 @@ const GAMES = [
     id:'sokkuri', href:'games/sokkuri.html', ns:'sokkuri',
     name:'そっくりわけ', desc:'いろ・かたちで<br>かごに わけよう。',
     ac:'#c95fc2', acd:'#a844a1', acsh:'#83307d', acsoft:'#f7ddf5',
-    tag:'きりかえ力', ribbon:'しんさく！',
+    tag:'きりかえ力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'こ せいかい'):null,
     banner:'assets/menu/banner_sokkuri.webp',
     scene:'assets/menu/card_sokkuri.webp'
@@ -376,7 +486,7 @@ const GAMES = [
     id:'pair', href:'games/pair.html', ns:'pair',
     name:'ぺあさがし', desc:'カードを めくって<br>おなじ えを さがそう。',
     ac:'#6577e0', acd:'#4a5cc4', acsh:'#3a489c', acsoft:'#e1e5fb',
-    tag:'おぼえる力', ribbon:'しんさく！',
+    tag:'おぼえる力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'かい クリア'):null,
     banner:'assets/menu/banner_pair.webp',
     scene:'assets/menu/card_pair.webp'
@@ -385,7 +495,7 @@ const GAMES = [
     id:'uta', href:'games/uta.html', ns:'uta',
     name:'うたあそび', desc:'たかい こえ ひくい こえ、<br>うたって あそぼう。',
     ac:'#ff7e62', acd:'#e85c3e', acsh:'#bd4528', acsoft:'#ffe2da',
-    tag:'おんかん力', ribbon:'しんさく！',
+    tag:'おんかん力',
     progressKey:'cleared', bestLabel:v=>v>0?(v+'かい クリア'):null,
     banner:'assets/menu/banner_uta.webp',
     scene:'assets/menu/card_uta.webp'
@@ -500,11 +610,109 @@ GAMES.forEach((g,i)=>{
   (g.feature ? featWrap : grid).appendChild(c);
 });
 
+function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
+/* ===== きょうの 3つ（まいにちの スタンプ） ===== */
+const STAMP = 'assets/menu/stamp.webp';
+function renderToday(){
+  if(!window.Rewards || !Rewards.daily) return;
+  let st; try{ st = Rewards.daily(); }catch(e){ return; }
+  const box = document.getElementById('today'); box.hidden = false;
+  const row = document.getElementById('todayRow'); row.innerHTML = '';
+  // まえに見たときより増えた スタンプは ポン！と押す演出
+  let seen = 0; try{ seen = +sessionStorage.getItem('amori_seen_'+st.date) || 0; }catch(e){}
+  st.picks.forEach((id,i)=>{
+    const g = GAMES.find(x=>x.id===id); if(!g) return;
+    const done = st.done.indexOf(id) >= 0;
+    const b = document.createElement('button');
+    b.className = 'tslot' + (done ? ' done' : '');
+    b.style.setProperty('--ac-sh', g.acsh); b.style.setProperty('--ac-d', g.acd);
+    b.setAttribute('aria-label', g.name + (done ? '（スタンプ あり）' : '') + ' で あそぶ');
+    b.innerHTML = `<span class="pic"><img src="${g.scene}" alt="" draggable="false"></span>
+      <span class="stamp" aria-hidden="true"><img src="${STAMP}" alt="" draggable="false"></span>
+      <span class="nm">${g.name}</span>`;
+    b.addEventListener('click', ev=>navTo(g.href, g, ev));
+    row.appendChild(b);
+  });
+  const newly = st.done.length > seen;
+  if(newly){
+    const slots = [...row.children].filter(x=>x.classList.contains('done'));
+    slots.forEach((x,i)=>{ if(i >= seen){ x.classList.add('pop'); x.querySelector('.stamp img').style.animationDelay = (0.5 + (i-seen)*0.35)+'s'; } });
+    setTimeout(()=>{ sfx('pop'); try{ const r=slots[slots.length-1].getBoundingClientRect(); FX.sparkles(r.left+r.width*.8, r.top+10); }catch(e){} }, 650);
+  }
+  try{ sessionStorage.setItem('amori_seen_'+st.date, st.done.length); }catch(e){}
+  const left = st.picks.length - st.done.length;
+  document.getElementById('todaySub').innerHTML = st.complete
+    ? 'ぜんぶ できた！ また あしたね'
+    : `<span class="bonus"><span class="acorn-mini"></span>あと ${left}つで どんぐり ＋${st.bonus}</span>`;
+  // あそんだ ひ（さいきんの 7にち）
+  const days = Rewards.stampDays ? Rewards.stampDays() : {};
+  const W = ['にち','げつ','か','すい','もく','きん','ど'];
+  const wk = document.getElementById('week'); wk.innerHTML = '';
+  for(let k=6;k>=0;k--){
+    const d = new Date(); d.setDate(d.getDate()-k);
+    const key = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    const n = days[key] || 0;
+    const c = document.createElement('span');
+    c.className = 'd' + (n ? ' has' : '') + (n && n<3 ? ' part' : '') + (k===0 ? ' now' : '');
+    c.innerHTML = `<i style="${n ? `background-image:url(${STAMP})` : ''}"></i>${W[d.getDay()]}`;
+    wk.appendChild(c);
+  }
+  // 3つ そろった日は1回だけ ボーナス
+  if(st.complete && !st.bonusGiven){
+    setTimeout(()=>{
+      if(!Rewards.claimDaily()) return;
+      try{ Sfx.fanfare(); }catch(e){}
+      try{ FX.confetti(); }catch(e){}
+      try{ const r = box.getBoundingClientRect(); FX.acornGain(st.bonus, r.left+r.width/2, r.top+r.height/2); }catch(e){}
+      try{ if(window.Talk) Talk.say('ぜんぶ できた！ どんぐり ' + st.bonus + 'こ ゲット！'); }catch(e){}
+      refreshRoom();
+    }, newly ? 1500 : 700);
+  }
+}
+renderToday();
+
+/* ===== ホームの じぶんの ユニコーン（きせかえ中なら その すがたで） ===== */
+(function dressHero(){
+  if(!window.Rewards || !Rewards.PLACE) return;
+  let w = {}; try{ w = Rewards.wear(); }catch(e){}
+  const cats = ['neck','face','hat'].filter(c=>w[c]);
+  if(!cats.length) return;
+  let pos = {}; try{ pos = Save.game('room').get('pos', {}) || {}; }catch(e){}
+  const img = id => id==='face_blush' ? '<div class="blush-css"><i></i><i></i></div>'
+                                       : `<img src="assets/items/${id}.webp" alt="" draggable="false">`;
+  let acc = '';
+  cats.forEach(cat=>{
+    const id = w[cat], p = Rewards.PLACE[id] || {cx:50,cy:30,w:50}, c = pos[id];
+    const st = `left:${c?c.x:p.cx}%;top:${c?c.y:p.cy}%;width:${p.w}%;`;
+    if(p.wrap){
+      acc += `<div class="acc" style="${st}z-index:-1">${img(id)}</div>`;
+      acc += `<div class="acc" style="${st}z-index:3">${img(id).replace('<img ', `<img style="clip-path:${p.wrap};-webkit-clip-path:${p.wrap}" `)}</div>`;
+    } else acc += `<div class="acc" style="${st}z-index:2">${img(id)}</div>`;
+  });
+  const old = document.querySelector('.cast .blue'); if(!old) return;
+  if(w.hat) document.querySelector('.cast').classList.add('hat');   // ぼうしの ぶん うえを あける
+  const me = document.createElement('button');
+  me.className = 'me'; me.setAttribute('aria-label','わたしの ユニコーン（おへやへ）');
+  me.innerHTML = `<div class="bd"><img class="uni" src="assets/uni/blue_standing.webp" alt="" draggable="false">${acc}</div>`;
+  me.addEventListener('click', ()=>document.getElementById('roomEntry').click());
+  old.replaceWith(me);
+})();
+
 /* ===== おへや 入口（どんぐり残数・くじ通知） ===== */
 (function(){
   const entry = document.getElementById('roomEntry');
   if(!entry) return;
   // どんぐり残数・くじ通知（Rewards が無い環境でも入口ナビは生かす）
+  refreshRoom();
+  entry.addEventListener('click', (ev)=>{
+    try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
+    try{ if(window.FX&&FX.ring){ const t=ev.currentTarget.getBoundingClientRect();
+      FX.ring(t.left+t.width/2, t.top+t.height/2, {color:'#c0832f', vr:7, life:24}); } }catch(e){}
+    if(window.App&&App.go){ try{ App.go('room.html'); return; }catch(e){} }
+    setTimeout(()=>{ location.href='room.html'; }, 110);
+  });
+})();
+function refreshRoom(){
   try{
     if(window.Rewards){
       document.getElementById('roomCount').textContent = Rewards.balance();
@@ -517,21 +725,46 @@ GAMES.forEach((g,i)=>{
         : 'どんぐりを ためて くじを ひこう';
     }
   }catch(e){}
-  entry.addEventListener('click', (ev)=>{
-    try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
-    try{ if(window.FX&&FX.ring){ const t=ev.currentTarget.getBoundingClientRect();
-      FX.ring(t.left+t.width/2, t.top+t.height/2, {color:'#c0832f', vr:7, life:24}); } }catch(e){}
-    if(window.App&&App.go){ try{ App.go('room.html'); return; }catch(e){} }
-    setTimeout(()=>{ location.href='room.html'; }, 110);
-  });
-})();
+}
 
 /* ===== せってい / ぜんぶ けす ===== */
 const ovlSet = document.getElementById('ovlSet');
 const ovl = document.getElementById('ovl');
-function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
 
-document.getElementById('btnSettings').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = false; });
+function openParent(){ syncParent(); ovlSet.hidden = false; }
+document.getElementById('btnSettings').addEventListener('click', ()=>{
+  sfx('tap');
+  if(window.Guard && Guard.gate) Guard.gate(openParent); else openParent();
+});
+function syncParent(){
+  const lim = window.Guard ? Guard.limit : 0;
+  document.querySelectorAll('#segLimit button').forEach(b=>b.classList.toggle('on', +b.dataset.m===lim));
+  const used = window.Guard ? Guard.usedMin() : 0;
+  const rem = window.Guard ? Guard.remainingMin() : Infinity;
+  document.getElementById('usedNote').textContent = 'きょう あそんだ じかん：' + used + 'ふん' +
+    (lim && rem!==Infinity ? '（のこり ' + rem + 'ふん）' : '');
+  const on = !(window.Sfx && Sfx.enabled===false);
+  document.querySelectorAll('#segSfx button').forEach(b=>b.classList.toggle('on', (b.dataset.v==='1')===on));
+  const T = window.Talk;
+  const ok = T && T.supported;
+  document.querySelectorAll('#segTalk button').forEach(b=>{ b.disabled = !ok; b.classList.toggle('on', ok && (b.dataset.v==='1')===T.enabled); });
+  document.getElementById('talkNote').textContent = ok
+    ? 'ヒントを こえで よみあげます（ヒントを タップしても よめます）'
+    : 'この たんまつでは よみあげが つかえません';
+}
+document.getElementById('segLimit').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b||!window.Guard) return;
+  sfx('tap'); Guard.setLimit(+b.dataset.m); syncParent();
+});
+document.getElementById('segSfx').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b||!window.Sfx||!Sfx.setEnabled) return;
+  Sfx.setEnabled(b.dataset.v==='1'); sfx('tap'); syncParent();
+});
+document.getElementById('segTalk').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b||!window.Talk) return;
+  sfx('tap'); Talk.setEnabled(b.dataset.v==='1'); syncParent();
+  if(Talk.enabled) Talk.say('こえの あんない オン');
+});
 document.getElementById('setClose').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = true; });
 document.getElementById('setReset').addEventListener('click', ()=>{ sfx('tap'); ovlSet.hidden = true; ovl.hidden = false; });
 ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true; });

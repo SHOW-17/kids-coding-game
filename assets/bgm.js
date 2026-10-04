@@ -41,8 +41,11 @@
      2) 共通 _default.mp3（全画面で同じ曲を流したいとき。1ファイル置けばOK）
      どちらも無ければ合成BGMへフォールバックする。 */
   var SHARED = '_default';
+  /* assets/bgm/ に置いた「画面別」mp3 の名前。置いたら ここに足す
+     （無いファイルを毎回とりに行って 404 を出さない＝オフラインのアプリでも無駄がない） */
+  var HAVE = {};
   function mp3candidates(track) {
-    return track === SHARED ? [mp3url(SHARED)] : [mp3url(track), mp3url(SHARED)];
+    return (track === SHARED || !HAVE[track]) ? [mp3url(SHARED)] : [mp3url(track), mp3url(SHARED)];
   }
 
   /* ---- ON/OFF 永続化（全画面共通キー）---- */

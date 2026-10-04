@@ -48,19 +48,6 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ===== layout ===== */
 .wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;
   display:flex;flex-direction:column;align-items:center;padding:0 16px;}
-/* 横画面：3x3の あなを 大きく左、ステータス類は右カラム（タブレット横） */
-@media (orientation:landscape) and (min-width:720px){
-  .wrap{max-width:1020px;display:grid;align-items:center;justify-items:center;
-    column-gap:44px;row-gap:12px;
-    grid-template-columns:auto minmax(220px,330px);
-    grid-template-areas:"board status" "board diff" "board gauge" "board hint";}
-  .statusbar{grid-area:status;align-self:end;}
-  .diffbar{grid-area:diff;}
-  .gaugewrap{grid-area:gauge;width:100%;}
-  .hint{grid-area:hint;align-self:start;margin:0;}
-  .board-wrap{grid-area:board;width:min(46vw,72vh,520px);margin:18px 0;}
-}
-
 .statusbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:8px 0 2px;}
 .pill{font-family:'Mochiy Pop One';background:#fff;padding:9px 16px;border-radius:999px;font-size:17px;
   color:var(--ac-d);box-shadow:0 4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;transition:transform .15s var(--spring);}
@@ -86,9 +73,10 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* むずかしさ えらび */
 .diffbar{display:flex;gap:8px;justify-content:center;margin:8px 0 0;}
 .diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--ac-d);background:#fff;border:none;cursor:pointer;
-  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+  min-height:44px;padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(209,59,100,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
 .diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(209,59,100,.18);}
 .diff.sel{background:linear-gradient(180deg,#ff8fab,var(--ac));color:#fff;box-shadow:0 4px 0 var(--ac-d);}
+.diff:disabled{cursor:default;opacity:.58;}
 
 .hint{font-weight:800;font-size:15.5px;color:var(--ink-soft);min-height:26px;text-align:center;margin:10px auto 6px;
   transition:color .2s;width:fit-content;background:rgba(255,255,255,.88);
@@ -153,6 +141,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   100%{transform:translate(-50%,118%) scale(.75,.9);}
 }
 .cell.snap .actor{transition:none;animation:none;}
+/* とりそこねても、あなだけが ぷるっと おしえてくれる */
+.cell.miss-wiggle{animation:missWiggle .4s var(--ease);}
+@keyframes missWiggle{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 /* おっと！バブル */
 .oops{position:absolute;left:50%;top:4%;z-index:6;pointer-events:none;white-space:nowrap;
   font-family:'Mochiy Pop One';font-size:14px;color:var(--ac-d);background:#fff;
@@ -225,13 +216,25 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   .enter{opacity:1;transform:none;animation:none;}
   .gauge.low .gfill{animation:none;}
 }
+/* 横画面：3x3の あなを 大きく左、ステータス類は右カラム（タブレット横） */
+@media (orientation:landscape) and (min-width:720px){
+  .wrap{max-width:1020px;display:grid;align-items:center;justify-items:center;
+    column-gap:44px;row-gap:12px;
+    grid-template-columns:auto minmax(220px,330px);
+    grid-template-areas:"board status" "board diff" "board gauge" "board hint";}
+  .statusbar{grid-area:status;align-self:end;}
+  .diffbar{grid-area:diff;}
+  .gaugewrap{grid-area:gauge;width:100%;}
+  .hint{grid-area:hint;align-self:start;margin:0;}
+  .board-wrap{grid-area:board;width:min(46vw,72vh,520px);margin:18px 0;}
+}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.png" alt="">とまれあそび</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.webp" alt="">とまれあそび</div>
 </div>
 
 <div class="wrap">
@@ -249,7 +252,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <button class="diff" data-d="fast">はやい</button>
   </div>
 
-  <div class="hint enter d1" id="hint">みどりの ボタンで スタート！</div>
+  <div class="hint enter d1" id="hint" data-talk>みどりの ボタンで スタート！</div>
 
   <div class="gaugewrap enter d2">
     <span class="clock" aria-hidden="true"></span>
@@ -267,11 +270,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- はじめての あんない -->
 <div class="ovl" id="introOvl" hidden>
   <div class="dlg">
-    <img class="uni" src="../assets/uni/green_standing.png" alt="">
+    <img class="uni" src="../assets/uni/green_standing.webp" alt="">
     <h2>とまれあそび！</h2>
     <div class="guide">
       <div class="grow">
-        <span class="gpic"><img src="../assets/uni/blue_face.png" alt=""></span>
+        <span class="gpic"><img src="../assets/uni/blue_face.webp" alt=""></span>
         <span class="gico tapok"><span class="fing"></span></span>
         <span class="glbl ok">タップ！</span>
       </div>
@@ -291,8 +294,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- result modal -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -306,6 +309,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== とまれあそび（Go/No-Go）＝がまん力をそだてる ====== */
 function S(){ return (window.Save&&Save.game)?Save.game('tomare'):{get:(k,d)=>d,set:()=>{},bestMax:()=>{}}; }
@@ -347,7 +352,7 @@ for(let i=0;i<9;i++){
   c.className = 'cell';
   c.setAttribute('aria-label','あな');
   c.innerHTML = '<span class="mouth"></span>'+
-    '<span class="popwrap"><span class="actor"><img class="face" src="../assets/uni/blue_face.png" alt=""><span class="toge"></span></span></span>'+
+    '<span class="popwrap"><span class="actor"><img class="face" src="../assets/uni/blue_face.webp" alt=""><span class="toge"></span></span></span>'+
     '<span class="lip"></span>';
   c.addEventListener('pointerdown', ev=>onCellTap(i, ev));
   board.appendChild(c);
@@ -363,6 +368,7 @@ function renderScore(){
 function renderBest(){ bestPill.innerHTML = '<span class="cstar"></span>さいこう ' + best; }
 function renderHearts(){ heartEls.forEach((h,i)=>h.classList.toggle('off', i>=hearts)); }
 function setHint(text, cls){ hint.textContent = text; hint.className = 'hint' + (cls?' '+cls:''); }
+function syncDiffButtons(){ diffBtns.forEach(b=>b.disabled = state !== 'idle'); }
 renderBest(); renderHearts();
 
 /* ----- テンポ：スコアが あがるほど はやくなる ----- */
@@ -387,7 +393,7 @@ function spawn(){
   const cell = cells[idx];
   cell.dataset.kind = kind;
   if(kind==='go'){
-    cell.querySelector('.face').src = '../assets/uni/' + FACES[Math.floor(Math.random()*FACES.length)] + '.png';
+    cell.querySelector('.face').src = '../assets/uni/' + FACES[Math.floor(Math.random()*FACES.length)] + '.webp';
     sfx('pop');
   }else{
     sfx('step');
@@ -402,7 +408,11 @@ function expire(cell, kind){
   if(resolved) return;
   resolved = true; activeIdx = -1;
   cell.classList.remove('up');
-  if(kind==='nogo'){
+  if(kind==='go'){
+    cell.classList.add('miss-wiggle');
+    sfx('tap');
+    setTimeout(()=>cell.classList.remove('miss-wiggle'), 400);
+  }else{
     const r = cell.getBoundingClientRect();
     fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:8, color:'#ffd23f'});
     sfx('sparkle');
@@ -470,6 +480,7 @@ function startRound(){
   if(state==='play') return;
   runId++;
   state = 'play';
+  syncDiffButtons();
   score = 0; hearts = 3; lastIdx = -1; lastWasNogo = false; resolved = true; activeIdx = -1;
   bestAtStart = best; lowFlag = false;
   scorePill.textContent = 'てん 0';
@@ -487,6 +498,7 @@ function startRound(){
 function endRound(){
   if(state!=='play') return;
   state = 'over'; runId++;
+  syncDiffButtons();
   clearTimeout(spawnTimer); clearTimeout(actorTimer);
   cells.forEach(c=>c.classList.remove('up','pop'));
   gauge.classList.remove('low');
@@ -506,17 +518,17 @@ function endRound(){
   setTimeout(()=>{
     let img, title, html;
     if(isBest){
-      img = '../assets/uni/purple_wave.png';
+      img = '../assets/uni/purple_wave.webp';
       title = score + 'てん！ すごい！';
       html = 'じこ さいこう きろく！<br>がまんの めいじんだね！';
       sfx('fanfare'); fx('celebrate');
     }else if(score > 0){
-      img = '../assets/uni/purple_face.png';
+      img = '../assets/uni/purple_face.webp';
       title = score + 'てん とれたね！';
       html = (hearts<=0 ? 'とげとげに きをつけて！<br>' : '') +
         '<span class="cstar"></span>さいこうは ' + best + 'てん。<br>つぎは こえられるかな？';
     }else{
-      img = '../assets/uni/blue_wave.png';
+      img = '../assets/uni/blue_wave.webp';
       title = 'ドンマイ！';
       html = 'ユニコーンが でたら タップ！<br>とげとげは がまん だよ';
     }
@@ -528,6 +540,7 @@ function resetIdle(){
   runId++;
   clearTimeout(spawnTimer); clearTimeout(actorTimer);
   state = 'idle'; resolved = true; activeIdx = -1;
+  syncDiffButtons();
   cells.forEach(c=>c.classList.remove('up','pop'));
   hearts = 3; renderHearts();
   score = 0; scorePill.textContent = 'てん 0';
@@ -574,10 +587,11 @@ document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); l
 /* むずかしさ（はやさ）えらび */
 const diffBtns = [...document.querySelectorAll('.diff')];
 diffBtns.forEach(b=>b.classList.toggle('sel', b.dataset.d===speed));
+syncDiffButtons();
 diffBtns.forEach(b=>b.addEventListener('click', ()=>{
+  if(state !== 'idle') return;
   speed = b.dataset.d; save.set('speed', speed); sfx('tap');
   diffBtns.forEach(x=>x.classList.toggle('sel', x===b));
-  if(state==='play'){ resetIdle(); }
 }));
 </script>
 <script>Bgm.play('tomare');</script>

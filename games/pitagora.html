@@ -42,7 +42,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
           mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
 .ttl{font-family:'Mochiy Pop One';font-size:18px;color:var(--accent-d);text-shadow:0 2px 0 #fff;}
 .ttl .uni{height:32px;vertical-align:-8px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(150,90,30,.3));}
-.lvnav{border:none;background:#fff;border-radius:14px;width:42px;height:42px;min-width:42px;cursor:pointer;
+.lvnav{border:none;background:#fff;border-radius:14px;width:48px;height:48px;min-width:48px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(200,130,40,.2), inset 0 2px 0 #fff;transition:transform .1s;}
 .lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(200,130,40,.2);}
 .lvnav:disabled{opacity:.34;cursor:default;}
@@ -66,7 +66,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   .controls{grid-area:controls;justify-content:flex-start;min-height:60px;margin:4px 0;}
 }
 
-.statusbar{display:flex;gap:10px;align-items:center;margin:4px 0 2px;}
+.statusbar{display:flex;gap:8px;align-items:center;margin:4px 0 2px;padding-right:2px;}
+.statusbar .pill{white-space:nowrap;}
 .pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;
   padding:7px 15px;border-radius:999px;font-size:16px;color:var(--accent-d);box-shadow:0 4px 0 rgba(200,130,40,.18), inset 0 2px 0 #fff;}
 .pill.budget{font-family:'M PLUS Rounded 1c';font-weight:800;font-size:15px;color:var(--ink-soft);}
@@ -190,7 +191,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.png" alt="">ぴたごら</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.webp" alt="">ぴたごら</div>
 </div>
 
 <div class="wrap">
@@ -202,7 +203,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   </div>
 
   <div class="dots enter d1" id="dots"></div>
-  <div class="hint enter d1" id="hint">さかを おいて すすもう！</div>
+  <div class="hint enter d1" id="hint" data-talk>さかを おいて すすもう！</div>
 
   <div class="board-wrap enter d2" id="boardWrap">
     <div class="board" id="board"></div>
@@ -229,8 +230,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/blue_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/blue_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -244,6 +245,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== ぴたごら（たまころがし）— ロジックは原版踏襲 ====== */
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
@@ -319,7 +322,10 @@ function calcCell(lv){
   const maxW = Math.min(window.innerWidth-30, 432);
   const chrome = 326;
   const maxBoardH = Math.max(140, window.innerHeight - chrome);
-  return Math.max(22, Math.min(Math.floor(maxW/lv.w), Math.floor(maxBoardH/lv.h), 64));
+  // 縦は 画面に おさめたいが、ゆびで さかを おけない ほど ちいさくは しない（最低 40px。
+  // はみ出す ぶんは 縦スクロール）。幅は 8マス×40＝320px で 360px 画面にも おさまる
+  const byW = Math.floor(maxW/lv.w);
+  return Math.max(Math.min(40, byW), Math.min(byW, Math.floor(maxBoardH/lv.h), 64));
 }
 function key(x,y){return x+','+y;}
 
@@ -403,7 +409,7 @@ async function run(){
 
 const ovl=document.getElementById('ovl');
 function showModal(opt){
-  document.getElementById('ovlUni').src = opt.uni || '../assets/uni/blue_wave.png';
+  document.getElementById('ovlUni').src = opt.uni || '../assets/uni/blue_wave.webp';
   document.getElementById('ovlTitle').textContent = opt.title;
   document.getElementById('ovlText').innerHTML = opt.text;
   const nb=document.getElementById('ovlNext'); nb.textContent = opt.nextLabel || 'つぎへ';
@@ -426,7 +432,7 @@ function win(){
   const isLast = (lvIndex >= LEVELS.length-1);
   setTimeout(()=>{
     showModal({
-      uni: isLast ? '../assets/uni/purple_wave.png' : '../assets/uni/blue_wave.png',
+      uni: isLast ? '../assets/uni/purple_wave.webp' : '../assets/uni/blue_wave.webp',
       title: isLast ? 'ぜんぶ クリア！' : 'ゴール！',
       text: isLast ? 'すごい！ さかの たつじんだね！' : 'たまが はいったよ！ つぎに いこう',
       nextLabel: isLast ? 'もういちど' : 'つぎへ',

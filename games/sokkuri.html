@@ -216,7 +216,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.png" alt="">そっくりわけ</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.webp" alt="">そっくりわけ</div>
 </div>
 
 <div class="wrap">
@@ -225,7 +225,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <span class="ok-pill" id="okPill"><span class="chk"></span>せいかい 0</span>
   </div>
 
-  <div class="hint enter d1" id="hint">かごに いれて あげよう</div>
+  <div class="hint enter d1" id="hint" data-talk>かごに いれて あげよう</div>
 
   <div class="stage-wrap enter d2">
     <div id="stage"></div>
@@ -238,8 +238,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- ルールの あんないカード（はかせ） -->
 <div class="ovl" id="ruleOvl" hidden>
   <div class="dlg">
-    <img class="uni" src="../assets/uni/green_standing.png" alt="">
-    <h2 id="ruleTitle"></h2>
+    <img class="uni" src="../assets/uni/green_standing.webp" alt="">
+    <h2 id="ruleTitle" data-talk></h2>
     <div class="samples" id="ruleSamples"></div>
     <p id="ruleNote"></p>
     <div class="row">
@@ -251,8 +251,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- けっかモーダル（5ラウンドごと） -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -266,6 +266,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== そっくりわけ — ぶんるい＋ルールの きりかえ（にんち の やわらかさ） ====== */
 function S(){ return (window.Save&&Save.game)?Save.game('sokkuri'):{get:(k,d)=>d,set:()=>{}}; }
@@ -300,14 +302,13 @@ const VAL_NAME = { aka:'あか', kiiro:'きいろ', midori:'みどり', ao:'あ�
   ookii:'おおきい', chiisai:'ちいさい' };
 const ITEMS_PER_ROUND = 8;
 const MIX_SWITCH_AT = 4;          /* ミックスは 4こめの あとで ルールが かわる */
-const ACORN = { color:1, shape:1, size:2 };   /* ミックスは 2 */
 
 /* ----- 状態 ----- */
-let round = 1, idx = 0, okCount = 0, combo = 0;
+let round = Math.max(1, Math.floor(save.get('round', 1) || 1)), idx = 0, okCount = 0, combo = 0;
 let plan = null, segIdx = 0, seg = null, lastRule = null, lastKey = '';
 let baskets = [];                 /* [{val, el}] */
 let item = null, itemEl = null;
-let locked = true;
+let locked = true, nextBusy = false;
 let dx = 0, dy = 0;
 
 /* ----- ラウンドの けいかく（ルール進行） ----- */
@@ -479,8 +480,6 @@ function correct(bEl){
   combo++; okCount++; idx++;
   okPill.innerHTML = '<span class="chk"></span>せいかい ' + okCount;
   save.set('cleared', (save.get('cleared',0)||0)+1);
-  const acGain = plan.mix ? 2 : ACORN[seg.rule];
-  save.set('wins', (save.get('wins',0)||0)+acGain);
 
   /* アイテムが かごへ とんでいく */
   const ir = itemEl.getBoundingClientRect();
@@ -496,7 +495,6 @@ function correct(bEl){
     bEl.classList.add('chomp');
     setTimeout(()=>bEl.classList.remove('chomp'), 520);
     fx('burst', bx, br.top+8, {count:14});
-    if(window.FX && FX.acornGain){ sfx('sparkle'); FX.acornGain(acGain, bx, br.top, {size:26}); }
   }, 260);
   updateCombo();
   hint.textContent = combo>=2 ? 'れんぞく せいかい！' : 'せいかい！';
@@ -541,6 +539,10 @@ function nextStep(){
 }
 
 async function roundClear(){
+  const acGain = 1 + ((plan.mix || plan.segs[0].rule === 'size') ? 1 : 0);
+  save.set('wins', (save.get('wins',0)||0) + acGain);
+  const r = stage.getBoundingClientRect();
+  fx('acornGain', acGain, r.left+r.width/2, r.top+r.height*.42);
   sfx('success');
   fx('confetti', {count:90});
   hint.textContent = 'ラウンド クリア！ すごい！';
@@ -558,6 +560,7 @@ async function roundClear(){
 /* ----- ラウンドの はじまり ----- */
 function startRound(){
   plan = roundPlan(round);
+  save.set('round', round);
   segIdx = 0; seg = plan.segs[0]; idx = 0;
   roundPill.textContent = 'ラウンド ' + round;
   const begin = ()=>{
@@ -565,7 +568,7 @@ function startRound(){
     hint.textContent = RULE_HINT[seg.rule]; hint.className = 'hint rule';
     spawn();
   };
-  if(seg.rule !== lastRule){
+  if(plan.mix || seg.rule !== lastRule){
     showRuleCard(false, begin);
   } else {
     begin();
@@ -603,6 +606,8 @@ document.getElementById('ruleGo').addEventListener('click', ()=>{
 /* ----- けっかモーダル（5ラウンドごと） ----- */
 const ovl = document.getElementById('ovl');
 function showResult(){
+  nextBusy = false;
+  document.getElementById('ovlNext').disabled = false;
   document.getElementById('ovlTitle').textContent = round + 'ラウンド クリア！';
   document.getElementById('ovlText').textContent = 'せいかい ' + okCount + 'かい！ そのちょうし！';
   ovl.hidden = false;
@@ -610,6 +615,9 @@ function showResult(){
 }
 document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 document.getElementById('ovlNext').addEventListener('click', ()=>{
+  if(nextBusy) return;
+  nextBusy = true;
+  document.getElementById('ovlNext').disabled = true;
   sfx('tap');
   ovl.classList.remove('show');
   setTimeout(()=>{ ovl.hidden = true; round++; startRound(); }, 240);

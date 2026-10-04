@@ -200,6 +200,9 @@ section[hidden]{display:none!important;}
 .step .hold{position:absolute;left:0;right:0;bottom:0;height:100%;border-radius:inherit;
   background:rgba(255,255,255,.6);transform-origin:bottom;transform:scaleY(0);}
 .step.aim{animation:aimPulse 1.1s ease-in-out infinite;}
+.step.help{box-shadow:0 0 0 5px rgba(255,255,255,.85),0 0 26px 8px rgba(255,210,63,.75);}
+.ring.near .in{filter:drop-shadow(0 0 12px rgba(255,236,150,.95));}
+.hint{word-break:keep-all;overflow-wrap:anywhere;}   /* ことばの とちゅうで おりかえさない */
 @keyframes aimPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3) saturate(1.18)}}
 .step.hit{filter:brightness(1.5);transform:translateY(-5px);}
 /* 段の上の音名（ど・れ・み・そ・ら・ど） */
@@ -287,14 +290,14 @@ section[hidden]{display:none!important;}
 
 <div class="topbar">
   <button class="home" id="navBtn" aria-label="もどる"><span class="ic ic-home" id="navIc"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.png" alt="">うたあそび</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.webp" alt="">うたあそび</div>
 </div>
 
 <div class="wrap">
 
   <!-- ===== モードせんたく ===== -->
   <section id="scrMenu">
-    <div class="hint lead enter">きいて うたって おんかんを きたえよう！</div>
+    <div class="hint lead enter" data-talk>きいて うたって おんかんを きたえよう！</div>
     <div class="modes">
       <button class="mode-btn enter d1" id="mb1">
         <span class="mb-ic ic1"><span class="aru"></span><span class="ard"></span><span class="msk note"></span></span>
@@ -329,16 +332,16 @@ section[hidden]{display:none!important;}
       <span class="pill" id="m1S">せいかい 0</span>
       <span class="best-pill" id="m1Best"><span class="cstar"></span>さいこう 0</span>
     </div>
-    <div class="hint enter d1" id="m1Hint">きいてね</div>
+    <div class="hint enter d1" id="m1Hint" data-talk>きいてね</div>
     <div class="duo-tray locked enter d2" id="duoTray">
       <button class="singer" id="sgL" aria-label="ひだりの こ">
         <span class="npop"></span>
-        <img src="../assets/uni/blue_standing.png" alt="">
+        <img src="../assets/uni/blue_standing.webp" alt="">
         <span class="padbase"></span>
       </button>
       <button class="singer" id="sgR" aria-label="みぎの こ">
         <span class="npop"></span>
-        <img src="../assets/uni/purple_standing.png" alt="">
+        <img src="../assets/uni/purple_standing.webp" alt="">
         <span class="padbase"></span>
       </button>
     </div>
@@ -356,7 +359,7 @@ section[hidden]{display:none!important;}
     </div>
     <div class="hint enter d1" id="m2Hint">こえの たかさで リングを ねらおう！</div>
     <div class="sky enter d2" id="sky">
-      <img id="flyUni" src="../assets/uni/blue_standing.png" alt="">
+      <img id="flyUni" src="../assets/uni/blue_standing.webp" alt="">
     </div>
   </section>
 
@@ -369,8 +372,8 @@ section[hidden]{display:none!important;}
     <div class="stairs-tray enter d2" id="stairsTray">
       <div id="solfBig" aria-hidden="true"></div>
       <div class="stairs" id="stairs"></div>
-      <img id="walker" class="actor" src="../assets/uni/purple_standing.png" alt="">
-      <img id="player3" class="actor" src="../assets/uni/blue_standing.png" alt="">
+      <img id="walker" class="actor" src="../assets/uni/purple_standing.webp" alt="">
+      <img id="player3" class="actor" src="../assets/uni/blue_standing.webp" alt="">
       <span id="vox"><span class="msk note"></span></span>
     </div>
     <div class="controls">
@@ -383,8 +386,8 @@ section[hidden]{display:none!important;}
 <!-- けっかモーダル -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">もどる</button>
@@ -396,7 +399,7 @@ section[hidden]{display:none!important;}
 <!-- マイクの ごあんない／つかえないとき -->
 <div class="ovl" id="micOvl" hidden>
   <div class="dlg">
-    <img class="uni" id="micUni" src="../assets/uni/green_standing.png" alt="">
+    <img class="uni" id="micUni" src="../assets/uni/green_standing.webp" alt="">
     <div class="micbig"><span class="msk mic"></span></div>
     <h2 id="micTitle">マイクで こえを きかせてね！</h2>
     <p id="micText">「はじめる」を おしたら<br>マイクを つかうよ</p>
@@ -412,6 +415,8 @@ section[hidden]{display:none!important;}
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ============================================================
    うたあそび — おんかん（音の高さ＝縦）を きく→うたう で身につける
@@ -644,9 +649,12 @@ function show(name){
     el.style.animation='none'; void el.offsetWidth; el.style.animation='';
   });
 }
+let micGen = 0;          // マイク許可まちの とちゅうで もどったら、あとから開いても すぐ止める
 function goMenu(){
+  micGen++;
   M1.stopGame(); M2.stopGame(); M3.stopGame();
   Mic.stop();
+  try{ if(window.Talk) Talk.pause(false); }catch(e){}
   hideResult(true); hideMicOvl(true);
   show('menu');
   try{ Bgm.play('uta'); }catch(e){}
@@ -661,6 +669,10 @@ document.getElementById('navBtn').addEventListener('click', ()=>{
 let micPendingMode = 0;
 function enterMode(n){
   sfx('whoosh');
+  // iOS：お手本の声の AudioContext は タップの なかで 起こす（タイマーの あとだと 無音になる）
+  try{ const c = Voice.ensure(); if(c && c.state==='suspended') c.resume(); }catch(e){}
+  // マイクを つかう モードでは よみあげを とめる（声を マイクが ひろうため）
+  try{ if(window.Talk) Talk.pause(n!==1); }catch(e){}
   try{ Bgm.stop(); }catch(e){}                 // マイクや聞き分けの邪魔をしない
   show('m'+n);
   if(n===1){ M1.start(); return; }
@@ -675,13 +687,16 @@ function micFlow(n){
 function requestMic(n){
   const go = document.getElementById('micGo');
   go.disabled = true;
+  const gen = micGen;
   Mic.start().then(()=>{
     go.disabled = false;
+    if(gen !== micGen || cur !== 'm'+n){ Mic.stop(); return; }   // もう もどっていた
     save.set('micok', true);
     hideMicOvl(true);
     startMicMode(n);
   }).catch(()=>{
     go.disabled = false;
+    if(gen !== micGen) return;
     showMicError();
   });
 }
@@ -694,7 +709,7 @@ document.getElementById('mb3').addEventListener('click', ()=>enterMode(3));
 /* ---- マイクの ごあんない／エラーカード ---- */
 const micOvl = document.getElementById('micOvl');
 function showMicIntro(){
-  document.getElementById('micUni').src = '../assets/uni/green_standing.png';
+  document.getElementById('micUni').src = '../assets/uni/green_standing.webp';
   document.getElementById('micTitle').textContent = 'マイクで こえを きかせてね！';
   document.getElementById('micText').innerHTML = '「はじめる」を おしたら<br>マイクを つかうよ';
   document.getElementById('micGo').style.display = '';
@@ -702,7 +717,7 @@ function showMicIntro(){
   requestAnimationFrame(()=>micOvl.classList.add('show'));
 }
 function showMicError(){
-  document.getElementById('micUni').src = '../assets/uni/blue_thinking.png';
+  document.getElementById('micUni').src = '../assets/uni/blue_thinking.webp';
   document.getElementById('micTitle').textContent = 'マイクが つかえないみたい';
   document.getElementById('micText').innerHTML = 'おうちの ひとに きいて みてね。<br>「どっちが たかい？」は あそべるよ！';
   document.getElementById('micGo').style.display = 'none';
@@ -720,12 +735,16 @@ document.getElementById('micBack').addEventListener('click', ()=>{ sfx('tap'); g
 /* ---- けっかモーダル ---- */
 const ovl = document.getElementById('ovl');
 let retryFn = null;
+// 画面を はなれたら（アプリ切りかえ・とじる）マイクを かならず止めて メニューへ
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden && cur!=='menu') goMenu(); });
+window.addEventListener('pagehide', ()=>{ micGen++; Mic.stop(); });
 function showResult({win, uni, title, html, retry}){
   document.getElementById('ovlUni').src = uni ||
-    (win ? '../assets/uni/purple_wave.png' : '../assets/uni/blue_thinking.png');
+    (win ? '../assets/uni/purple_wave.webp' : '../assets/uni/blue_thinking.webp');
   document.getElementById('ovlTitle').textContent = title;
   document.getElementById('ovlText').innerHTML = html;
   retryFn = retry;
+  if(cur==='m2' || cur==='m3'){ micGen++; Mic.stop(); }
   ovl.hidden = false;
   requestAnimationFrame(()=>ovl.classList.add('show'));
 }
@@ -756,7 +775,7 @@ function roundReward(acGain){
 const M1 = {
   TOTAL: 10,
   GAPS: [12,9,7,5,4,3,2,1],   // せいかい数に応じて音程差が狭まる
-  q:0, score:0, correct:'L', canAnswer:false, runId:0,
+  q:0, score:0, lv:0, correct:'L', canAnswer:false, runId:0,
   midi:{L:60, R:64},
   el:{
     q: document.getElementById('m1Q'), s: document.getElementById('m1S'),
@@ -777,7 +796,7 @@ const M1 = {
     this.el.replay.classList.toggle('show', !b);
   },
   start(){
-    this.runId++; this.q=0; this.score=0;
+    this.runId++; this.q=0; this.score=0; this.lv=0;
     this.el.L.classList.remove('win','no','sing');
     this.el.R.classList.remove('win','no','sing');
     this.pills();
@@ -785,7 +804,8 @@ const M1 = {
   },
   stopGame(){ this.runId++; this.canAnswer=false; },
   newPair(){
-    const gap = this.GAPS[Math.min(this.score, this.GAPS.length-1)];
+    // あたると 1だん むずかしく、はずすと 2だん やさしく（ずっと はずれ つづけない）
+    const gap = this.GAPS[clamp(this.lv, 0, this.GAPS.length-1)];
     const base = 60 + Math.floor(Math.random()*13);       // C4〜C5
     this.correct = Math.random()<0.5 ? 'L' : 'R';
     this.midi.L = this.correct==='L' ? base+gap : base;
@@ -825,18 +845,19 @@ const M1 = {
     const my = this.runId;
     const el = this.el[side];
     if(side === this.correct){
-      this.score++;
+      this.score++; this.lv++;
       this.pills();
       sfx('ding'); buzz(16);
       el.classList.add('win');
       const r = el.getBoundingClientRect();
       fx('sparkles', r.left+r.width/2, r.top+r.height*0.3, {count:10, color:'#ffd23f'});
-      this.hint('せいかい！ たかいのは うえ！', 'go');
+      this.hint('せいかい！ たかいのは こっち！', 'go');
       await wait(1050);
       if(my!==this.runId) return;
       el.classList.remove('win');
     }else{
       sfx('error'); buzz([26,36,26]);
+      this.lv = Math.max(0, this.lv-2);
       el.classList.add('no');
       this.hint('おしい！ もういちど きいてみよう');
       this.lock(true);
@@ -920,7 +941,7 @@ const M2 = {
     const t = clamp(Math.log2(f/this.F0)/Math.log2(this.F1/this.F0), 0, 1);
     return pad + (1-t)*(H - 2*pad - uh);
   },
-  tolSemis(){ return this.popped<5 ? 1.5 : (this.popped<10 ? 1.0 : 0.75); },
+  tolSemis(){ return this.popped<5 ? 1.5 : 1.25; },   // 小1の こえは ずれて あたりまえ。きびしく しすぎない
   start(){
     this.stopGame();
     this.active = true;
@@ -1011,7 +1032,11 @@ const M2 = {
     if(ring && !ring.done){
       ring.x -= ((W+180)/6.5)*dt;              // 右から左へ ゆっくり（約6.5びょう）
       ring.el.style.transform = 'translate(' + (ring.x-48) + 'px,' + (ring.y-48) + 'px)';
-      if(f>0){
+      // リングが ユニコーンの ちかくに きたときだけ 数える（画面の そとで はじけない・
+      // 出てくるときの お手本の声を マイクが ひろっても 正解に ならない）
+      const near = Math.abs(ring.x - (ux + uw/2)) < 95;
+      ring.el.classList.toggle('near', near);
+      if(f>0 && near){
         const cents = Math.abs(1200*Math.log2(f/ring.f));
         if(cents <= this.tolSemis()*100){
           inTol = true;
@@ -1029,13 +1054,13 @@ const M2 = {
     this.stopGame();
     const popped = this.popped;
     save.bestMax('best2', popped);
-    const acGain = Math.max(1, Math.ceil(popped/3));
+    const acGain = popped>0 ? Math.ceil(popped/3) : 0;
     roundReward(acGain);
     let dots = '';
     for(let i=0;i<this.TOTAL;i++) dots += '<span class="dot' + (i<popped?' on':'') + '"></span>';
     const title = popped>=this.TOTAL ? 'ぜんぶ パンッ！すごい！' :
                   popped>=5 ? 'いっぱい はじけたね！' :
-                  popped>0  ? 'ポンッと はじけた！' : 'こえが とどいたよ！';
+                  popped>0  ? 'ポンッと はじけた！' : 'リングに こえを とどけよう！';
     showResult({
       win: true,
       title,
@@ -1058,7 +1083,7 @@ const M3 = {
   HEIGHTS: [24,37,50,63,76,89],   // 段の高さ（stairs の%）
   NEED: 0.4,                       // 1音に必要な「合っていた時間」
   active:false, raf:0, lastT:0, runId:0,
-  phrase:[], pi:0, ni:0, phase:'idle', hold:0, done:0,
+  phrase:[], pi:0, ni:0, phase:'idle', hold:0, done:0, stuck:0, helped:false,
   steps:[], holds:[],
   el:{
     tray: document.getElementById('stairsTray'), stairs: document.getElementById('stairs'),
@@ -1106,7 +1131,8 @@ const M3 = {
   pills(){ this.el.f.textContent = 'フレーズ ' + Math.min(this.pi+1,this.TOTAL) + '/' + this.TOTAL; },
   hint(t, cls){ this.el.hint.textContent = t; this.el.hint.className = 'hint' + (cls?' '+cls:''); },
   setAim(i){
-    this.steps.forEach(s=>s.classList.remove('aim'));
+    this.stuck = 0; this.helped = false;
+    this.steps.forEach(s=>s.classList.remove('aim','help'));
     if(i>=0 && this.phrase[i]!=null){
       const k = this.phrase[i];
       this.steps[k].classList.add('aim');
@@ -1196,7 +1222,7 @@ const M3 = {
   noteHit(){
     const k = this.phrase[this.ni];
     const st = this.steps[k];
-    st.classList.remove('aim');
+    st.classList.remove('aim','help');
     st.classList.add('hit');
     this.holds[k].style.transform = 'scaleY(0)';
     Voice.sing(this.NOTES[k], 0.5);                  // とれた音も歌声で確認
@@ -1245,13 +1271,23 @@ const M3 = {
     if(this.phase==='play' && this.phrase[this.ni]!=null){
       const k = this.phrase[this.ni];
       const target = this.NOTES[k];
+      // つまったら たすける：8びょうで ゆるく（±2はんおん）、18びょうで「いっしょに うたおう」で すすむ
+      this.stuck += dt;
+      const tol = this.stuck >= 8 ? 200 : 100;
+      if(this.stuck >= 8 && !this.helped){
+        this.helped = true;
+        this.steps[k].classList.add('help');
+        Voice.sing(target, 0.8);
+        this.hint('いっしょに うたおう！「' + SOLF[k] + 'ー」', 'listen');
+      }
+      if(this.stuck >= 18){ this.noteHit(); this.raf = requestAnimationFrame(tt=>this.loop(tt)); return; }
       let ok = false;
       if(f>0){
         // オクターブ折りたたみ判定：1オクターブ下（おうちの人の低い声）や
         // 上の裏声でも、同じ「ど」なら正解にする。許容は従来どおり±1半音。
         let c = 1200*Math.log2(f/target);
         c = ((c % 1200) + 1200) % 1200;          // 0〜1200 セントに折りたたむ
-        ok = Math.min(c, 1200 - c) <= 100;
+        ok = Math.min(c, 1200 - c) <= tol;
       }
       if(ok) this.hold += dt;
       else this.hold = Math.max(0, this.hold - dt*1.6);

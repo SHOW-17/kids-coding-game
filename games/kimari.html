@@ -84,7 +84,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* むずかしさ えらび */
 .diffbar{display:flex;gap:8px;justify-content:center;margin:6px 0 0;flex-wrap:wrap;}
 .diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--accent-d);background:#fff;border:none;cursor:pointer;
-  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(33,137,173,.16), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+  min-height:44px;padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(33,137,173,.16), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
 .diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(33,137,173,.16);}
 .diff.sel{background:linear-gradient(180deg,#76d3ee,var(--accent));color:#fff;box-shadow:0 4px 0 var(--accent-d);}
 
@@ -157,6 +157,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 @keyframes wrongflash{0%,100%{background:var(--paper);}40%{background:#ffd6d6;}}
 .choice.correctpick{background:#d7f7e0;box-shadow:0 7px 0 var(--green-d), 0 12px 20px rgba(60,130,160,.22), inset 0 2px 0 #fff;}
 .choice.locked{pointer-events:none;}
+.choice.out{opacity:.32;filter:grayscale(.6);transform:scale(.92);pointer-events:none;transition:opacity .3s,transform .3s;}
 .choice .glyph{line-height:1;}
 .choice .dotgrid{width:60%;height:60%;}
 
@@ -196,7 +197,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/green_face.png" alt="">きまり あそび</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/green_face.webp" alt="">きまり あそび</div>
 </div>
 
 <div class="wrap">
@@ -212,7 +213,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <button class="diff" data-d="hard">むずかしい</button>
   </div>
 
-  <div class="hint enter d1" id="hint">つぎは なにかな？</div>
+  <div class="hint enter d1" id="hint" data-talk>つぎは なにかな？</div>
 
   <div class="seq-card enter d2">
     <div class="seq" id="seq"></div>
@@ -227,8 +228,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/green_standing.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/green_standing.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -242,6 +243,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== きまり あそび（パターン推理）— ロジックは原版踏襲・図柄をCSS図形化 ====== */
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
@@ -398,6 +401,8 @@ function genRotate(len){
   return fromUnit(unit, len, ARROW_TOKENS);
 }
 function genSkip(tokens, len){
+  // こたえが「A」に なる ながさ（偶数）だけ。奇数だと 6こ周期を 見ぬかないと きまらず あいまい
+  if(len%2) len++;
   const pool=shuffle(tokens);
   const A=pool[0]; const others=pool.slice(1,1+3);
   const unit=[A,others[0],A,others[1],A,others[2]];
@@ -468,14 +473,16 @@ function renderProblem(p){
   const q=document.createElement('div'); q.className='tile qmark enter d'+Math.min(6,p.seq.length+1); q.textContent='？'; q.id='qtile'; seqEl.appendChild(q);
   choicesEl.innerHTML='';
   p.choices.forEach((tok,i)=>{ const c=document.createElement('button'); c.className='choice enter d'+(i+1); c.appendChild(makeGlyph(tok));
-    c.addEventListener('pointerdown', ()=>onPick(c, tok), {passive:true}); choicesEl.appendChild(c); });
+    c.addEventListener('click', ()=>onPick(c, tok)); choicesEl.appendChild(c); });   // てのひらの うっかりタッチを ひろわない
+  missed=false;
   hintEl.textContent='つぎは なにかな？';
 }
 function nextProblem(){ locked=false; current=buildProblem(qIndex); renderProblem(current); }
 
 /* ---------- こたえる ---------- */
+let missed=false;   // この もんだいで いちど まちがえたか（どんぐりは いっぱつ せいかいだけ＝あてずっぽう対策）
 function onPick(btn, tok){
-  if (locked) return;
+  if (locked || btn.classList.contains('out')) return;
   sfx('tap');
   if (tokenKey(tok)===current.ansKey) correctAnswer(btn, tok); else wrongAnswer(btn);
 }
@@ -493,9 +500,11 @@ function correctAnswer(btn, tok){
   if (streak>best){ best=streak; save.bestMax('best', best); }
   save.set('cleared', total);
   // 1もん せいかいごとに どんぐり＋（むずかしいほど多く）。difficultyNow() は 1〜6 → 半分にして 1〜3。
-  const acGain = Math.ceil(difficultyNow()/2);
-  save.set('wins', (save.get('wins',0)||0)+acGain);
-  if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
+  const acGain = missed ? 0 : Math.ceil(difficultyNow()/2);
+  if(acGain){
+    save.set('wins', (save.get('wins',0)||0)+acGain);
+    if(window.FX && FX.acornGain){ FX.acornGain(acGain, r.left+r.width/2, r.top+r.height/2); }
+  }
   renderStatus();
   streakPill.classList.add('bump'); setTimeout(()=>streakPill.classList.remove('bump'),220);
   hintEl.textContent=pick(['せいかい！','できた！','すごい！','ばっちり！']);
@@ -505,7 +514,9 @@ function correctAnswer(btn, tok){
 function wrongAnswer(btn){
   sfx('error'); buzz([20,30,20]);
   btn.classList.add('wrong'); fx('shake', btn, 7, 320);
-  setTimeout(()=>btn.classList.remove('wrong'),420);
+  missed=true;
+  // まちがえた こたえは うすくして えらべなくする（のこりから かんがえ直せる）
+  setTimeout(()=>{ btn.classList.remove('wrong'); btn.classList.add('out'); },420);
   streak=0; renderStatus();
   hintEl.textContent='もういちど！';
   toast('もういちど みてみよう');
@@ -515,7 +526,7 @@ function wrongAnswer(btn){
 const ovl=document.getElementById('ovl');
 function milestone(){
   sfx('fanfare'); fx('celebrate');
-  document.getElementById('ovlUni').src = total>=15 ? '../assets/uni/purple_wave.png' : '../assets/uni/green_standing.png';
+  document.getElementById('ovlUni').src = total>=15 ? '../assets/uni/purple_wave.webp' : '../assets/uni/green_standing.webp';
   document.getElementById('ovlTitle').textContent = 'すごい！ ' + total + 'もん せいかい！';
   document.getElementById('ovlText').innerHTML = 'れんぞく さいこう <span class="flame"></span>' + best + '<br>この ちょうしで つづけよう！';
   ovl.hidden=false; requestAnimationFrame(()=>ovl.classList.add('show'));

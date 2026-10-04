@@ -49,8 +49,8 @@
     padding:7px 12px;border-radius:26px;max-width:calc(100vw - 24px);justify-content:center;
     box-shadow:0 5px 0 #ecd9b5,0 10px 20px rgba(180,140,80,.18), inset 0 2px 0 #fff;font-weight:800;}
   .levelbar .lv{font-family:'Mochiy Pop One';color:var(--honey-d);font-size:18px;white-space:nowrap;}
-  .stars{display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;max-width:190px;}
-  .pstar{width:11px;height:11px;background:#e7d4b0;
+  .stars{display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;max-width:260px;}
+  .pstar{width:13px;height:13px;background:#e7d4b0;
     clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
   .pstar.on{background:var(--honey);box-shadow:0 0 5px rgba(255,180,61,.7);}
   .pstar.cur{outline:2px solid var(--honey-d);outline-offset:2px;}
@@ -67,7 +67,7 @@
   .home .ic{width:22px;height:22px;background:var(--honey-d);
     -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
             mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
-  .lvnav{border:none;background:#fff;border-radius:12px;width:40px;height:40px;min-width:40px;cursor:pointer;
+  .lvnav{border:none;background:#fff;border-radius:14px;width:48px;height:48px;min-width:48px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #ecd9b5, inset 0 2px 0 #fff;transition:transform .1s;}
   .lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 #ecd9b5;}
   .lvnav:disabled{opacity:.32;cursor:default;}
@@ -174,7 +174,7 @@
   .loopbox .lhead{display:flex;align-items:center;gap:5px;font-weight:800;color:#7a4fd0;background:#fff;
     border-radius:12px;padding:4px 5px;font-size:17px;white-space:nowrap;}
   .loopbox .lcount{display:flex;align-items:center;gap:3px;padding:0 2px;min-width:46px;justify-content:center;}
-  .lstep{border:none;cursor:pointer;width:34px;height:34px;min-width:34px;border-radius:10px;font-family:inherit;
+  .lstep{border:none;cursor:pointer;width:42px;height:42px;min-width:42px;border-radius:10px;font-family:inherit;
     font-weight:800;font-size:20px;line-height:1;padding:0;background:#8a5cff;color:#fff;
     box-shadow:0 3px 0 #6f43e0, inset 0 2px 0 rgba(255,255,255,.3);
     display:flex;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s;}
@@ -249,6 +249,17 @@
   .ctrl.back{background:#f0a93c;flex:.7;}.ctrl.clear{background:#e08a8a;flex:.7;}
   .ctrl.play{background:#5fcf80;flex:1.6;font-size:20px;}
   .ctrl:disabled{opacity:.45;}
+  .ctrl.play.stop{background:#f08f6c;}
+  .ctrl .sq{width:15px;height:15px;background:#fff;border-radius:3px;}
+  #program.shake{animation:shake .4s ease;}
+  /* はじめての ボタンを ひからせる（よまなくても「ここ！」が わかる） */
+  .spot{position:relative;z-index:6;animation:spotPulse 1.1s ease-in-out infinite;}
+  .spot::after{content:"";position:absolute;left:50%;top:-30px;margin-left:-11px;width:0;height:0;
+    border-left:11px solid transparent;border-right:11px solid transparent;border-top:16px solid #ff7b3d;
+    filter:drop-shadow(0 2px 0 #c9541c);animation:spotBob .8s ease-in-out infinite;pointer-events:none;}
+  @keyframes spotPulse{0%,100%{box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 0 0 rgba(255,140,60,.7)}60%{box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 0 12px rgba(255,140,60,0)}}
+  @keyframes spotBob{50%{transform:translateY(-7px)}}
+  @media (prefers-reduced-motion: reduce){ .spot,.spot::after{animation:none} .spot{outline:4px solid #ff7b3d;outline-offset:3px} }
   .ctrl .tri{width:0;height:0;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;}
 
   #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
@@ -288,8 +299,8 @@
 
   <div id="page">
    <div id="leftPane">
-    <h1><img class="h1uni" src="../assets/uni/blue_standing.png" alt="">プログラミング</h1>
-    <div class="sub">めいれいを ならべて ともだちの ところまで いこう！</div>
+    <h1><img class="h1uni" src="../assets/uni/blue_standing.webp" alt="">プログラミング</h1>
+    <div class="sub" data-talk>めいれいを ならべて ともだちの ところまで いこう！</div>
 
     <div class="levelbar">
       <button class="lvnav" id="prevLv" aria-label="まえの レベル"><span class="tri l"></span></button>
@@ -299,7 +310,7 @@
       <button class="reset" id="resetBtn">さいしょ</button>
     </div>
 
-    <div id="stage"><div id="board"></div><div id="bear"><img src="../assets/uni/blue_standing.png" alt=""></div></div>
+    <div id="stage"><div id="board"></div><div id="bear"><img src="../assets/uni/blue_standing.webp" alt=""></div></div>
    </div>
 
    <div id="rightPane">
@@ -320,15 +331,15 @@
   </div>
 
   <div id="overlay"><div class="card">
-    <img class="big" id="cardUni" src="../assets/uni/blue_wave.png" alt="">
-    <h2 id="cardTitle">やったね！</h2>
-    <p id="cardMsg">ともだちに あえたよ！</p>
+    <img class="big" id="cardUni" src="../assets/uni/blue_wave.webp" alt="">
+    <h2 id="cardTitle" data-talk>やったね！</h2>
+    <p id="cardMsg" data-talk>ともだちに あえたよ！</p>
     <button class="next" id="cardBtn">つぎへ</button>
   </div></div>
 
   <div id="trash" aria-hidden="true"><span class="tic"></span></div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" data-talk="auto"></div>
 
 <script>
 const LEVELS = [
@@ -399,12 +410,17 @@ function load(){
     if(d){ cleared = new Set(d.cleared||[]); announced = new Set(d.announced||[]); lvIndex = Math.min(Math.max(d.current||0,0), LEVELS.length-1); progWins = d.wins||0; }
   }catch(e){}
 }
+// 「さいしょ」は おうちの ひと ゲートの うしろ（こどもが うっかり 消さないように）。
+// 消すのは クリアの きろくだけ。ためた どんぐり（wins）は のこす＝くじの ざんだかが こわれない。
 function resetSave(){
+  if(running) return;
+  const doIt=()=>{
+    cleared=new Set(); announced=new Set(); lvIndex=0; program=[]; activeLoop=null;
+    save(); renderProgram(); buildLevel();
+  };
+  if(window.Guard && Guard.gate){ Guard.gate(doIt); return; }
   let ok=true; try{ ok = window.confirm('さいしょから やりなおす？'); }catch(e){ ok=false; }
-  if(!ok) return;
-  cleared=new Set(); announced=new Set(); lvIndex=0; program=[]; activeLoop=null; progWins=0;
-  try{ localStorage.removeItem(KEY); }catch(e){}
-  renderProgram(); buildLevel();
+  if(ok) doIt();
 }
 
 function cellSize(w,h){
@@ -424,7 +440,18 @@ function cellSize(w,h){
   const cByW = Math.floor((availW - gap*(w-1)) / w);
   const cByH = Math.floor((availH - gap*(h-1)) / h);
   let c = Math.min(cByW, cByH);
-  return Math.max(38, Math.min(c, cap));
+  return Math.max(26, Math.min(c, cap));   // 盤のマスは タップしないので 小さくてもよい
+}
+// 縦画面：スタートボタンまで 1画面に おさまるよう、はみ出した ぶんだけ マスを ちいさくする
+function fitBoard(L){
+  if(window.innerWidth > window.innerHeight && window.innerWidth >= 720) return;
+  const de=document.documentElement;
+  for(let k=0;k<4;k++){
+    const over = de.scrollHeight - window.innerHeight;
+    const cs = parseInt(getComputedStyle(de).getPropertyValue('--cell'));
+    if(over <= 2 || cs <= 26) break;
+    de.style.setProperty('--cell', Math.max(26, cs - Math.ceil(over / L.h)) + 'px');
+  }
 }
 function isWall(L,x,y){ return L.walls.some(p=>p.x===x&&p.y===y); }
 function footprint(x,y){
@@ -502,7 +529,7 @@ function buildLevel(){
     else if(gateAt(L,x,y)){ c.className='cell gate'; }
     if(L.goal && L.goal.x===x && L.goal.y===y){
       const wrap=document.createElement('span'); wrap.className='goalwrap';
-      const g=document.createElement('img'); g.className='goalmark'; g.src='../assets/uni/purple_face.png'; g.alt='';
+      const g=document.createElement('img'); g.className='goalmark'; g.src='../assets/uni/purple_face.webp'; g.alt='';
       wrap.appendChild(g); c.appendChild(wrap);
     }
     if((L.targets||[]).some(t=>t.x===x&&t.y===y)){ const g=document.createElement('span'); g.className='target'; c.appendChild(g); }
@@ -512,14 +539,16 @@ function buildLevel(){
     board.appendChild(c);
   }
   collected=new Set(); gatesOpen=false;
-  pos={...L.start}; placeBear(false); makeBoxes(L);
   $('lvText').textContent='レベル '+(lvIndex+1);
   renderStars(); renderPad(); renderBudget(); updateNav();
+  fitBoard(L);
+  pos={...L.start}; placeBear(false); makeBoxes(L);
   const num=lvIndex+1;
   if(INTRO[num] && !announced.has(num)){
     announced.add(num); save();
-    showCard({uni:'../assets/uni/green_standing.png',title:'レベルアップ！',msg:INTRO[num],btn:'やってみる！',onBtn:hideCard});
-  }
+    showCard({uni:'../assets/uni/green_standing.webp',title:'レベルアップ！',msg:INTRO[num],btn:'やってみる！',
+      onBtn:()=>{ hideCard(); spot(SPOT[num] && document.querySelector(SPOT[num])); }});
+  } else tutorSpot();
 }
 
 let pos={x:0,y:0};
@@ -561,14 +590,26 @@ function addMove(dir, jump){
   const L=LEVELS[lvIndex];
   if(L.budget!=null && usedBlocks()+1 > L.budget){ toast('ブロックが たりない！ くりかえし で まとめよう'); return; }
   if(activeLoop){
-    if(activeLoop.body.length>=8) return;
+    if(activeLoop.body.length>=8){ full(); return; }
     activeLoop.body.push({dir,jump});
   } else {
-    if(program.length>=16) return;
+    if(program.length>=16){ full(); return; }
     program.push({kind:'move',dir,jump});
   }
   renderProgram(); beep(jump?700:520,0.05);
+  tutorSpot();
 }
+let spotEl=null;
+function spot(el){ spotOff(); if(!el) return; spotEl=el; el.classList.add('spot'); el.addEventListener('pointerdown', spotOff, {once:true}); }
+function spotOff(){ if(spotEl) spotEl.classList.remove('spot'); spotEl=null; }
+// あたらしい ボタンが 出た レベルでは、その ボタンを ひからせる
+const SPOT = {2:'#pad .btn.up', 3:'#pad .btn.left', 5:'#loopBtn', 7:'#jumpRow .jbtn'};
+// レベル1（はじめて）：「みぎ」を ひからせ、3こ ならんだら「スタート」を ひからせる
+function tutorSpot(){
+  if(lvIndex!==0 || cleared.has(0) || running) return;
+  spot(program.length>=3 ? $('playBtn') : document.querySelector('#pad .btn.right'));
+}
+function full(){ beep(200,0.12,'square'); toast('もう いっぱい！'); const p=$('program'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); }
 function usedBlocks(){ return program.reduce((n,it)=> n + (it.kind==='move'?1:1+it.body.length), 0); }
 function dropEmptyActive(){
   if(activeLoop && activeLoop.body.length===0){ const i=program.indexOf(activeLoop); if(i>=0) program.splice(i,1); }
@@ -828,8 +869,10 @@ function jumpTo(idx){
 
 let actx;
 function beep(freq,dur,type='sine'){
+  try{ if(localStorage.getItem('amori_sfx_on')==='0') return; }catch(e){}   // おうちの ひと メニューで こうかおん オフ
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();   // iOS：アプリ切替のあと 無音のままに ならないように
     const o=actx.createOscillator(),g=actx.createGain();
     o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
     g.gain.setValueAtTime(0.12,actx.currentTime);
@@ -849,12 +892,16 @@ async function run(){
   });
   if(flat.length===0){ toast('やじるしを いれてね！'); return; }
 
-  running=true; setButtons(true);
+  running=true; stopReq=false; setButtons(true);
   const L=LEVELS[lvIndex];
   collected=new Set(); gatesOpen=false; restoreLevelTokens(L); resetBoxes(L);
   pos={...L.start}; placeBear(false); clearPaws(); footprint(pos.x,pos.y); await wait(150);
 
   for(let i=0;i<flat.length;i++){
+    if(stopReq){   // とめる：やさしく スタートへ もどす
+      p.querySelectorAll('.chip').forEach(c=>c.classList.remove('run'));
+      beep(330,0.08); pos={...L.start}; placeBear(true); await wait(360); finishRun(); return;
+    }
     p.querySelectorAll('.chip').forEach(c=>c.classList.remove('run'));
     if(flat[i].el){ flat[i].el.classList.add('run'); }
     const d=DIRS[flat[i].dir], step=flat[i].jump?2:1;
@@ -899,9 +946,12 @@ async function run(){
     pos={...L.start}; placeBear(true); await wait(360); finishRun();
   }
 }
+let stopReq=false;
 function finishRun(){ running=false; setButtons(false); }
 function setButtons(dis){
-  ['playBtn','backBtn','clearBtn','loopBtn'].forEach(id=>{const e=$(id); if(e)e.disabled=dis;});
+  // 実行中は スタート → とめる に かわる（とちゅうで やめられる）
+  ['backBtn','clearBtn','loopBtn'].forEach(id=>{const e=$(id); if(e)e.disabled=dis;});
+  const pb=$('playBtn'); if(pb){ pb.classList.toggle('stop',dis); pb.innerHTML = dis ? '<span class="sq"></span> とめる' : '<span class="tri"></span> スタート！'; }
   document.querySelectorAll('#pad .btn, #jumpRow .jbtn').forEach(b=>b.disabled=dis);
   document.body.classList.toggle('running',dis);
 }
@@ -914,7 +964,7 @@ function win(){
   renderStars(); save(); winSound(); confetti();
   setTimeout(()=>acornPop(acGain), 360);
   const last=lvIndex>=LEVELS.length-1;
-  showCard({uni:last?'../assets/uni/purple_wave.png':'../assets/uni/blue_wave.png',title:'やったね！',
+  showCard({uni:last?'../assets/uni/purple_wave.webp':'../assets/uni/blue_wave.webp',title:'やったね！',
     msg:last?'ぜんぶ クリア！ きみは プログラミングはかせ だ！':'ともだちに あえたよ！',
     btn:last?'もういちど':'つぎへ', onBtn:next});
   running=false;
@@ -930,7 +980,7 @@ function next(){
 
 let cardCb=null;
 function showCard({uni,title,msg,btn,onBtn}){
-  $('cardUni').src=uni||'../assets/uni/blue_wave.png'; $('cardTitle').textContent=title; $('cardMsg').textContent=msg;
+  $('cardUni').src=uni||'../assets/uni/blue_wave.webp'; $('cardTitle').textContent=title; $('cardMsg').textContent=msg;
   $('cardBtn').textContent=btn; cardCb=onBtn; $('overlay').classList.add('show');
 }
 function hideCard(){ $('overlay').classList.remove('show'); }
@@ -975,20 +1025,23 @@ function acornPop(n){
 
 $('backBtn').addEventListener('click',undo);
 $('clearBtn').addEventListener('click',clearP);
-$('playBtn').addEventListener('click',run);
+$('playBtn').addEventListener('click',()=>{ if(running){ stopReq=true; return; } spotOff(); run(); });
 $('loopBtn').addEventListener('click',toggleLoop);
 $('resetBtn').addEventListener('click',resetSave);
 $('prevLv').addEventListener('click',()=>jumpTo(lvIndex-1));
 $('nextLv').addEventListener('click',()=>jumpTo(lvIndex+1));
 $('stars').addEventListener('click',e=>{ const s=e.target.closest('.pstar'); if(s) jumpTo(+s.dataset.i); });
 $('cardBtn').addEventListener('click',()=>{ const cb=cardCb; cardCb=null; if(cb) cb(); });
-let rsz; window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(buildLevel,150);});
+// 実行中に URLバーの のびちぢみ等で作り直すと 進行が こわれるので、実行中は あとまわし
+let rsz; window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(function again(){ if(running){ rsz=setTimeout(again,400); return; } buildLevel(); },150);});
 
 load();
 buildLevel();
 renderProgram();
 </script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>Bgm.play('programming');</script>
 </body>
 </html>
