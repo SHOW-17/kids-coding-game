@@ -299,11 +299,14 @@
     if (reduceMotion()) return;  // 動き控えめ設定では揺らさない
     intensity = intensity || 8; dur = dur || 380;
     // 元の inline transform を退避し、終了後に必ず復元（他のtransformを壊さない）
-    var prev = el.style.transform || '';
+    // 連打で ゆれが かさなっても、さいしょの transform に もどす（ずれが のこらない）
+    if (el.__shk == null) el.__shk = { prev: el.style.transform || '', id: 0 };
+    var prev = el.__shk.prev, my = ++el.__shk.id;
     var start = performance.now();
     function frame(t) {
+      if (!el.__shk || el.__shk.id !== my) return;          // あとから きた ゆれに まかせる
       var p = (t - start) / dur;
-      if (p >= 1) { el.style.transform = prev; return; }
+      if (p >= 1) { el.style.transform = prev; el.__shk = null; return; }
       var damp = (1 - p) * intensity;
       var dx = (Math.random() * 2 - 1) * damp;
       var dy = (Math.random() * 2 - 1) * damp;

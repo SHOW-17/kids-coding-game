@@ -15,6 +15,7 @@
 - `docs/rewards-system.md` — ごほうびシステム（どんぐり経済・くじ・きせかえ・おへや）
 - `docs/game-notes.md` — 各ゲームの実装メモ（落とし穴回避）・ゲーム一覧表・アセット規約
 - `docs/build-release.md` — PWA / GitHub Pages / Android APK のビルド・公開手順
+- `docs/review/2026-10-04.md` — 超レビュー＋大改造の記録（指摘一覧・方針・残課題）
 - `.claude/skills/new-game/` — 新ゲーム追加の手順（/new-game）
 - `.claude/skills/build-release/` — 公開・APKビルドの手順（/build-release）
 - `.agents/skills` は `.claude/skills` へのローカル用シンボリックリンク（Codex 等から参照するため）
@@ -61,7 +62,7 @@ games/
   sokkuri.html          そっくりわけ（属性分類）     pair.html      ぺあさがし（神経衰弱）
   uta.html              うたあそび（音程トレーニング）
 assets/                 画像・音・共通JS（置き場の規約 → docs/game-notes.md §アセット規約）
-  audio.js / fx.js / save.js / rewards.js / shell.js / bgm.js   共通基盤（下記）
+  audio.js / fx.js / save.js / rewards.js / shell.js / bgm.js / talk.js / guard.js   共通基盤（下記）
   menu/ uni/ bg/ tokens/ pairs/ items/ gacha/ room/ icons/ fonts/ bgm/
 sw.js                   Service Worker（scripts/build-sw.mjs で自動生成。直接編集しない）
 capacitor.config.json   Capacitor 設定（appId: jp.show17.asobinomori）
@@ -77,8 +78,10 @@ scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-place
 - **FX**（fx.js）：`FX.confetti()/burst(x,y)/sparkles(x,y)/ring(x,y)/floatEmoji(x,y,text)/shake(el)/celebrate()`＋`FX.acornGain(n,x,y)`。
 - **Save**（save.js）：`const save = Save.game('ゲーム名'); save.get(k,def); save.set(k,v); save.bestMax/bestMin(k,v)`。localStorage不可環境はメモリに自動フォールバック。
 - 上記 **Sfx/FX/Save の3本＋rewards.js（save.js の後に読む）は新ゲームで必須**。
-  ※ **programming.html だけは歴史的経緯で完全自己完結の例外**（bgm.js のみ読む。詳細 → docs/programming-game.md）。新ゲームは self-contained にしないこと。
+  ※ **programming.html だけは歴史的経緯で自己完結の例外**（共通JSは bgm.js・talk.js・guard.js のみ読む。詳細 → docs/programming-game.md）。新ゲームは self-contained にしないこと。
   ※ **BGM は全画面共通方針**：`bgm.js` を読み込み `Bgm.play('画面名')`。
+- **talk.js（こえの あんない＝ヒント読み上げ）と guard.js（おうちの ひと ゲート・あそぶ じかん）は全ページで必須**
+  （bgm.js の後に読む）。ヒント1行に `data-talk` を付ける。詳細 → docs/game-notes.md §共通基盤。
 - **App**（shell.js）は**現状 index.html 専用**。各ゲームは topbar・結果モーダル・トーストをテーマに合わせて
   自前インライン実装する（色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先）。
   `App.showModal` は絵文字を渡せる API だが「絵文字を使わない」方針のため使わない。
@@ -88,10 +91,12 @@ scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-place
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** 各ゲームは規定キーで保存すること：
   - manekko / kimari / tomare → `set('best', 最高記録)`（kimari は れんぞく さいこう）、その他 → `set('cleared', クリア/正解 数)`
   - programming は独自キー `kuma_prog_save_v1`（互換のため変更しない。index.html はこれも読む）
-- **新ゲームを足したら4か所を必ず更新**：index.html の `GAMES` 配列・`doReset` の名前空間リスト・
-  rewards.js の `earned()`（wins 集計）・scripts/test-games.js の `PAGES`。手順の全体は /new-game スキル参照。
+- **新ゲームを足したら5か所を必ず更新**：index.html の `GAMES` 配列・`doReset` の名前空間リスト・
+  rewards.js の `earned()`（wins 集計）・rewards.js の `DAILY_ORDER`/`DAILY_NS`（きょうの 3つ）・scripts/test-games.js の `PAGES`。
+  手順の全体は /new-game スキル参照。
 - **どんぐり（ごほうび通貨）**：クリア時に `wins` を加算し `FX.acornGain()` で「🌰＋N」演出。
-  獲得量の式・くじ・きせかえの仕様は docs/rewards-system.md。
+  獲得量の式・くじ・きせかえ・「きょうの 3つ」（毎日のスタンプ）の仕様は docs/rewards-system.md。
+- **子どもが記録を消せる操作・設定は必ず `Guard.gate()`（おうちの ひと ゲート）の うしろに置く。**
 
 ## キャラクター・テーマについて（重要）
 

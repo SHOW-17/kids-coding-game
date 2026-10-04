@@ -1,11 +1,11 @@
 /* ============================================================
    test-games.js — 全ページのヘッドレス・スモークテスト
    ------------------------------------------------------------
-   各ページを 412x892 のモバイル相当で開き、以下を検査する：
+   各ページを 3サイズ（スマホ小 360x640／スマホ 412x892／タブレット横 1024x768）で開き、以下を検査する：
    - console.error / pageerror（JS例外）
-   - 自前アセット（127.0.0.1）のリクエスト失敗（リンク切れ）
+   - 自前アセット（127.0.0.1）のリクエスト失敗・HTTP 4xx/5xx（リンク切れ）
    - 横スクロール（はみ出し）
-   合わせて /tmp/shot-<name>.png にスクリーンショットを保存。
+   合わせて /tmp/shot-<name>[-<size>].png にスクリーンショットを保存。
 
    実行方法（puppeteer-core と google-chrome-stable が必要）:
      # 1) リポジトリ直下で静的サーバーを起動
@@ -38,12 +38,18 @@ const PAGES = [
     executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome-stable',
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    defaultViewport: { width: 412, height: 892, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   });
+  const SIZES = [
+    { key: '',     vp: { width: 412,  height: 892, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
+    { key: '360',  vp: { width: 360,  height: 640, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
+    { key: 'tabl', vp: { width: 1024, height: 768, deviceScaleFactor: 1, isMobile: true, hasTouch: true } },
+  ];
 
   let totalErrors = 0;
-  for (const p of PAGES) {
+  for (const sz of SIZES) for (const p0 of PAGES) {
+    const p = { name: p0.name + (sz.key ? '-' + sz.key : ''), url: p0.url };
     const page = await browser.newPage();
+    await page.setViewport(sz.vp);
     const errors = [];
     page.on('console', m => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
     page.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -52,6 +58,7 @@ const PAGES = [
       // フォント等の外部は無視、自前アセットの失敗のみ拾う
       if (u.includes('127.0.0.1')) errors.push('requestfailed: ' + u + ' (' + r.failure().errorText + ')');
     });
+    page.on('response', r => { if (r.status() >= 400 && r.url().includes('127.0.0.1')) errors.push('HTTP ' + r.status() + ': ' + r.url()); });
     try {
       await page.goto(p.url, { waitUntil: 'networkidle2', timeout: 15000 });
       await new Promise(r => setTimeout(r, 800));

@@ -180,7 +180,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.png" alt="">ぺあさがし</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.webp" alt="">ぺあさがし</div>
 </div>
 
 <div class="wrap">
@@ -189,7 +189,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <span class="pair-pill" id="pairPill"><span class="cstar"></span>あと 3</span>
   </div>
 
-  <div class="hint enter d1" id="hint">カードを くばるよ…</div>
+  <div class="hint enter d1" id="hint" data-talk>カードを くばるよ…</div>
 
   <div class="tray enter d2">
     <div class="board" id="board" aria-label="カードの ばんめん"></div>
@@ -199,8 +199,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- result modal -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <div class="stars" id="ovlStars"><span class="st"></span><span class="st"></span><span class="st"></span></div>
     <p id="ovlText"></p>
     <div class="row">
@@ -215,6 +215,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== ぺあさがし（神経衰弱）— 視覚空間きおく力 ====== */
 
@@ -236,14 +238,13 @@ const MOTIFS = [
 ];
 
 /* レベル構成：L1=3ペア → L2=4ペア → L3=6ペア → L4=8ペア。L4クリア後は L4 をくりかえす。
-   peek＝はじめに 1.5びょう ぜんぶ みせる（小1への配慮。L1・L2 のみ） */
+   peek＝はじめに 1.5びょう ぜんぶ みせる（小1への配慮。L3 は短め） */
 const LEVELS = [
-  {pairs:3, peek:true},
-  {pairs:4, peek:true},
-  {pairs:6, peek:false},
-  {pairs:8, peek:false},
+  {pairs:3, peek:1500},
+  {pairs:4, peek:1500},
+  {pairs:6, peek:750},
+  {pairs:8, peek:0},
 ];
-const PEEK_MS = 1500;
 
 function S(){ return (window.Save&&Save.game)?Save.game('pair'):{get:(k,d)=>d,set:()=>{}}; }
 const save = S();
@@ -258,13 +259,14 @@ const hint = document.getElementById('hint');
 const lvPill = document.getElementById('lvPill');
 const pairPill = document.getElementById('pairPill');
 
-let round = 1;          // レベル番号（L4 をこえても ふえていく）
+let round = Math.max(1, Math.floor(save.get('round', 1) || 1)); // レベル番号（L4 をこえても ふえていく）
 let cfg = LEVELS[0];
 let deck = [];          // {m:絵柄, el:カード要素, matched:bool}
 let first = -1;         // 1まいめに めくった index（なければ -1）
 let lock = true;        // 判定ちゅう・くばりちゅうは 入力ロック
 let moves = 0, found = 0;
 let buildId = 0;        // ラウンドをまたいだ setTimeout の打ち消し用
+let pendingMiss = null, nextBusy = false;
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function setLock(v){ lock = v; board.classList.toggle('locked', v); }
@@ -306,6 +308,8 @@ window.addEventListener('resize', layout, {passive:true});
 /* ---- 1レベルぶんの 盤面を つくる ---- */
 function build(){
   const my = ++buildId;
+  pendingMiss = null;
+  save.set('round', round);
   cfg = LEVELS[Math.min(round-1, LEVELS.length-1)];
   const motifs = shuffle(MOTIFS.slice()).slice(0, cfg.pairs);   // 毎回ランダムに絵柄を選ぶ
   deck = shuffle(motifs.concat(motifs).map(m=>({m, matched:false})));
@@ -333,13 +337,13 @@ function build(){
   const dealDone = reduce ? 200 : deck.length*60 + 520;
   setTimeout(()=>{
     if(my !== buildId) return;
-    if(cfg.peek) peekAll(my);
+    if(cfg.peek) peekAll(my, cfg.peek);
     else { setLock(false); setHint('おなじ えの ペアを さがそう'); }
   }, dealDone);
 }
 
-/* ---- チラ見せ（L1・L2）：ぜんぶ 1.5びょう みせて いっせいに うらがえす ---- */
-function peekAll(my){
+/* ---- チラ見せ：ぜんぶを すこしだけ みせて いっせいに うらがえす ---- */
+function peekAll(my, duration){
   setHint('どこに なにが あるか おぼえてね！','watch');
   sfx('sparkle');
   deck.forEach(c=>c.el.classList.add('open'));
@@ -352,12 +356,15 @@ function peekAll(my){
       setLock(false);
       setHint('おなじ えの ペアを さがそう');
     }, 420);
-  }, PEEK_MS);
+  }, duration);
 }
 
 /* ---- カードを めくる（連続タップ・3まいめは ロックで ガード） ---- */
 function onCard(i){
   const card = deck[i];
+  if(lock && pendingMiss && i !== pendingMiss.a && i !== pendingMiss.b && !card.matched && !card.el.classList.contains('open')){
+    resolvePendingMiss();
+  }
   if(lock || card.matched || card.el.classList.contains('open')) return;
   const my = buildId;
   sfx('pop'); buzz(12);
@@ -368,7 +375,8 @@ function onCard(i){
   if(deck[a].m.id === deck[b].m.id){
     setTimeout(()=>{ if(my===buildId) onMatch(a,b); }, 430);    // flip を見せてから
   }else{
-    setTimeout(()=>{ if(my===buildId) onMiss(a,b); }, 750);     // 2まいとも しばらく 見せる
+    pendingMiss = {a, b, my, showTimer:null, hideTimer:null, unlockTimer:null};
+    pendingMiss.showTimer = setTimeout(()=>{ if(my===buildId) onMiss(a,b); }, 550);
   }
 }
 
@@ -390,23 +398,35 @@ function onMatch(a,b){
 }
 
 function onMiss(a,b){
-  const my = buildId;
+  const miss = pendingMiss;
+  if(!miss || miss.a !== a || miss.b !== b) return;
   sfx('step'); buzz(20);                                        // やわらかい音。叱らない
   deck[a].el.classList.add('wrong');
   deck[b].el.classList.add('wrong');
   setHint('ちがった！ ばしょを おぼえよう','watch');
-  setTimeout(()=>{
-    if(my !== buildId) return;
+  miss.hideTimer = setTimeout(()=>{
+    if(miss.my !== buildId || pendingMiss !== miss) return;
     [a,b].forEach(idx=>{
       deck[idx].el.classList.remove('wrong');
       deck[idx].el.classList.remove('open');
     });
-    setTimeout(()=>{
-      if(my !== buildId) return;
+    miss.unlockTimer = setTimeout(()=>{
+      if(miss.my !== buildId || pendingMiss !== miss) return;
+      pendingMiss = null;
       setLock(false);
       setHint('おなじ えの ペアを さがそう');
-    }, 400);
-  }, 400);
+    }, 150);
+  }, 250);
+}
+
+function resolvePendingMiss(){
+  const miss = pendingMiss;
+  if(!miss) return;
+  clearTimeout(miss.showTimer); clearTimeout(miss.hideTimer); clearTimeout(miss.unlockTimer);
+  [miss.a,miss.b].forEach(idx=>deck[idx].el.classList.remove('wrong','open'));
+  pendingMiss = null;
+  setLock(false);
+  setHint('おなじ えの ペアを さがそう');
 }
 
 /* ---- ぴったり度（めくった回数 → 星1〜3。星1でも まえむき） ---- */
@@ -437,6 +457,8 @@ const STAR_TEXT = {
   1:'さいごまで みつけられたね！',
 };
 function showResult(stars){
+  nextBusy = false;
+  document.getElementById('ovlNext').disabled = false;
   document.getElementById('ovlTitle').textContent = 'クリア！すごい！';
   document.getElementById('ovlText').textContent = STAR_TEXT[stars];
   const sts = [...document.getElementById('ovlStars').children];
@@ -450,6 +472,9 @@ function showResult(stars){
 function hideResult(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
 document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 document.getElementById('ovlNext').addEventListener('click', ()=>{
+  if(nextBusy) return;
+  nextBusy = true;
+  document.getElementById('ovlNext').disabled = true;
   sfx('tap'); hideResult();
   round++;                                                      // L4 のあとも レベル数は ふえる（盤面は L4）
   setTimeout(build, 260);

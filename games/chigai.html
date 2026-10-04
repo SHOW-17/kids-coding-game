@@ -66,7 +66,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* ===== panels（ねんどトレイ）===== */
 .panels{position:relative;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;}
 .panel{position:relative;border-radius:26px;overflow:hidden;cursor:pointer;touch-action:manipulation;
-  width:min(92vw, 420px, calc((100dvh - 318px)*0.7));aspect-ratio:7/5;
+  width:min(92vw, 420px, calc((100dvh - 264px)*0.7));aspect-ratio:7/5;
   background:linear-gradient(180deg,#fbfffd,#e2f4ec);
   box-shadow:0 14px 26px -12px rgba(21,113,95,.38), 0 3px 0 rgba(21,113,95,.10),
     inset 0 3px 0 rgba(255,255,255,.95), inset 0 -10px 16px rgba(44,150,130,.12);}
@@ -211,7 +211,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/green_face.png" alt="">どこちがう</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/green_face.webp" alt="">どこちがう</div>
 </div>
 
 <div class="wrap">
@@ -220,24 +220,24 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <span class="pill slots" id="slots"></span>
   </div>
 
-  <div class="hint enter d1" id="hint">2まいの え、どこが ちがうかな？</div>
+  <div class="hint enter d1" id="hint" data-talk>2まいの え、どこが ちがうかな？</div>
 
   <div class="panels enter d2" id="panels">
     <div class="panel" id="pa" aria-label="うえの え"></div>
     <div class="panel" id="pb" aria-label="したの え"></div>
-    <img class="cheer" id="cheer" src="../assets/uni/purple_wave.png" alt="">
+    <img class="cheer" id="cheer" src="../assets/uni/purple_wave.webp" alt="">
   </div>
 </div>
 
 <button class="hintbtn" id="hintBtn" hidden aria-label="ヒント">
-  <img src="../assets/uni/green_face.png" alt=""><span>ヒント</span>
+  <img src="../assets/uni/green_face.webp" alt=""><span>ヒント</span>
 </button>
 
 <!-- result modal -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -251,6 +251,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== どこちがう（まちがいさがし）— かんさつ力 ====== */
 function S(){ return (window.Save&&Save.game)?Save.game('chigai'):{get:(k,d)=>d,set:()=>{}}; }
@@ -270,11 +272,11 @@ const cheer = document.getElementById('cheer');
 
 /* パネル座標系：よこ100ユニット、たて H_UNITS（パネルは 7:5） */
 const H_UNITS = 500/7;
-const HINT_WAIT = 20000;
+const HINT_WAIT = 9000;
 
 let stage = save.get('stage',0)||0;
 let cleared = save.get('cleared',0)||0;
-let scene = null, found = [], locked = false, lastPanel = null, hintTimer = null;
+let scene = null, found = [], locked = false, lastPanel = null, hintTimer = null, hintUses = 0, nextBusy = false;
 
 /* ---------- シード付き乱数（mulberry32） ---------- */
 function rngFactory(seed){
@@ -293,7 +295,7 @@ function shuffleR(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){c
 const TYPES = {
   flower:{flip:false, vars:['#ff7d9c','#ffc23d','#7cc6ff','#b58cff'],
     html(){ let h=''; for(let k=0;k<6;k++) h+='<i class="petal cl" style="transform:rotate('+(k*60)+'deg) translate(0,-72%)"></i>'; return h+'<i class="core cl"></i>'; }},
-  mush:{flip:true, vars:['#ff6b6b','#5cc8e8','#b58cff','#ff9f43'],
+  mush:{flip:false, vars:['#ff6b6b','#5cc8e8','#b58cff','#ff9f43'],
     html(){ return '<i class="cap cl"></i><i class="stem cl"></i>'+
       '<i class="dot" style="left:14%;top:16%;width:20%;height:20%"></i>'+
       '<i class="dot" style="left:58%;top:11%;width:12%;height:12%"></i>'+
@@ -305,7 +307,7 @@ const TYPES = {
       '<i class="puff cl" style="left:10%;top:44%;width:80%;height:30%;border-radius:999px"></i>'; }},
   star:{flip:false, vars:['#ffd23f','#ff8fb8','#6fd3f0','#b58cff'],
     html(){ return '<i class="body cl"></i>'; }},
-  tree:{flip:true, vars:['#58c472','#f5a23c','#f7a8c8','#b58cff'],
+  tree:{flip:false, vars:['#58c472','#f5a23c','#f7a8c8','#b58cff'],
     html(){ return '<i class="trunk cl"></i><i class="can cl"></i>'+
       '<i class="fr" style="left:18%;top:16%;width:13%;height:13%"></i>'+
       '<i class="fr" style="left:32%;top:38%;width:11%;height:11%"></i>'; }},
@@ -339,7 +341,7 @@ function tryGen(st, nObj, rng){
   for(let k=0;k<nDiff;k++){
     const t = TYPES[typeKeys[k]];
     let avail = (st===0) ? ['color','size'] : ['color','size','miss'];
-    if(st>0 && t.flip) avail = avail.concat(['flip']);
+    if(st>=4 && t.flip) avail = avail.concat(['flip']);
     let pool = avail.filter(x=>!usedKinds.includes(x));
     if(!pool.length) pool = avail;
     const kind = pool[(rng()*pool.length)|0];
@@ -465,7 +467,7 @@ function renderSlots(){
   }
 }
 function startStage(){
-  locked = false; found = []; lastPanel = null;
+  locked = false; found = []; lastPanel = null; hintUses = 0;
   scene = genScene(stage);
   renderPanels(scene);
   renderSlots();
@@ -562,6 +564,7 @@ function stageClear(){
 /* ---------- 5ステージごとの ひとくぎり ---------- */
 const ovl = document.getElementById('ovl');
 function milestone(){
+  nextBusy = false; ovlNext.disabled = false;
   sfx('fanfare'); fx('celebrate');
   document.getElementById('ovlTitle').textContent = 'すごい！ ' + stage + 'ステージ クリア！';
   document.getElementById('ovlText').innerHTML = 'ちがいを たくさん みつけたね！<br>かんさつの めいじんだ！';
@@ -570,10 +573,15 @@ function milestone(){
 }
 function closeOvl(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
 document.getElementById('ovlHome').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
-document.getElementById('ovlNext').addEventListener('click', ()=>{ sfx('whoosh'); closeOvl(); startStage(); });
+const ovlNext = document.getElementById('ovlNext');
+ovlNext.addEventListener('click', ()=>{
+  if(nextBusy) return;
+  nextBusy = true; ovlNext.disabled = true;
+  sfx('whoosh'); closeOvl(); startStage();
+});
 document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
 
-/* ---------- ヒント（20びょう みつからないと はかせ登場） ---------- */
+/* ---------- ヒント（9びょう みつからないと はかせ登場） ---------- */
 function armHintTimer(){
   clearTimeout(hintTimer);
   hintTimer = setTimeout(()=>{ if(!locked && hintBtn.hidden){ hintBtn.hidden=false; sfx('pop'); } }, HINT_WAIT);
@@ -590,9 +598,10 @@ hintBtn.addEventListener('click', ()=>{
   sfx('sparkle');
   const d = rem[(Math.random()*rem.length)|0];
   const o = scene.objs[d.i];
-  const R = 42;                                  // 大きな円＝こたえを示しすぎない
-  const gx = Math.min(92, Math.max(8, o.x + (Math.random()*16-8)));
-  const gy = Math.min(H_UNITS-5, Math.max(5, o.y + (Math.random()*12-6)));
+  const isPrecise = hintUses++ > 0;
+  const R = isPrecise ? o.s * 1.4 : 42;
+  const gx = isPrecise ? o.x : Math.min(92, Math.max(8, o.x + (Math.random()*16-8)));
+  const gy = isPrecise ? o.y : Math.min(H_UNITS-5, Math.max(5, o.y + (Math.random()*12-6)));
   [pa,pb].forEach(p=>{
     const gEl = document.createElement('div'); gEl.className = 'hglow';
     gEl.style.left = gx + '%'; gEl.style.top = (gy/H_UNITS*100) + '%'; gEl.style.width = R + '%';

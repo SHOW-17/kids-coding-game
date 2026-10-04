@@ -41,7 +41,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
           mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
 .ttl{font-family:'Mochiy Pop One';font-size:18px;color:var(--accent-d);text-shadow:0 2px 0 #fff;}
 .ttl .uni{height:32px;vertical-align:-8px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(40,110,60,.3));}
-.lvnav{border:none;background:#fff;border-radius:14px;width:42px;height:42px;min-width:42px;cursor:pointer;
+.lvnav{border:none;background:#fff;border-radius:14px;width:48px;height:48px;min-width:48px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(58,158,92,.2), inset 0 2px 0 #fff;transition:transform .1s;}
 .lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(58,158,92,.2);}
 .lvnav:disabled{opacity:.34;cursor:default;}
@@ -65,7 +65,10 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   .controls{grid-area:controls;justify-content:flex-start;min-height:52px;margin:4px 0;}
 }
 
-.statusbar{display:flex;gap:10px;align-items:center;margin:4px 0 2px;}
+.statusbar{display:flex;gap:8px;align-items:center;margin:4px 0 2px;}
+.statusbar .pill{white-space:nowrap;}
+/* なまえは 盤の なかにも 出ているので、せまい画面では はぶいて BGMボタンと かさならないように */
+@media (max-width:440px){ .namepill{display:none;} }
 .pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;
   padding:7px 16px;border-radius:999px;font-size:16px;color:var(--accent-d);box-shadow:0 4px 0 rgba(58,158,92,.18), inset 0 2px 0 #fff;}
 .pill.left{font-family:'M PLUS Rounded 1c';font-weight:800;color:var(--ink-soft);}
@@ -75,7 +78,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   padding:5px 14px;border-radius:999px;box-shadow:0 3px 0 rgba(58,158,92,.14);}
 
 .dots{display:flex;gap:6px;justify-content:center;margin:4px 0 2px;flex-wrap:wrap;}
-.dots .d{width:8px;height:8px;border-radius:50%;background:rgba(40,110,60,.2);}
+.dots .d{width:11px;height:11px;border-radius:50%;background:rgba(40,110,60,.2);}
 .dots .d.on{background:var(--accent);}
 .dots .d.cur{background:var(--accent-d);box-shadow:0 0 0 3px rgba(58,158,92,.25);}
 
@@ -96,7 +99,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   font-size:15px;color:rgba(60,110,75,.5);pointer-events:none;letter-spacing:1px;}
 
 .piece{position:absolute;touch-action:none;cursor:grab;z-index:5;
-  transition:transform .18s var(--spring), filter .18s, left .28s var(--spring), top .28s var(--spring);will-change:transform;}
+  transition:transform .18s var(--spring), scale .22s var(--spring), filter .18s, left .28s var(--spring), top .28s var(--spring);will-change:transform;}
 .piece svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
 .piece .poly{stroke:rgba(255,255,255,.9);stroke-width:2.5;stroke-linejoin:round;filter:drop-shadow(0 3px 3px rgba(50,90,60,.32));}
 .piece.grab{cursor:grabbing;z-index:30;transition:filter .12s;}
@@ -152,7 +155,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/green_face.png" alt="">かたちづくり</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/green_face.webp" alt="">かたちづくり</div>
 </div>
 
 <div class="wrap">
@@ -165,7 +168,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
   </div>
 
   <div class="dots enter d1" id="dots"></div>
-  <div class="hint enter d1" id="hint">ピースを かげに はめてね</div>
+  <div class="hint enter d1" id="hint" data-talk>ピースを かげに はめてね</div>
 
   <div class="board-wrap enter d2" id="boardWrap">
     <div class="board" id="board">
@@ -188,8 +191,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/green_standing.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/green_standing.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -203,6 +206,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== かたちづくり（かげあわせ・タングラム）— ロジックは原版踏襲 ====== */
 function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
@@ -378,7 +383,9 @@ function calcSizes(){
     const maxBoardH = Math.max(220, window.innerHeight*0.46);
     boardPx = Math.max(220, Math.min(maxW, maxBoardH));
     trayW = boardPx;
-    trayH = Math.max(96, Math.round(boardPx*0.32));
+    // ピースが おおい レベルは トレイを 2〜3だんに（ピースは トレイの なかで ちいさく ならべる）
+    const n = cur ? cur.pieces.length : 3;
+    trayH = n<=3 ? Math.max(96, Math.round(boardPx*0.32)) : Math.max(124, Math.round(boardPx*0.44));
   }
 }
 function loadLevel(){
@@ -433,10 +440,13 @@ function layout(){
     if(e._placed){ placeOnShadow(e); }
     else {
       const slot = p._slot;
+      // トレイでは マスに おさまる ように ちいさく（つかんだら 盤の おおきさに もどる）
+      const cellW = trayW/slot.cols, cellH = trayH/slot.rows;
+      e._ts = Math.min(1, (cellW-6)/e._pw, (cellH-6)/e._ph);
       const tx = slot.x*trayW - e._pw/2; const ty = slot.y*trayH - e._ph/2;
       e.dataset.home = JSON.stringify({x:tx, y:ty});
       if(e.dataset.parent!=='tray'){ tray.appendChild(e); }
-      e.dataset.parent='tray'; e.style.left = tx+'px'; e.style.top = ty+'px'; e.style.transform='';
+      e.dataset.parent='tray'; e.style.left = tx+'px'; e.style.top = ty+'px'; e.style.transform=''; e.style.scale=String(e._ts);
     }
   });
 }
@@ -445,7 +455,8 @@ function scatterSlots(n){
   const cols = n<=3 ? n : (n<=4?2:3); const rows = Math.ceil(n/cols); const arr=[];
   for(let i=0;i<n;i++){ const r=Math.floor(i/cols), c=i%cols; const colsInRow=Math.min(cols,n-r*cols);
     arr.push({x:(c+0.5)/colsInRow, y:(r+0.5)/rows}); }
-  return arr.map(s=>({ x:Math.max(0.12,Math.min(0.88,s.x+(Math.random()-0.5)*0.08)), y:Math.max(0.18,Math.min(0.82,s.y+(Math.random()-0.5)*0.10)) }));
+  return arr.map((s,i)=>{ const colsInRow=Math.min(cols,n-Math.floor(i/cols)*cols);
+    return { x:s.x+(Math.random()-0.5)*0.04/colsInRow, y:s.y+(Math.random()-0.5)*0.04/rows, cols:colsInRow, rows:rows }; });
 }
 function attachDrag(e){ e.addEventListener('pointerdown', onDown); }
 function onDown(e){
@@ -459,11 +470,12 @@ function onDown(e){
   try{ t.setPointerCapture && t.setPointerCapture(e.pointerId); }catch(_){}
   const boardRect = board.getBoundingClientRect();
   const r = t.getBoundingClientRect();
-  const cMassX = r.left + r.width/2 + t._cOffX; const cMassY = r.top + r.height/2 + t._cOffY;
+  const k = t.dataset.parent==='tray' ? (t._ts||1) : 1;
+  const cMassX = r.left + r.width/2 + t._cOffX*k; const cMassY = r.top + r.height/2 + t._cOffY*k;
   t._grabDX = e.clientX - cMassX; t._grabDY = e.clientY - cMassY;
   moveElToBoard(t);
   setMassOnBoard(t, e.clientX - boardRect.left - t._grabDX, e.clientY - boardRect.top - t._grabDY);
-  t.style.transition='filter .12s'; t.style.transform='scale(1.08)';
+  t.style.transition='filter .12s'; t.style.scale='1'; t.style.transform='scale(1.08)';
   window.addEventListener('pointermove', onMove, {passive:false});
   window.addEventListener('pointerup', onUp);
   window.addEventListener('pointercancel', onUp);
@@ -510,7 +522,7 @@ function placeOnShadow(e){
   const t = e._target; if(!t) return;
   e.style.left = (u2bx(t.tx) - e._cOffX - e._pw/2)+'px';
   e.style.top  = (u2bx(t.ty) - e._cOffY - e._ph/2)+'px';
-  e.style.transform=''; if(e.dataset.parent!=='board'){ board.appendChild(e); e.dataset.parent='board'; }
+  e.style.transform=''; e.style.scale='1'; if(e.dataset.parent!=='board'){ board.appendChild(e); e.dataset.parent='board'; }
 }
 function snapPiece(e, target){
   e._target = target; target._filled = e; placeOnShadow(e);
@@ -527,12 +539,12 @@ function snapPiece(e, target){
 function returnToTray(e){
   let home = {x:0,y:0}; try{ home = JSON.parse(e.dataset.home); }catch(_){}
   if(e.dataset.parent!=='tray'){ tray.appendChild(e); e.dataset.parent='tray'; }
-  e.style.left = home.x+'px'; e.style.top = home.y+'px'; e.style.transform=''; sfx('step');
+  e.style.left = home.x+'px'; e.style.top = home.y+'px'; e.style.transform=''; e.style.scale=String(e._ts||1); sfx('step');
 }
 
 const ovl=document.getElementById('ovl');
 function showModal(opt){
-  document.getElementById('ovlUni').src = opt.uni || '../assets/uni/green_standing.png';
+  document.getElementById('ovlUni').src = opt.uni || '../assets/uni/green_standing.webp';
   document.getElementById('ovlTitle').textContent = opt.title;
   document.getElementById('ovlText').innerHTML = opt.text;
   const nb=document.getElementById('ovlNext'); nb.textContent = opt.nextLabel || 'つぎへ';
@@ -557,7 +569,7 @@ function win(){
   const isLast = (lvIndex >= LEVELS.length-1);
   setTimeout(()=>{
     showModal({
-      uni: isLast ? '../assets/uni/purple_wave.png' : '../assets/uni/green_standing.png',
+      uni: isLast ? '../assets/uni/purple_wave.webp' : '../assets/uni/green_standing.webp',
       title: isLast ? 'ぜんぶ できた！' : 'できた！',
       text: isLast ? 'すごい！ かたちづくりの たつじんだね！' : 'かたちが かんせい！ つぎに いこう',
       nextLabel: isLast ? 'もういちど' : 'つぎへ',
@@ -572,7 +584,7 @@ hintBtn.addEventListener('click', ()=>{
   if(any){ sfx('sparkle'); hint.textContent='ひかってる かげに はめてね';
     setTimeout(()=>{ cur.targets.forEach(t=>{ if(!t._filled) t._shadow.classList.remove('hi'); }); }, 2000); }
 });
-resetBtn.addEventListener('click', ()=>{ sfx('tap'); loadLevel(); });
+resetBtn.addEventListener('click', ()=>{ if(winning||dragging) return; sfx('tap'); loadLevel(); });
 prevLv.addEventListener('click', ()=>jumpTo(lvIndex-1));
 nextLv.addEventListener('click', ()=>jumpTo(lvIndex+1));
 dotsEl.addEventListener('click', e=>{ const d=e.target.closest('.d'); if(d) jumpTo(+d.dataset.i); });

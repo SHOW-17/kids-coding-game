@@ -18,8 +18,8 @@ user-invocable: true
 
 ## 手順
 
-1. `games/新ゲーム.html` を作る。**必ず `audio.js / fx.js / save.js / rewards.js` を読み込み
-   （Sfx/FX/Save/Rewards）、manekko.html を品質・構成の参照基準にする。**
+1. `games/新ゲーム.html` を作る。**必ず `audio.js / fx.js / save.js / rewards.js / bgm.js / talk.js / guard.js` を
+   この順で読み込み（Sfx/FX/Save/Rewards/Bgm/Talk/Guard）、ヒント1行に `data-talk` を付ける（読み上げ）。manekko.html を品質・構成の参照基準にする。**
    UIガワ（topbar・結果モーダル・トースト）はテーマに合わせて各HTMLに自前インライン実装
    （shell.js は読み込まない）。`:root` で `--accent / --accent-d / --accent-l` を上書きし、
    入場アニメは `.enter .d1..d6`。フォントは `../assets/fonts/fonts.css`（外部CDN禁止）。
@@ -27,8 +27,9 @@ user-invocable: true
 3. 進捗を規定キーで保存する（index.html のカードが読む）：
    `Save.game('ns').set('cleared', n)` または `set('best', n)`。
    クリア時は `wins` 加算＋`FX.acornGain()` で どんぐりゲット演出（式は docs/rewards-system.md）。
-4. **4か所を必ず更新**：index.html の `GAMES` 配列（href・名前ひらがな・アクセント色・看板アート・進捗キー）
+4. **5か所を必ず更新**：index.html の `GAMES` 配列（href・名前ひらがな・アクセント色・看板アート・進捗キー）
    ／index.html の `doReset` の名前空間リスト／rewards.js の `earned()`（wins 集計）
+   ／rewards.js の `DAILY_ORDER` と `DAILY_NS`（きょうの 3つ のローテーション）
    ／scripts/test-games.js の `PAGES` 配列。
 5. プレースホルダー画像が要るなら `node scripts/gen-placeholder-art.mjs`（本番画像が来たら同名上書き）。
 6. `node scripts/test-games.js` でヘッドレス確認（console error / 例外 / はみ出しゼロ）。

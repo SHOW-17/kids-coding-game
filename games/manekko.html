@@ -76,7 +76,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* むずかしさ えらび */
 .diffbar{display:flex;gap:8px;justify-content:center;margin:8px 0 0;}
 .diff{font-family:'Mochiy Pop One';font-size:13px;color:var(--purple-d);background:#fff;border:none;cursor:pointer;
-  padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(123,89,224,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
+  min-height:44px;padding:9px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(123,89,224,.18), inset 0 2px 0 #fff;transition:transform .12s var(--ease);}
 .diff:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(123,89,224,.18);}
 .diff.sel{background:linear-gradient(180deg,#b39bff,var(--purple));color:#fff;box-shadow:0 4px 0 var(--purple-d);}
 
@@ -193,7 +193,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 
 <div class="topbar">
   <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
-  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.png" alt="">まねっこ</div>
+  <div class="ttl"><img class="uni" src="../assets/uni/purple_face.webp" alt="">まねっこ</div>
 </div>
 
 <div class="wrap">
@@ -208,7 +208,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
     <button class="diff" data-d="fast">はやい</button>
   </div>
 
-  <div class="hint enter d1" id="hint">まんなかを おして スタート！</div>
+  <div class="hint enter d1" id="hint" data-talk>まんなかを おして スタート！</div>
 
   <div class="dial-wrap enter d2">
     <div class="dial locked" id="dial">
@@ -218,7 +218,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
       <button class="pad br" data-c="2" aria-label="きいろ"><span class="sym"></span></button>
     </div>
     <div class="hub" id="hub" data-state="idle">
-      <img src="../assets/uni/purple_face.png" alt="">
+      <img src="../assets/uni/purple_face.webp" alt="">
       <div class="lbl" id="hubLbl">まねっこ</div>
     </div>
     <div class="startcover" id="startcover">
@@ -234,8 +234,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <!-- result modal -->
 <div class="ovl" id="ovl" hidden>
   <div class="dlg">
-    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.png" alt="">
-    <h2 id="ovlTitle"></h2>
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
     <p id="ovlText"></p>
     <div class="row">
       <button class="ghost" id="ovlHome">おうち</button>
@@ -249,6 +249,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <script src="../assets/save.js"></script>
 <script src="../assets/rewards.js"></script>
 <script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
 <script>
 /* ====== まねっこ（サイモン）— ロジックは原版を踏襲 ====== */
 function S(){ return (window.Save&&Save.game)?Save.game('manekko'):{get:(k,d)=>d,set:()=>{}}; }
@@ -433,7 +435,7 @@ async function replayCurrent(){
 /* result modal */
 const ovl = document.getElementById('ovl');
 function showResult({win,title,html}){
-  document.getElementById('ovlUni').src = win ? '../assets/uni/purple_wave.png' : '../assets/uni/blue_thinking.png';
+  document.getElementById('ovlUni').src = win ? '../assets/uni/purple_wave.webp' : '../assets/uni/blue_thinking.webp';
   document.getElementById('ovlTitle').textContent = title;
   document.getElementById('ovlText').innerHTML = html;
   ovl.hidden = false;
@@ -450,6 +452,8 @@ document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); l
 const diffBtns = [...document.querySelectorAll('.diff')];
 diffBtns.forEach(b=>b.classList.toggle('sel', b.dataset.d===speed));
 diffBtns.forEach(b=>b.addEventListener('click', ()=>{
+  // あそんでいる とちゅうは かえない（だまって さいしょに もどって しまうため）
+  if(phase!=='idle' && phase!=='over'){ fx('shake', b, 4, 260); return; }
   speed = b.dataset.d; save.set('speed', speed); sfx('tap');
   diffBtns.forEach(x=>x.classList.toggle('sel', x===b));
   resetIdle();

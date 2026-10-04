@@ -15,7 +15,7 @@ function walk(dir) {
     const p = join(dir, name);
     const rel = relative(root, p).replaceAll('\\', '/');
     if (statSync(p).isDirectory()) {
-      if (['node_modules', '.git', 'scripts', 'android', 'www', 'resources'].includes(rel)) continue;
+      if (['node_modules', '.git', 'scripts', 'android', 'www', 'resources', 'docs', 'dist', '.claude', '.agents'].includes(rel)) continue;   // docs/ 等は配信しない
       walk(p);
     } else {
       if (/\.(html|css|js|webmanifest|png|webp|svg|ico|woff2|mp3)$/.test(name)) {

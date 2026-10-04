@@ -42,12 +42,34 @@ CLAUDE.md から分離した正本（2026-07-06〜）。各ゲーム固有の落
   pointerdown(kick→開始) → click(stop) → 保留中の play() が中断 → **次候補を再生**して鳴り続けるバグがあった。
   stop のたびに世代を進め、古い世代の続き（tryNext / then / fadeIn）は何もしない。
 
+- **かたちづくりのトレイは盤と別の縮尺**：トレイでは各ピースを格子マスに収まるよう `scale`（個別プロパティ）で縮め、
+  つかむと盤の大きさ（scale 1）に戻る。`transform` を使わないのは `.enter` の入場アニメ（forwards）が transform を上書きするため。
+- **ぴたごらの升は最低 40px**（ゆびで坂を置ける大きさ。高さが足りない分は縦スクロール）。
+- **うたあそび（2026-10 改修）**：こえで とばそ は「リングがユニコーンの近く（±95px）にいる間だけ」判定（画面外で弾けない・
+  出現時のお手本の声をマイクが拾っても正解にならない）。まねうたは 8秒つまると許容 ±2半音＋段が光る、18秒で「いっしょに うたおう」で進む。
+  どっちが たかい？ は適応型（正解で1段せまく・不正解で2段ひろく）。マイクは結果画面・メニュー・アプリ切替・ページ離脱で必ず止める
+  （許可待ち中に戻った場合も世代トークン `micGen` で後から止める）。お手本の AudioContext はモードボタンのタップ内で起こす（iOS 対策）。
+  マイクを使うモード中は `Talk.pause(true)`（読み上げを止める）。
+- **「つぎへ」系ボタンは二重押しガード**（そっくり・ぺあ・どこちがう）。連打でラウンドが飛ばない。
+- **難しさボタンは あそんでいる途中は無効**（まねっこ・とまれ。黙ってリセットされるのを防ぐ）。
+
+## 共通基盤（talk.js / guard.js・2026-10〜）
+
+- **talk.js（`Talk`）**：`data-talk` の要素を Web Speech（ja-JP・ゆっくり・やや高め）で読み上げ。文字が変わると自動（280ms 待って最後の1回）、
+  タップで もう一度。最初のユーザー操作の前に出た文は保留し、6秒以内の最初のタップで読む（自動再生制限）。
+  `data-talk="tap"` はタップ時だけ。未対応環境では何もしない。設定は localStorage `amori_talk_on`。
+- **guard.js（`Guard`）**：`gate(onPass)`＝かけざん4択（外れたら閉じる）。あそぶ じかんは `amori_care`（`{limit}`）と
+  `amori_usage`（`{date,ms,extra,warned}`）。5秒ごとに見えている間だけ積算、のこり1ぷんでトースト、0で「おやすみ」画面
+  （下の画面への操作を止める・BGM停止・効果音一時ミュート）。延長はゲートの うしろ。これらの設定キーは「きろくを ぜんぶ けす」では消さない。
+- **効果音オフ**：localStorage `amori_sfx_on`='0'（audio.js と programming の beep が見る）。
+- **bgm.js の `HAVE`**：画面別 mp3 を置いたら名前を足す（無い画面は `_default.mp3` だけを取りに行く＝404 を出さない）。
+
 ## アセット規約（assets/ 配下の置き場ルール）
 
 - `menu/` — トップ画面（index.html）専用の画像素材（webp。背景 `bg` / ロゴ `logo` /
   ユニコーン `uni_*` / ボタン `btn_*` / ゲーム看板 `banner_<id>` / カードアート `card_<id>`）。
   **banner_/card_ は index.html の `GAMES` 配列と1対1対応（新ゲームは両方に足す）**。
-- `uni/` — ユニコーン画像（blue_/green_/purple_*。マスコット。配役は Design.md §2）。
+- `uni/` — ユニコーン画像（blue_/green_/purple_*。**WebP**。マスコット。配役は Design.md §2）。`blue_sleep` は「おやすみ」画面用（Codex 画像生成）。
 - `bg/` — 各ゲームのシーン背景（webp 1024x1536。生成画像＝空＋下1/3だけ丘の縦長シーン。
   body に center bottom / cover で敷く。中央は余白＝UIが乗る前提の低コントラスト）。
 - `tokens/` — 盤面トークン画像（webp 透過・余白トリム済み）。programming の
@@ -57,8 +79,9 @@ CLAUDE.md から分離した正本（2026-07-06〜）。各ゲーム固有の落
   butterfly/car/fish/strawberry/moon/mushroom/balloon/bird/heart）。
   **pair.html の MOTIFS 配列と1対1対応（新絵柄は両方に足す）**。
 - `items/` — ごほうび図鑑のアイテムPNG（詳細は docs/rewards-system.md）。
-- `gacha/` — どんぐりガチャマシン・たまご画像（machine / egg_closed / egg_open）。
-- `room/` — おへや背景（room_bg.png）。
+- `gacha/` — どんぐりガチャマシン・たまご画像（machine / egg_closed / egg_open。WebP）。
+- `room/` — おへや背景（room_bg.webp）。
+- `menu/stamp.webp` — きょうの 3つ のスタンプ（Codex 画像生成）。
 - `icons/` — ファビコン・PWA・apple-touch アイコン一式。
 - `fonts/` — セルフホストフォント（fonts.css + woff2 496個。**外部CDN参照は禁止**）。
 - `bgm/` — BGM音源置き場（mp3。AI生成曲をコミット済み。公開リポジトリのため権利クリアな音源のみ）。

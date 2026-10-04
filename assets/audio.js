@@ -13,6 +13,9 @@
   var ctx = null;
   var master = null;
   var muted = false;
+  // おうちの ひと メニューの「こうかおん オフ」（全画面共通で保存。muted は一時的な消音で保存しない）
+  var off = false;
+  try { off = localStorage.getItem('amori_sfx_on') === '0'; } catch (e) {}
 
   function ensure() {
     if (!AC) return null;
@@ -38,7 +41,7 @@
   /* 単音を鳴らす低レベル関数
      opts: {freq, dur, type, vol, attack, release, slideTo, when, pan} */
   function tone(opts) {
-    if (muted) return;
+    if (muted || off) return;
     var c = ensure();
     if (!c) return;
     try {
@@ -106,6 +109,8 @@
     get muted() { return muted; },
     setMuted: function (m) { muted = !!m; },
     toggleMute: function () { muted = !muted; return muted; },
+    get enabled() { return !off; },
+    setEnabled: function (b) { off = !b; try { localStorage.setItem('amori_sfx_on', b ? '1' : '0'); } catch (e) {} },
     setVolume: function (v) { ensure(); if (master) master.gain.value = Math.max(0, Math.min(1, v)); },
 
     // 任意の周波数を1音（ゲームの「光って鳴る」用）
