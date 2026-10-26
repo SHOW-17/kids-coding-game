@@ -231,6 +231,23 @@ section[hidden]{display:none!important;}
 #vox.on{opacity:.95;}
 #vox .msk{width:18px;height:18px;}
 
+
+/* ===== ③ じぶんの声の高さを見ながら歌うガイド ===== */
+.voice-coach{width:100%;max-width:440px;margin:2px auto 6px;padding:9px 14px 12px;
+  border-radius:19px;background:rgba(255,255,255,.91);box-shadow:0 3px 0 rgba(189,69,40,.14);}
+.voice-coach-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:13px;font-weight:900;color:var(--ink-soft);min-height:23px;}
+#coachFeedback{color:var(--ac-d);text-align:right;}
+.coach-track{position:relative;height:23px;margin-top:5px;border-radius:999px;
+  background:linear-gradient(90deg,#c9ddec 0%,#ecf5fa 43%,#b8e4c5 44%,#b8e4c5 56%,#ffe0c8 57%,#f4c9c5 100%);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.12);}
+.coach-target{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;transform:translateX(-50%);
+  border-radius:3px;background:#278954;box-shadow:0 0 0 2px #fff;}
+.coach-needle{position:absolute;left:50%;top:50%;width:23px;height:23px;
+  transform:translate(-50%,-50%);border-radius:50%;background:var(--ac);
+  border:3px solid #fff;box-shadow:0 2px 5px rgba(140,50,30,.28);
+  opacity:0;transition:left .11s linear,opacity .15s;}
+.coach-needle.on{opacity:1;}
 /* ===== モーダル（けっか・マイク） ===== */
 .ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
   background:rgba(90,40,30,.4);backdrop-filter:blur(3px);padding:24px;opacity:0;transition:opacity .25s;}
@@ -369,6 +386,10 @@ section[hidden]{display:none!important;}
       <span class="pill" id="m3F">フレーズ 1/5</span>
     </div>
     <div class="hint enter d1" id="m3Hint">おてほんを きいてね</div>
+    <div class="voice-coach" aria-label="うたの たかさを あわせよう">
+      <div class="voice-coach-head"><span id="coachTarget">めざす おと</span><span id="coachFeedback">うたってみよう！</span></div>
+      <div class="coach-track"><span class="coach-target"></span><span class="coach-needle" id="coachNeedle"></span></div>
+    </div>
     <div class="stairs-tray enter d2" id="stairsTray">
       <div id="solfBig" aria-hidden="true"></div>
       <div class="stairs" id="stairs"></div>
@@ -1084,13 +1105,16 @@ const M3 = {
   NEED: 0.4,                       // 1音に必要な「合っていた時間」
   active:false, raf:0, lastT:0, runId:0,
   phrase:[], pi:0, ni:0, phase:'idle', hold:0, done:0, stuck:0, helped:false,
-  steps:[], holds:[],
+  steps:[], holds:[], cleanNotes:0, assistedNotes:0, earBlockUntil:0,
   el:{
     tray: document.getElementById('stairsTray'), stairs: document.getElementById('stairs'),
     walker: document.getElementById('walker'), player: document.getElementById('player3'),
     vox: document.getElementById('vox'), solf: document.getElementById('solfBig'),
     f: document.getElementById('m3F'), hint: document.getElementById('m3Hint'),
     replay: document.getElementById('m3Replay'),
+    coachTarget: document.getElementById('coachTarget'),
+    coachFeedback: document.getElementById('coachFeedback'),
+    coachNeedle: document.getElementById('coachNeedle'),
   },
   build(){
     if(this.steps.length) return;
@@ -1130,21 +1154,45 @@ const M3 = {
   parkPlayer(){ this.el.player.style.left='7%'; this.el.player.style.bottom='7%'; },
   pills(){ this.el.f.textContent = 'フレーズ ' + Math.min(this.pi+1,this.TOTAL) + '/' + this.TOTAL; },
   hint(t, cls){ this.el.hint.textContent = t; this.el.hint.className = 'hint' + (cls?' '+cls:''); },
+  coach(f, target){
+    // オクターブをまたいでも同じ「ド」は中央。どちらへ動かすかを文字でも示す。
+    if(this.phase!=='play' || !target){
+      this.el.coachNeedle.classList.remove('on');
+      this.el.coachFeedback.textContent = 'おてほんを きいてね';
+      return;
+    }
+    if(!(f>0)){
+      this.el.coachNeedle.classList.remove('on');
+      this.el.coachFeedback.textContent = 'こえを だしてみよう';
+      return;
+    }
+    let cents = 1200*Math.log2(f/target);
+    cents = ((cents+600)%1200+1200)%1200-600;
+    this.el.coachNeedle.style.left = clamp(50+cents/10, 8, 92) + '%';
+    this.el.coachNeedle.classList.add('on');
+    this.el.coachFeedback.textContent = Math.abs(cents)<=100 ? 'ぴったり！' :
+      cents<0 ? 'もうすこし たかく ↑' : 'もうすこし ひくく ↓';
+  },
   setAim(i){
     this.stuck = 0; this.helped = false;
     this.steps.forEach(s=>s.classList.remove('aim','help'));
     if(i>=0 && this.phrase[i]!=null){
       const k = this.phrase[i];
+      this.el.coachTarget.textContent = 'めざす：' + SOLF[k] + 'ー';
+      this.el.coachFeedback.textContent = 'うたってみよう！';
+      this.el.coachNeedle.classList.remove('on');
       this.steps[k].classList.add('aim');
       this.solf(k);                                  // いま出す音を大きく見せる
       this.hint('「' + SOLF[k] + 'ー」って うたってね！', 'go');
     }else{
       this.solf(-1);
+      this.el.coachTarget.textContent = 'めざす おと';
+      this.el.coachNeedle.classList.remove('on');
     }
   },
   /* フレーズ生成：レベルが進むほど 長く・音程差が狭く */
   genPhrase(p){
-    const len  = [2,2,3,3,4][p];
+    const len  = [1,2,2,3,4][p];     // まず単音から始める
     const minJ = [2,2,1,1,1][p];
     const maxJ = [4,3,3,2,1][p];
     let idx = 1 + Math.floor(Math.random()*4);
@@ -1164,6 +1212,7 @@ const M3 = {
     this.build();
     this.runId++; this.active = true;
     this.pi=0; this.done=0; this.ni=0; this.hold=0;
+    this.cleanNotes=0; this.assistedNotes=0; this.earBlockUntil=0;
     this.parkPlayer();
     this.el.walker.classList.remove('dim');
     this.place(this.el.walker, 0);
@@ -1181,6 +1230,7 @@ const M3 = {
     this.el.replay.classList.remove('show');
     this.el.vox.classList.remove('on');
     this.solf(-1);
+    this.el.coachNeedle.classList.remove('on');
   },
   nextPhrase(){
     this.phrase = this.genPhrase(this.pi);
@@ -1215,17 +1265,21 @@ const M3 = {
     }
     this.el.walker.classList.add('dim');
     this.phase = 'play';
+    this.earBlockUntil = performance.now()+360; // 最後のお手本の残響を無視
     this.hold = 0;
     this.el.replay.classList.add('show');
     this.setAim(this.ni);                            // ヒントは setAim が「ど〜って うたってね！」を出す
   },
-  noteHit(){
+  noteHit(assisted=false){
+    if(assisted) this.assistedNotes++;
+    else this.cleanNotes++;
     const k = this.phrase[this.ni];
     const st = this.steps[k];
     st.classList.remove('aim','help');
     st.classList.add('hit');
     this.holds[k].style.transform = 'scaleY(0)';
     Voice.sing(this.NOTES[k], 0.5);                  // とれた音も歌声で確認
+    this.earBlockUntil = performance.now()+750;    // スピーカーの歌声を自分の声として判定しない
     sfx('pop'); buzz(16);
     const r = st.getBoundingClientRect();
     fx('ring', r.left+r.width/2, r.top+8, {color:'#fff', vr:6, life:20, lw:5});
@@ -1258,7 +1312,7 @@ const M3 = {
     if(!this.active) return;
     const dt = Math.min(0.05, (t-this.lastT)/1000);
     this.lastT = t;
-    const f = Mic.read();
+    const f = t<this.earBlockUntil ? 0 : Mic.read();
     // こえの たかさマーカー（うたの音域 C4±/C5± を縦に）
     if(f>0){
       const midi = 69 + 12*Math.log2(f/440);
@@ -1271,6 +1325,7 @@ const M3 = {
     if(this.phase==='play' && this.phrase[this.ni]!=null){
       const k = this.phrase[this.ni];
       const target = this.NOTES[k];
+      this.coach(f, target);
       // つまったら たすける：8びょうで ゆるく（±2はんおん）、18びょうで「いっしょに うたおう」で すすむ
       this.stuck += dt;
       const tol = this.stuck >= 8 ? 200 : 100;
@@ -1278,9 +1333,10 @@ const M3 = {
         this.helped = true;
         this.steps[k].classList.add('help');
         Voice.sing(target, 0.8);
+        this.earBlockUntil = t+1050;               // ヒントの歌声も判定に混ぜない
         this.hint('いっしょに うたおう！「' + SOLF[k] + 'ー」', 'listen');
       }
-      if(this.stuck >= 18){ this.noteHit(); this.raf = requestAnimationFrame(tt=>this.loop(tt)); return; }
+      if(this.stuck >= 18){ this.noteHit(true); this.raf = requestAnimationFrame(tt=>this.loop(tt)); return; }
       let ok = false;
       if(f>0){
         // オクターブ折りたたみ判定：1オクターブ下（おうちの人の低い声）や
@@ -1299,12 +1355,13 @@ const M3 = {
   end(){
     const done = this.done;
     this.stopGame();
-    const acGain = Math.min(3, Math.max(1, done));
-    roundReward(acGain);
+    const acGain = this.cleanNotes ? Math.min(3, Math.ceil(this.cleanNotes/4)) : 0;
+    if(acGain) roundReward(acGain);
     showResult({
-      win: true,
-      title: 'フレーズ ぜんぶ うたえたね！',
-      html: 'こえで おとを つかまえた！<br>きみは うたの めいじんだ！',
+      win: this.cleanNotes>0,
+      title: this.cleanNotes ? 'うたうの じょうずに なったね！' : 'いっしょに れんしゅうできたね！',
+      html: 'じぶんで うたえた おと：' + this.cleanNotes +
+        'こ<br>いっしょに れんしゅうした おと：' + this.assistedNotes + 'こ',
       retry: ()=>micFlow(3),
     });
     sfx('fanfare'); fx('celebrate');
