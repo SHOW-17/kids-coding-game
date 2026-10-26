@@ -232,6 +232,15 @@ section[hidden]{display:none!important;}
 #vox .msk{width:18px;height:18px;}
 
 
+
+/* ===== ② 練習モード切り替え ===== */
+.uta-mode-switch{display:flex;align-items:center;justify-content:center;gap:9px;margin:2px auto 8px;}
+.uta-mode-switch button,.uta-next{font-family:'Mochiy Pop One';font-size:13px;min-height:44px;
+  border:2px solid #f0bcae;background:#fff8f5;color:var(--ac-d);padding:8px 16px;
+  border-radius:999px;cursor:pointer;}
+.uta-mode-switch button[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:var(--ac-d);}
+.uta-next[hidden]{display:none!important;}
+.uta-next{min-height:48px;}
 /* ===== ③ じぶんの声の高さを見ながら歌うガイド ===== */
 .voice-coach{width:100%;max-width:440px;margin:2px auto 6px;padding:9px 14px 12px;
   border-radius:19px;background:rgba(255,255,255,.91);box-shadow:0 3px 0 rgba(189,69,40,.14);}
@@ -375,9 +384,14 @@ section[hidden]{display:none!important;}
       <span class="best-pill" id="m2Best"><span class="cstar"></span>さいこう 0</span>
     </div>
     <div class="hint enter d1" id="m2Hint">こえの たかさで リングを ねらおう！</div>
+    <div class="uta-mode-switch" aria-label="ゲームの はやさ">
+      <button id="m2Practice" type="button" aria-pressed="true">ゆっくり れんしゅう</button>
+      <button id="m2Challenge" type="button" aria-pressed="false">チャレンジ</button>
+    </div>
     <div class="sky enter d2" id="sky">
       <img id="flyUni" src="../assets/uni/blue_standing.webp" alt="">
     </div>
+    <div class="controls"><button class="uta-next" id="m2Skip" type="button">つぎの リング</button></div>
   </section>
 
   <!-- ===== ③ まねうた ===== -->
@@ -941,11 +955,18 @@ M1.el.replay.addEventListener('click', async ()=>{
    ============================================================ */
 const M2 = {
   TOTAL: 8,
-  NOTES: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25],  // C4 D4 E4 G4 A4 C5
-  F0: 196, F1: 587.33,            // 表示音域 G3〜D5（縦に log2 マッピング）
+  NOTE_POOL: [
+    {f:130.81,label:'ど'},{f:146.83,label:'れ'},{f:164.81,label:'み'},
+    {f:196.00,label:'そ'},{f:220.00,label:'ら'},
+    {f:261.63,label:'ど'},{f:293.66,label:'れ'},{f:329.63,label:'み'},
+    {f:392.00,label:'そ'},{f:440.00,label:'ら'},
+    {f:523.25,label:'ど'},{f:587.33,label:'れ'},{f:659.25,label:'み'},
+  ],
+  F0: 125, F1: 680,              // 低い声も高い声も飛ぶ
   NEED: 0.6,                       // リングが はじけるのに必要な「合っていた時間」
   active:false, raf:0, lastT:0, idx:0, popped:0, ring:null,
   uniY:0, uniVy:0, voiced:false, trailT:0, spawnTimer:0,
+  practice:true, calibrating:false, samples:[], activeNotes:[],
   el:{
     sky: document.getElementById('sky'), uni: document.getElementById('flyUni'),
     r: document.getElementById('m2R'), p: document.getElementById('m2P'),
@@ -963,20 +984,51 @@ const M2 = {
     return pad + (1-t)*(H - 2*pad - uh);
   },
   tolSemis(){ return this.popped<5 ? 1.5 : 1.25; },   // 小1の こえは ずれて あたりまえ。きびしく しすぎない
+  setMode(practice){
+    if(this.practice===practice) return;
+    this.practice=practice;
+    this.syncMode();
+    if(this.active) this.start();
+  },
+  syncMode(){
+    document.getElementById('m2Practice').setAttribute('aria-pressed', String(this.practice));
+    document.getElementById('m2Challenge').setAttribute('aria-pressed', String(!this.practice));
+    document.getElementById('m2Skip').hidden = !this.practice;
+  },
+  fitVoice(){
+    // マイク入力の中央値に近い5音を選ぶ。声を出さなくても既定の音で始められる。
+    if(this.samples.length<8) return;
+    const ss=[...this.samples].sort((a,b)=>a-b);
+    const center=ss[ss.length>>1];
+    this.activeNotes=[...this.NOTE_POOL]
+      .sort((a,b)=>Math.abs(Math.log2(a.f/center))-Math.abs(Math.log2(b.f/center)))
+      .slice(0,5).sort((a,b)=>a.f-b.f);
+  },
   start(){
     this.stopGame();
     this.active = true;
     this.idx = 0; this.popped = 0; this.ring = null;
+    this.samples=[]; this.calibrating=true;
+    this.activeNotes=this.NOTE_POOL.filter(n=>n.f>=261 && n.f<=524);
+    this.syncMode();
     this.pills();
-    this.el.hint.textContent = 'こえの たかさで リングを ねらおう！';
+    this.el.hint.textContent = 'まず「あー」って こえを きかせてね！';
     this.el.hint.className = 'hint';
     this.uniY = this.el.sky.clientHeight*0.6;
     this.lastT = performance.now();
-    this.spawnTimer = setTimeout(()=>this.spawn(), 900);
+    this.spawnTimer = setTimeout(()=>{
+      if(!this.active) return;
+      this.fitVoice();
+      this.calibrating=false;
+      this.el.hint.textContent = this.practice ?
+        'リングに あわせて うたおう！' : 'リングが くるまえに うたおう！';
+      this.spawn();
+    },2300);
     this.raf = requestAnimationFrame(t=>this.loop(t));
   },
   stopGame(){
     this.active = false;
+    this.calibrating=false;
     cancelAnimationFrame(this.raf);
     clearTimeout(this.spawnTimer);
     this.killRing();
@@ -989,12 +1041,12 @@ const M2 = {
     if(this.idx >= this.TOTAL){ this.end(); return; }
     this.idx++;
     this.pills();
-    const ni = Math.floor(Math.random()*this.NOTES.length);
-    const f = this.NOTES[ni];
+    const note = this.activeNotes[Math.floor(Math.random()*this.activeNotes.length)];
+    const f = note.f;
     const el = document.createElement('div');
     el.className = 'ring';
     el.innerHTML = '<span class="in"><span class="body"></span><span class="fill"></span>' +
-      '<span class="rl">' + SOLF[ni] + '</span></span>';   // リングの中に音名（ど・れ・み…）
+      '<span class="rl">' + note.label + '</span></span>';   // リングの中に音名
     this.el.sky.appendChild(el);
     const W = this.el.sky.clientWidth;
     const yC = this.yFor(f) + this.uniH()/2;     // リング中心＝その音で歌うユニコーンの中心
@@ -1028,6 +1080,7 @@ const M2 = {
     const uh = this.uniH(), uw = this.el.uni.offsetWidth || 76;
     const ux = W*0.16;
     const f = Mic.read();
+    if(this.calibrating && f>0 && this.samples.length<80) this.samples.push(f);
     let inTol = false;
     if(f>0){
       this.voiced = true;
@@ -1051,7 +1104,8 @@ const M2 = {
     // リングの移動と判定
     const ring = this.ring;
     if(ring && !ring.done){
-      ring.x -= ((W+180)/6.5)*dt;              // 右から左へ ゆっくり（約6.5びょう）
+      ring.x -= ((W+180)/(this.practice ? 9.5 : 6.5))*dt;
+      if(this.practice) ring.x = Math.max(ring.x, ux+uw/2+22); // 練習は近くで止まる
       ring.el.style.transform = 'translate(' + (ring.x-48) + 'px,' + (ring.y-48) + 'px)';
       // リングが ユニコーンの ちかくに きたときだけ 数える（画面の そとで はじけない・
       // 出てくるときの お手本の声を マイクが ひろっても 正解に ならない）
@@ -1093,6 +1147,13 @@ const M2 = {
     else sfx('pop');
   },
 };
+
+document.getElementById('m2Practice').addEventListener('click', ()=>{ sfx('tap'); M2.setMode(true); });
+document.getElementById('m2Challenge').addEventListener('click', ()=>{ sfx('tap'); M2.setMode(false); });
+document.getElementById('m2Skip').addEventListener('click', ()=>{
+  if(M2.active && M2.practice && M2.ring){ sfx('tap'); M2.resolveRing(false); }
+});
+M2.syncMode();
 
 /* ============================================================
    ③ まねうた（ねんどの階段で フレーズ再現）
