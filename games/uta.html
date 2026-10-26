@@ -578,10 +578,11 @@ function detectPitch(buf, sr){
     nsdf[lag] = m>0 ? (2*ac)/m : 0;
   }
 
-  // キーマキシマ（正の山ごとの極大）を拾う
+  // キーマキシマ（正の山ごとの極大）を拾う。
+  // ここで最初の正の山を飛ばすと、特に高音域で基音を見落として
+  // 1オクターブ低い音と誤判定する（例: 659Hz → 330Hz）。
   const peaks = [];
   let lag = minLag;
-  while(lag<=maxLag && nsdf[lag]>0) lag++;       // lag0 側の山を抜ける
   while(lag<=maxLag){
     while(lag<=maxLag && nsdf[lag]<=0) lag++;
     let pk=0, pkLag=0;
@@ -1112,7 +1113,11 @@ const M2 = {
       const near = Math.abs(ring.x - (ux + uw/2)) < 95;
       ring.el.classList.toggle('near', near);
       if(f>0 && near){
-        const cents = Math.abs(1200*Math.log2(f/ring.f));
+        const delta = 1200*Math.log2(f/ring.f);
+        const advice = Math.abs(delta)<=this.tolSemis()*100 ? 'その たかさ！' :
+          delta<0 ? 'もうすこし たかい こえ ↑' : 'もうすこし ひくい こえ ↓';
+        if(this.el.hint.textContent!==advice) this.el.hint.textContent=advice;
+        const cents = Math.abs(delta);
         if(cents <= this.tolSemis()*100){
           inTol = true;
           ring.acc += dt;
@@ -1130,14 +1135,14 @@ const M2 = {
     const popped = this.popped;
     save.bestMax('best2', popped);
     const acGain = popped>0 ? Math.ceil(popped/3) : 0;
-    roundReward(acGain);
+    if(acGain) roundReward(acGain);
     let dots = '';
     for(let i=0;i<this.TOTAL;i++) dots += '<span class="dot' + (i<popped?' on':'') + '"></span>';
     const title = popped>=this.TOTAL ? 'ぜんぶ パンッ！すごい！' :
                   popped>=5 ? 'いっぱい はじけたね！' :
                   popped>0  ? 'ポンッと はじけた！' : 'リングに こえを とどけよう！';
     showResult({
-      win: true,
+      win: popped>0,
       title,
       html: '<span class="dots">' + dots + '</span>はじけた リング ' + popped + ' こ',
       retry: ()=>micFlow(2),
