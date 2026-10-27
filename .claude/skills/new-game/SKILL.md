@@ -27,7 +27,8 @@ user-invocable: true
 3. 進捗を規定キーで保存する（index.html のカードが読む）：
    `Save.game('ns').set('cleared', n)` または `set('best', n)`。
    クリア時は `wins` 加算＋`FX.acornGain()` で どんぐりゲット演出（式は docs/rewards-system.md）。
-4. **5か所を必ず更新**：index.html の `GAMES` 配列（href・名前ひらがな・アクセント色・看板アート・進捗キー）
+4. **5か所を必ず更新**：index.html の `GAMES` 配列（href・名前ひらがな・アクセント色・看板アート・進捗キー・
+   なかま わけ `cat`＝think/eye/note・新作なら `isNew:true` と `ribbon:'しんさく！'`）
    ／index.html の `doReset` の名前空間リスト／rewards.js の `earned()`（wins 集計）
    ／rewards.js の `DAILY_ORDER` と `DAILY_NS`（きょうの 3つ のローテーション）
    ／scripts/test-games.js の `PAGES` 配列。

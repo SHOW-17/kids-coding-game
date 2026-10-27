@@ -117,7 +117,7 @@ body{
   width:16px;height:22px;background:#9a6420;border-radius:8px 8px 0 0;}
 .room-entry .txt{flex:1;min-width:0;}
 .room-entry .txt b{display:block;font-family:'Mochiy Pop One';font-size:16px;color:var(--ink);}
-.room-entry .txt span{font-size:12px;font-weight:800;color:var(--ink-soft);}
+.room-entry .txt span{font-size:12px;font-weight:800;color:var(--ink-soft);text-wrap:balance;display:block;}
 .room-entry .count{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
   font-family:'Mochiy Pop One';font-size:16px;color:#9a6420;
   background:#fffdf7;padding:7px 13px 7px 9px;border-radius:999px;box-shadow:inset 0 2px 0 #fff,0 3px 0 rgba(150,100,40,.18);}
@@ -171,7 +171,7 @@ body{
   filter:drop-shadow(0 5px 6px rgba(60,40,10,.4));transform:rotate(-1.5deg);
   transform-origin:left center;}
 
-.desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;}
+.desc{font-size:12.5px;font-weight:700;color:var(--ink-soft);line-height:1.5;text-wrap:balance;}
 .play{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
   font-family:'Mochiy Pop One';font-size:14.5px;color:#fff;
   background:linear-gradient(180deg,var(--ac,#ffb43d),var(--ac-d,#f59312));
@@ -207,7 +207,8 @@ body{
 @media(max-width:360px){ .grid{gap:11px;} }
 /* 横画面（タブレット優先）：横幅を活かして広げ、ゲームは4列に＝スクロールを減らす */
 @media (orientation:landscape) and (min-width:720px){
-  .screen{max-width:960px;}
+  body{max-width:1100px;}
+  .screen{max-width:1060px;}
   .grid{grid-template-columns:repeat(4,1fr);}
   /* 横画面はヒーローをコンパクトにして、あそびのカードを早く見せる */
   .hero{padding-top:calc(16px + env(safe-area-inset-top));}
@@ -220,6 +221,101 @@ body{
 .grid .body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:7px;}
 /* 看板はアート下端に少し重ねる（上にはみ出す＝本文ボックスは clip しないので見える） */
 .grid .banner{max-height:34px;margin:-26px 0 6px -2px;transform:rotate(-2deg);}
+
+/* グリッドの さいごが 1まい あまったら まんなかに（はしに ぽつんと のこさない） */
+.grid .card:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 7px);}
+@media (orientation:landscape) and (min-width:720px){
+  .grid .card:last-child:nth-child(odd){grid-column:auto;justify-self:stretch;width:100%;}
+}
+/* しんさく リボン（グリッドの カードは アートの みぎうえ） */
+.grid .ribbon{top:10px;right:10px;border-radius:999px;font-size:11px;padding:4px 10px;
+  background:linear-gradient(180deg,#ff8a5c,#ee5f33);box-shadow:0 4px 0 #c8491f, inset 0 2px 0 rgba(255,255,255,.35);}
+.grid .ribbon.new{animation:newWiggle 2.6s ease-in-out infinite;}
+@keyframes newWiggle{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-7deg)}95%{transform:rotate(6deg)}}
+@media (prefers-reduced-motion: reduce){ .grid .ribbon.new{animation:none;} }
+
+/* ===== あそびの たな：なかま わけ タブ（よめなくても いろと かたちで わかる） ===== */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px;}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:64px;padding:8px 4px 7px;border:none;border-radius:20px;cursor:pointer;font:inherit;color:var(--ink-soft);
+  background:rgba(255,253,247,.92);
+  box-shadow:0 5px 0 rgba(150,110,60,.18),0 10px 16px -10px rgba(90,55,15,.4),inset 0 2px 0 #fff;
+  transition:transform .14s var(--ease),box-shadow .14s var(--ease),background .2s;}
+.tab:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(150,110,60,.18),inset 0 2px 0 #fff;}
+.tab b{font-family:'Mochiy Pop One';font-weight:400;font-size:11.5px;line-height:1.15;white-space:nowrap;}
+.tab.on{color:#fff;background:linear-gradient(180deg,var(--tc),var(--tcd));
+  box-shadow:0 5px 0 var(--tsh),0 12px 18px -10px rgba(90,55,15,.5),inset 0 2px 0 rgba(255,255,255,.4);}
+.tab .ti{position:relative;width:26px;height:26px;display:block;}
+.tab .ti i{position:absolute;display:block;background:var(--tc);}
+.tab.on .ti i{background:#fff;}
+/* ぜんぶ：4つの まる */
+.ti.all i{width:11px;height:11px;border-radius:4px;}
+.ti.all i:nth-child(1){left:1px;top:1px}.ti.all i:nth-child(2){right:1px;top:1px}
+.ti.all i:nth-child(3){left:1px;bottom:1px}.ti.all i:nth-child(4){right:1px;bottom:1px}
+/* かんがえる：でんきゅう */
+.ti.think i:nth-child(1){left:4px;top:0;width:18px;height:18px;border-radius:50%;}
+.ti.think i:nth-child(2){left:8px;top:17px;width:10px;height:5px;border-radius:2px;}
+.ti.think i:nth-child(3){left:9px;top:22px;width:8px;height:3px;border-radius:2px;}
+.ti.think i:nth-child(4){left:9px;top:5px;width:3px;height:6px;border-radius:2px;background:rgba(255,255,255,.75)!important;}
+.tab.on .ti.think i:nth-child(4){background:var(--tcd)!important;}
+/* みる・おぼえる：め */
+.ti.eye i:nth-child(1){left:0;top:5px;width:26px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;}
+.ti.eye i:nth-child(2){left:8px;top:8px;width:10px;height:10px;border-radius:50%;background:#fffdf7!important;}
+.ti.eye i:nth-child(3){left:10.5px;top:10.5px;width:5px;height:5px;border-radius:50%;}
+.tab.on .ti.eye i:nth-child(2){background:var(--tcd)!important;}
+/* おと・いろ：おんぷ */
+.ti.note i:nth-child(1){left:3px;bottom:1px;width:12px;height:10px;border-radius:50%;transform:rotate(-20deg);}
+.ti.note i:nth-child(2){left:12px;top:2px;width:3.5px;height:20px;border-radius:2px;}
+.ti.note i:nth-child(3){left:13px;top:1px;width:10px;height:8px;border-radius:0 8px 2px 0;}
+.tab .cnt{position:absolute;top:-6px;right:-3px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;
+  font-family:'Mochiy Pop One';font-size:11.5px;line-height:22px;color:#fff;background:var(--tcd);
+  box-shadow:0 2px 0 var(--tsh);}
+.tab.on .cnt{background:#fff;color:var(--tcd);}
+@media(max-width:370px){ .tab b{font-size:10.5px;} .tabs{gap:6px;} }
+
+/* ===== さいきん あそんだ ===== */
+.recent{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 12px;border-radius:24px;
+  background:rgba(255,253,247,.86);box-shadow:0 5px 0 rgba(150,110,60,.14),inset 0 2px 0 #fff;}
+.recent[hidden]{display:none;}
+.recent .lbl{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:'Mochiy Pop One';font-size:11px;color:var(--ink-soft);line-height:1.2;text-align:center;}
+/* とけい（CSS図形） */
+.recent .clock{position:relative;width:26px;height:26px;border-radius:50%;background:#fff;
+  box-shadow:inset 0 0 0 3px var(--honey-d),0 2px 0 #d9851f;}
+.recent .clock::before{content:"";position:absolute;left:11.5px;top:5px;width:3px;height:9px;border-radius:2px;background:var(--ink-soft);}
+.recent .clock::after{content:"";position:absolute;left:12px;top:11.5px;width:8px;height:3px;border-radius:2px;background:var(--ink-soft);}
+.recent .row{flex:1;min-width:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.rslot{border:none;background:none;padding:0;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;align-items:center;gap:5px;
+  transition:transform .14s var(--ease);min-width:0;}
+.rslot:active{transform:translateY(3px) scale(.96);}
+.rslot .pic{display:block;width:100%;max-width:72px;aspect-ratio:1;border-radius:50%;overflow:hidden;background:#f3ead7;
+  box-shadow:0 5px 0 var(--ac-sh,#d9851f),0 9px 14px -8px rgba(90,55,15,.45),inset 0 0 0 3px #fff;}
+.rslot .pic img{width:100%;height:100%;object-fit:cover;display:block;}
+.rslot .nm{font-family:'Mochiy Pop One';font-size:10.5px;color:var(--ac-d,#9a6420);max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ===== PC・タブレット横：うえを 2カラム（ひだり ヒーロー／みぎ きょうの3つ＋おへや） ===== */
+@media (orientation:landscape) and (min-width:900px){
+  .topzone{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:26px;align-items:center;margin-top:8px;}
+  .topzone .hero{padding-top:calc(30px + env(safe-area-inset-top));}
+  .topzone .logo-img{width:min(86%,400px);}
+  .topzone .cast{height:190px;}
+  .topzone .cast img{max-height:none;}
+  .topzone .cast .blue{height:178px;}
+  .topzone .cast .me{width:calc(178px * 258 / 374);}
+  .topzone .cast .green{height:120px;}
+  .topzone .cast .purple{height:122px;}
+  .topzone .today{margin-top:calc(26px + env(safe-area-inset-top));}
+  .tabs{max-width:640px;margin-left:auto;margin-right:auto;}
+  .recent{max-width:640px;margin-left:auto;margin-right:auto;}
+  /* よこ長の カードが 画像の たかさで のびないよう、アートは 本文の たかさに あわせる */
+  .feature{min-height:0;height:230px;}
+  .feature .art{flex-basis:52%;}
+  .feature .art img.scene{position:absolute;inset:0;}
+  .feature .body{padding-left:26px;}
+  .feature .banner{max-height:50px;}
+  .feature .desc{font-size:14px;}
+}
 
 /* entrance */
 .enter{opacity:0;transform:translateY(14px);animation:rise .5s var(--ease) forwards;}
@@ -284,7 +380,8 @@ body{
 .pset .note{font-size:12px;font-weight:700;color:var(--ink-faint);margin-top:6px;}
 .seg{display:flex;flex-wrap:wrap;gap:6px;}
 #segLimit{display:grid;grid-template-columns:repeat(5,1fr);}
-#segLimit button{font-size:12.5px;padding:8px 2px;white-space:nowrap;}
+#segLimit{gap:4px;}
+#segLimit button{font-size:12.5px;padding:8px 2px;white-space:nowrap;min-width:0!important;}
 .dlg .seg button{min-width:0;}
 .dlg .seg button{flex:1 1 auto;min-width:52px;min-height:44px;padding:8px 6px;font-size:14px;
   background:#f6eddc;color:var(--ink-soft);box-shadow:0 3px 0 rgba(150,110,60,.2);}
@@ -320,6 +417,7 @@ body{
     <img src="assets/menu/btn_settings.webp" alt="" draggable="false">
   </button>
 
+  <div class="topzone">
   <header class="hero">
     <img class="logo-img enter d1" src="assets/menu/logo.webp" alt="あそびのもり" draggable="false">
     <div class="tagline enter d2"><span class="star"></span> よめなくても あそべる！</div>
@@ -331,6 +429,7 @@ body{
     </div>
   </header>
 
+  <div class="topside">
   <section class="today enter d3" id="today" hidden>
     <div class="today-h"><span class="sun" aria-hidden="true"></span><b>きょうの 3つ</b>
       <span class="sub" id="todaySub">あそんで スタンプを あつめよう</span></div>
@@ -344,8 +443,17 @@ body{
     <span class="count"><span class="acorn"><span class="cap"></span><span class="nut"></span></span><span id="roomCount">0</span></span>
     <span class="bell" id="roomBell" hidden>!</span>
   </button>
+  </div>
+  </div>
 
   <div class="shelf-wrap"><div class="shelf-h enter d3"><span class="dot"></span> あそびを えらんでね</div></div>
+
+  <div class="recent enter d3" id="recent" hidden aria-label="さいきん あそんだ">
+    <div class="lbl" aria-hidden="true"><span class="clock"></span>さいきん</div>
+    <div class="row" id="recentRow"></div>
+  </div>
+
+  <div class="tabs enter d3" id="tabs" role="tablist" aria-label="あそびの なかま"></div>
 
   <div id="grid-feature"></div>
   <div class="grid" id="grid"></div>
@@ -412,7 +520,7 @@ body{
 /* ===== ゲーム定義（看板・カードは画像素材を使用） ===== */
 const GAMES = [
   {
-    id:'kuma', feature:true, href:'games/programming.html',
+    id:'kuma', cat:'think', feature:true, href:'games/programming.html',
     name:'プログラミング', desc:'やじるしを ならべて、<br>ゴールまで すすもう。',
     ac:'#ffb43d', acd:'#f59312', acsh:'#d9851f', acsoft:'#ffe9c6',
     ribbon:'まずは ここから', total:19,
@@ -420,7 +528,34 @@ const GAMES = [
     scene:'assets/menu/card_programming.webp'
   },
   {
-    id:'manekko', href:'games/manekko.html', ns:'manekko',
+    id:'meiro', cat:'think', isNew:true, href:'games/meiro.html', ns:'meiro',
+    name:'めいろ', desc:'ゆびで なぞって<br>ゴールまで いこう。',
+    ac:'#c07a3c', acd:'#9c5c24', acsh:'#7a4517', acsoft:'#f6e3cf',
+    tag:'けいかく力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'こ クリア'):null,
+    banner:'assets/menu/banner_meiro.webp',
+    scene:'assets/menu/card_meiro.webp'
+  },
+  {
+    id:'iromaze', cat:'note', isNew:true, href:'games/iromaze.html', ns:'iromaze',
+    name:'いろまぜ', desc:'えのぐを まぜて<br>おなじ いろを つくろう。',
+    ac:'#3f8de0', acd:'#2b6fc0', acsh:'#1f5295', acsoft:'#dceafb',
+    tag:'はっけん力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?(v+'しょく みつけた'):null,
+    banner:'assets/menu/banner_iromaze.webp',
+    scene:'assets/menu/card_iromaze.webp'
+  },
+  {
+    id:'taiko', cat:'note', isNew:true, href:'games/taiko.html', ns:'taiko',
+    name:'たいこ', desc:'きいた リズムを<br>まねして たたこう。',
+    ac:'#6fb83a', acd:'#57982a', acsh:'#3f7419', acsoft:'#e3f3d3',
+    tag:'リズム力', ribbon:'しんさく！',
+    progressKey:'cleared', bestLabel:v=>v>0?('ステージ '+v+' クリア'):null,
+    banner:'assets/menu/banner_taiko.webp',
+    scene:'assets/menu/card_taiko.webp'
+  },
+  {
+    id:'manekko', cat:'eye', href:'games/manekko.html', ns:'manekko',
     name:'まねっこ', desc:'ひかった じゅんばんを<br>おぼえて まねっこ。',
     ac:'#9b7cf0', acd:'#7b59e0', acsh:'#5f43b8', acsoft:'#ece3ff',
     tag:'きおく力',
@@ -429,7 +564,7 @@ const GAMES = [
     scene:'assets/menu/card_manekko.webp'
   },
   {
-    id:'kimari', href:'games/kimari.html', ns:'kimari',
+    id:'kimari', cat:'think', href:'games/kimari.html', ns:'kimari',
     name:'きまり', desc:'ならびの つぎは なに？<br>きまりを みつけよう。',
     ac:'#2fa6cc', acd:'#2189ad', acsh:'#1a6c8a', acsoft:'#d7f1fb',
     tag:'すいり力',
@@ -438,7 +573,7 @@ const GAMES = [
     scene:'assets/menu/card_kimari.webp'
   },
   {
-    id:'katachi', href:'games/katachi.html', ns:'katachi',
+    id:'katachi', cat:'think', href:'games/katachi.html', ns:'katachi',
     name:'かたち', desc:'ピースを ならべて<br>おてほんを つくろう。',
     ac:'#389355', acd:'#389355', acsh:'#2c7544', acsoft:'#dcf3e3',
     tag:'かたち力',
@@ -447,7 +582,7 @@ const GAMES = [
     scene:'assets/menu/card_katachi.webp'
   },
   {
-    id:'pitagora', href:'games/pitagora.html', ns:'pitagora',
+    id:'pitagora', cat:'think', href:'games/pitagora.html', ns:'pitagora',
     name:'ぴたごら', desc:'どうぐを おいて<br>たまを ゴールへ。',
     ac:'#e57e1c', acd:'#c96a12', acsh:'#a4540b', acsoft:'#ffe6cb',
     tag:'くふう力',
@@ -456,7 +591,7 @@ const GAMES = [
     scene:'assets/menu/card_pitagora.webp'
   },
   {
-    id:'tomare', href:'games/tomare.html', ns:'tomare',
+    id:'tomare', cat:'eye', href:'games/tomare.html', ns:'tomare',
     name:'とまれあそび', desc:'ユニコーンは タップ、<br>とげとげは がまん！',
     ac:'#e8567c', acd:'#d13b64', acsh:'#ab2c50', acsoft:'#ffdce7',
     tag:'がまん力',
@@ -465,7 +600,7 @@ const GAMES = [
     scene:'assets/menu/card_tomare.webp'
   },
   {
-    id:'chigai', href:'games/chigai.html', ns:'chigai',
+    id:'chigai', cat:'eye', href:'games/chigai.html', ns:'chigai',
     name:'どこちがう', desc:'2まいの え、<br>ちがう ところは どこ？',
     ac:'#2cb1a0', acd:'#1f9183', acsh:'#15715f', acsoft:'#d3f3ec',
     tag:'かんさつ力',
@@ -474,7 +609,7 @@ const GAMES = [
     scene:'assets/menu/card_chigai.webp'
   },
   {
-    id:'sokkuri', href:'games/sokkuri.html', ns:'sokkuri',
+    id:'sokkuri', cat:'think', href:'games/sokkuri.html', ns:'sokkuri',
     name:'そっくりわけ', desc:'いろ・かたちで<br>かごに わけよう。',
     ac:'#c95fc2', acd:'#a844a1', acsh:'#83307d', acsoft:'#f7ddf5',
     tag:'きりかえ力',
@@ -483,7 +618,7 @@ const GAMES = [
     scene:'assets/menu/card_sokkuri.webp'
   },
   {
-    id:'pair', href:'games/pair.html', ns:'pair',
+    id:'pair', cat:'eye', href:'games/pair.html', ns:'pair',
     name:'ぺあさがし', desc:'カードを めくって<br>おなじ えを さがそう。',
     ac:'#6577e0', acd:'#4a5cc4', acsh:'#3a489c', acsoft:'#e1e5fb',
     tag:'おぼえる力',
@@ -492,7 +627,7 @@ const GAMES = [
     scene:'assets/menu/card_pair.webp'
   },
   {
-    id:'uta', href:'games/uta.html', ns:'uta',
+    id:'uta', cat:'note', href:'games/uta.html', ns:'uta',
     name:'うたあそび', desc:'たかい こえ ひくい こえ、<br>うたって あそぼう。',
     ac:'#ff7e62', acd:'#e85c3e', acsh:'#bd4528', acsoft:'#ffe2da',
     tag:'おんかん力',
@@ -529,6 +664,7 @@ function progressOf(g){
 }
 
 function navTo(href, g, ev){
+  if(g && g.id) pushRecent(g.id);
   try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
   try{
     if(window.FX&&FX.ring){ const t=ev.currentTarget.getBoundingClientRect();
@@ -570,7 +706,7 @@ function makeCard(g, i){
     : '';
 
   const bannerImg = `<img class="banner" src="${g.banner}" alt="${g.name}" draggable="false">`;
-  const ribbon = g.ribbon ? `<span class="ribbon">${g.ribbon}</span>` : '';
+  const ribbon = g.ribbon ? `<span class="ribbon${g.isNew?' new':''}">${g.ribbon}</span>` : '';
 
   if(g.feature){
     // body 左（看板は本文の先頭にブロック配置＝見切れない） / art 右（ribbon は右上）
@@ -605,10 +741,74 @@ function makeCard(g, i){
 
 const featWrap = document.getElementById('grid-feature');
 const grid = document.getElementById('grid');
-GAMES.forEach((g,i)=>{
-  const c = makeCard(g,i);
-  (g.feature ? featWrap : grid).appendChild(c);
-});
+
+/* ===== なかま わけ タブ（ぜんぶ／かんがえる／みる・おぼえる／おと・いろ） =====
+   よめなくても えらべるよう、いろ＋アイコン＋かず で みせる。えらんだ タブは おぼえておく。 */
+const CATS = [
+  { id:'all',   name:'ぜんぶ',     icon:'all',   tc:'#ffb43d', tcd:'#f59312', tsh:'#d9851f' },
+  { id:'think', name:'かんがえる', icon:'think', tc:'#2fa6cc', tcd:'#2189ad', tsh:'#1a6c8a' },
+  { id:'eye',   name:'みる・おぼえる', icon:'eye', tc:'#9b7cf0', tcd:'#7b59e0', tsh:'#5f43b8' },
+  { id:'note',  name:'おと・いろ', icon:'note',  tc:'#ff7e62', tcd:'#e85c3e', tsh:'#bd4528' },
+];
+const TAB_KEY = 'amori_home_tab';
+let curCat = 'all';
+try{ const t = localStorage.getItem(TAB_KEY); if(CATS.some(c=>c.id===t)) curCat = t; }catch(e){}
+function renderGames(animate){
+  featWrap.innerHTML = ''; grid.innerHTML = '';
+  let k = 0;
+  GAMES.forEach(g=>{
+    if(curCat !== 'all' && g.cat !== curCat) return;
+    const c = makeCard(g, k++);
+    if(!animate) c.classList.remove('enter');
+    (g.feature ? featWrap : grid).appendChild(c);
+  });
+}
+function renderTabs(){
+  const box = document.getElementById('tabs'); box.innerHTML = '';
+  CATS.forEach(c=>{
+    const n = c.id==='all' ? GAMES.length : GAMES.filter(g=>g.cat===c.id).length;
+    const b = document.createElement('button');
+    b.className = 'tab' + (c.id===curCat ? ' on' : '');
+    b.setAttribute('role','tab'); b.setAttribute('aria-selected', c.id===curCat ? 'true' : 'false');
+    b.setAttribute('aria-label', c.name + '（' + n + 'こ）');
+    b.style.setProperty('--tc', c.tc); b.style.setProperty('--tcd', c.tcd); b.style.setProperty('--tsh', c.tsh);
+    b.innerHTML = `<span class="ti ${c.icon}" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>${c.name}</b><span class="cnt">${n}</span>`;
+    b.addEventListener('click', ()=>{
+      if(curCat === c.id) return;
+      curCat = c.id; try{ localStorage.setItem(TAB_KEY, curCat); }catch(e){}
+      try{ if(window.Sfx&&Sfx.pop) Sfx.pop(); }catch(e){}
+      renderTabs(); renderGames(true);
+    });
+    box.appendChild(b);
+  });
+}
+renderTabs(); renderGames(true);
+
+/* ===== さいきん あそんだ（ホームから ひらいた じゅんに 4つ） ===== */
+const RECENT_KEY = 'amori_recent';
+function recentIds(){
+  try{ const a = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(a) ? a.filter(id=>GAMES.some(g=>g.id===id)) : []; }
+  catch(e){ return []; }
+}
+function pushRecent(id){
+  try{ const a = recentIds().filter(x=>x!==id); a.unshift(id); localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0,4))); }catch(e){}
+}
+function renderRecent(){
+  const ids = recentIds();
+  const box = document.getElementById('recent'), row = document.getElementById('recentRow');
+  box.hidden = !ids.length; row.innerHTML = '';
+  ids.forEach(id=>{
+    const g = GAMES.find(x=>x.id===id);
+    const b = document.createElement('button');
+    b.className = 'rslot';
+    b.style.setProperty('--ac-sh', g.acsh); b.style.setProperty('--ac-d', g.acd);
+    b.setAttribute('aria-label', g.name + ' で あそぶ');
+    b.innerHTML = `<span class="pic"><img src="${g.scene}" alt="" draggable="false"></span><span class="nm">${g.name}</span>`;
+    b.addEventListener('click', ev=>navTo(g.href, g, ev));
+    row.appendChild(b);
+  });
+}
+renderRecent();
 
 function sfx(n){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](); }catch(e){} }
 /* ===== きょうの 3つ（まいにちの スタンプ） ===== */
@@ -771,9 +971,10 @@ ovlSet.addEventListener('click', e=>{ if(e.target===ovlSet) ovlSet.hidden = true
 
 function doReset(){
   try{ localStorage.removeItem('kuma_prog_save_v1'); }catch(e){}
-  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','room']); }catch(e){}
+  try{ localStorage.removeItem('amori_recent'); }catch(e){}
+  try{ if(window.Save&&Save.resetAll) Save.resetAll(['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','meiro','iromaze','taiko','room']); }catch(e){}
   // Save が無い環境でも確実に消す（キーは save.js の PREFIX と同じ）
-  ['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','room'].forEach(ns=>{ try{ localStorage.removeItem('asobinomori:'+ns); }catch(e){} });
+  ['manekko','kimari','katachi','pitagora','tomare','chigai','sokkuri','pair','uta','meiro','iromaze','taiko','room'].forEach(ns=>{ try{ localStorage.removeItem('asobinomori:'+ns); }catch(e){} });
   sfx('whoosh');
   setTimeout(()=>location.reload(), 200);
 }

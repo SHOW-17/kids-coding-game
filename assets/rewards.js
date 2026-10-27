@@ -128,7 +128,8 @@
     var wins = g('manekko', 'wins') + g('kimari', 'wins') +
                g('katachi', 'wins') + g('pitagora', 'wins') +
                g('tomare', 'wins') + g('chigai', 'wins') + g('sokkuri', 'wins') +
-               g('pair', 'wins') + g('uta', 'wins') + progWins();
+               g('pair', 'wins') + g('uta', 'wins') +
+               g('meiro', 'wins') + g('iromaze', 'wins') + g('taiko', 'wins') + progWins();
     var s2 = save();
     return bonus + wins + (s2 ? (s2.get('dailyBonus', 0) || 0) : 0);
   }
@@ -192,7 +193,7 @@
   // 3つ そろうと ボーナスどんぐり。いろいろな力を まんべんなく使う＋また あした
   // あそびたくなる仕掛け。判定は「その日はじめに見た wins」より増えたか（ゲーム側は無改修）。
   // ゲームID（programming だけ独自キーなので 'kuma'）。並びは日替わりローテの順番。
-  var DAILY_ORDER = ['kuma', 'pair', 'kimari', 'tomare', 'katachi', 'manekko', 'chigai', 'pitagora', 'sokkuri', 'uta'];
+  var DAILY_ORDER = ['kuma', 'pair', 'kimari', 'tomare', 'katachi', 'manekko', 'chigai', 'pitagora', 'sokkuri', 'uta', 'meiro', 'iromaze', 'taiko'];
   var DAILY_BONUS = 5;
   function winsOf(id) { return id === 'kuma' ? progWins() : g(id, 'wins'); }
   function today() {
@@ -204,7 +205,7 @@
     return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
   }
   function picksFor(day) {
-    // 10個を3つずつ順番に。10日で ぜんぶ一巡する（同じ日に同じゲームは出ない）
+    // 13個を3つずつ順番に。13日で ぜんぶ一巡する（同じ日に同じゲームは出ない）
     var n = DAILY_ORDER.length, out = [];
     for (var i = 0; i < 3; i++) out.push(DAILY_ORDER[(day * 3 + i) % n]);
     return out;
@@ -243,7 +244,7 @@
 
   /* ゲーム中に「スタンプ ゲット！」を出す：各ゲームの save.set('wins', …) を見張る
      （Save.game を包むだけ。ゲーム側のコードは変えない） */
-  var DAILY_NS = { manekko: 1, kimari: 1, katachi: 1, pitagora: 1, tomare: 1, chigai: 1, sokkuri: 1, pair: 1, uta: 1 };
+  var DAILY_NS = { manekko: 1, kimari: 1, katachi: 1, pitagora: 1, tomare: 1, chigai: 1, sokkuri: 1, pair: 1, uta: 1, meiro: 1, iromaze: 1, taiko: 1 };
   function hookSave() {
     var S = global.Save; if (!S || !S.game || S.game.__daily) return;
     var orig = S.game;

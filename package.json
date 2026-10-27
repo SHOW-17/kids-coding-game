@@ -4,7 +4,8 @@
     "sync:android": "node scripts/build-sw.mjs && node scripts/build-www.mjs && cap sync android",
     "build:apk": "npm run sync:android && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64} ./gradlew assembleRelease",
     "test": "node scripts/test-games.js",
-    "test:uta": "node scripts/test-uta-pitch.js"
+    "test:uta": "node scripts/test-uta-pitch.js",
+    "test:new": "node scripts/test-new-games.js"
   },
   "dependencies": {
     "puppeteer-core": "^25.1.0"
