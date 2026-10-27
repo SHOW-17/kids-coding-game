@@ -241,6 +241,8 @@ section[hidden]{display:none!important;}
 .uta-mode-switch button[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:var(--ac-d);}
 .uta-next[hidden]{display:none!important;}
 .uta-next{min-height:48px;}
+.sky .uta-next{position:absolute;right:10px;top:10px;z-index:3;
+  box-shadow:0 3px 0 rgba(232,92,62,.18);}
 /* ===== ③ じぶんの声の高さを見ながら歌うガイド ===== */
 .voice-coach{width:100%;max-width:440px;margin:2px auto 6px;padding:9px 14px 12px;
   border-radius:19px;background:rgba(255,255,255,.91);box-shadow:0 3px 0 rgba(189,69,40,.14);}
@@ -250,6 +252,8 @@ section[hidden]{display:none!important;}
 .coach-track{position:relative;height:23px;margin-top:5px;border-radius:999px;
   background:linear-gradient(90deg,#c9ddec 0%,#ecf5fa 43%,#b8e4c5 44%,#b8e4c5 56%,#ffe0c8 57%,#f4c9c5 100%);
   box-shadow:inset 0 2px 4px rgba(0,0,0,.12);}
+/* つまって ±2はんおんに ゆるめたら みどりの 帯も ひろげる（判定と 見た目を そろえる） */
+.coach-track.wide{background:linear-gradient(90deg,#c9ddec 0%,#ecf5fa 37%,#b8e4c5 38%,#b8e4c5 62%,#ffe0c8 63%,#f4c9c5 100%);}
 .coach-target{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;transform:translateX(-50%);
   border-radius:3px;background:#278954;box-shadow:0 0 0 2px #fff;}
 .coach-needle{position:absolute;left:50%;top:50%;width:23px;height:23px;
@@ -308,7 +312,11 @@ section[hidden]{display:none!important;}
   #flyUni{width:88px;}
   #scrM1{max-width:600px;}
   #scrM3{max-width:640px;}
-  .stairs-tray{height:min(58vh,440px);}
+  .stairs-tray{height:min(55vh,440px);}   /* 1024x768 で「もういちど きく」まで スクロールなしで おさめる */
+}
+/* 背の ひくい スマホ（360x640 など）：階段を すこし ひくく して ボタンを 画面内に */
+@media (orientation:portrait) and (max-height:700px){
+  .stairs-tray{height:min(46vh,400px);}
 }
 </style>
 </head>
@@ -390,8 +398,9 @@ section[hidden]{display:none!important;}
     </div>
     <div class="sky enter d2" id="sky">
       <img id="flyUni" src="../assets/uni/blue_standing.webp" alt="">
+      <!-- 練習の「つぎへ」は そらの なかに おく＝どの 画面でも スクロールなしで 見える -->
+      <button class="uta-next" id="m2Skip" type="button">つぎの リング</button>
     </div>
-    <div class="controls"><button class="uta-next" id="m2Skip" type="button">つぎの リング</button></div>
   </section>
 
   <!-- ===== ③ まねうた ===== -->
@@ -402,7 +411,7 @@ section[hidden]{display:none!important;}
     <div class="hint enter d1" id="m3Hint">おてほんを きいてね</div>
     <div class="voice-coach" aria-label="うたの たかさを あわせよう">
       <div class="voice-coach-head"><span id="coachTarget">めざす おと</span><span id="coachFeedback">うたってみよう！</span></div>
-      <div class="coach-track"><span class="coach-target"></span><span class="coach-needle" id="coachNeedle"></span></div>
+      <div class="coach-track" id="coachTrack"><span class="coach-target"></span><span class="coach-needle" id="coachNeedle"></span></div>
     </div>
     <div class="stairs-tray enter d2" id="stairsTray">
       <div id="solfBig" aria-hidden="true"></div>
@@ -470,6 +479,25 @@ function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
 function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
 function midiHz(m){ return 440*Math.pow(2,(m-69)/12); }
+
+/* ---- 音程の判定とコーチ（②③で共有。ヘッドレステストからも呼ぶ） ----
+   判定：1オクターブ下（おうちの人の低い声）や 上の裏声でも、同じ音なら正解。
+   向き：じっさいの 高い／低いの とおりに 出す（±600セントで 折り返すと、
+   6はんおん より 大きく はずしたとき 向きが 逆に なるため）。
+   A3（220Hz）より 下の 声だけは 1オクターブ 上に して くらべる。 */
+function foldCents(f, target){             // いちばん 近い オクターブとの ずれ（-600〜+600）
+  let c = 1200*Math.log2(f/target);
+  c = ((c % 1200) + 1200) % 1200;
+  return c > 600 ? c - 1200 : c;
+}
+function pitchOk(f, target, tol){ return f>0 && Math.abs(foldCents(f, target)) <= tol; }
+function pitchGuide(f, target, tol){       // → { cents（メーター用）, dir: 0=ぴったり / 1=もっと たかく / -1=もっと ひくく }
+  if(pitchOk(f, target, tol)) return { cents: foldCents(f, target), dir: 0 };
+  let g = f;
+  while(g < 220) g *= 2;
+  const cents = 1200*Math.log2(g/target);
+  return { cents, dir: cents < 0 ? 1 : -1 };
+}
 
 /* ---- ドレミ（NOTES C4 D4 E4 G4 A4 C5 と1対1） ---- */
 const SOLF = ['ど','れ','み','そ','ら','ど'];
@@ -550,20 +578,27 @@ const Voice = {
 /* ============================================================
    ピッチ検出（正規化自己相関＝McLeod系の簡易版）
    - AnalyserNode(fftSize 2048) の時間波形を渡す純関数
-   - 明瞭度しきい値 0.93 / 130〜700Hz / 無音は RMS で弾く
+   - 明瞭度しきい値 0.93 / 130〜700Hz / 無音は RMS で弾く / 直流は引いてから計算
    - window.__pitchTest で公開：ヘッドレス検証用に、既知周波数の
      合成サイン波バッファを直接渡して単体テストできる
    ============================================================ */
 function detectPitch(buf, sr){
   const N = buf.length;
+  // 直流（マイクの かたより）を ひく。のこると 短いラグの相関が 高いままになり、
+  // 無音や 低い うなりを 700Hz 前後の 声と まちがえる
+  let mean = 0;
+  for(let i=0;i<N;i++) mean += buf[i];
+  mean /= N;
   let rms = 0;
-  for(let i=0;i<N;i++) rms += buf[i]*buf[i];
+  for(let i=0;i<N;i++){ const v = buf[i]-mean; rms += v*v; }
   rms = Math.sqrt(rms/N);
   if(rms < 0.012) return 0;                      // 無音（声なし）
 
   const FMIN = 130, FMAX = 700;
   const maxLag = Math.min(N-1, Math.floor(sr/FMIN));
-  const minLag = Math.max(2, Math.floor(sr/FMAX));
+  // 探す範囲は FMAX より 少し 上まで。範囲の はしに はりついた 山（うなり・
+  // FMAX を こえる声）は 下で 0 に する＝1オクターブ下と まちがえない
+  const minLag = Math.max(2, Math.floor(sr/(FMAX*1.3)));
   const W = Math.min(1024, N - maxLag);          // 相関窓（計算量を抑える）
   if(W < 256) return 0;
 
@@ -572,7 +607,7 @@ function detectPitch(buf, sr){
   for(let lag=minLag; lag<=maxLag; lag++){
     let ac=0, m=0;
     for(let i=0;i<W;i++){
-      const a=buf[i], b=buf[i+lag];
+      const a=buf[i]-mean, b=buf[i+lag]-mean;
       ac += a*b; m += a*a + b*b;
     }
     nsdf[lag] = m>0 ? (2*ac)/m : 0;
@@ -600,6 +635,7 @@ function detectPitch(buf, sr){
   // 最初の「十分高い」山を採用（オクターブ下振れ防止）
   let chosen = peaks[0][0];
   for(const p of peaks){ if(p[1] >= best*0.9){ chosen=p[0]; break; } }
+  if(chosen===minLag && nsdf[minLag+1]<nsdf[minLag]) return 0;   // はしに はりついた 山
 
   // 放物線補間でラグを小数精度に
   let lagF = chosen;
@@ -648,6 +684,8 @@ const Mic = {
     try{ if(this.src) this.src.disconnect(); }catch(e){}
     this.stream=null; this.src=null; this.an=null; this.hist=[];
   },
+  /* お手本の声を ながしている間は よまずに 履歴を すてる（あとで お手本の音が まざらない） */
+  mute(){ this.hist = []; return 0; },
   /* 現在の声の周波数（Hz）。声なし＝0。直近5フレームの中央値で平滑化 */
   read(){
     if(!this.an) return 0;
@@ -967,7 +1005,8 @@ const M2 = {
   NEED: 0.6,                       // リングが はじけるのに必要な「合っていた時間」
   active:false, raf:0, lastT:0, idx:0, popped:0, ring:null,
   uniY:0, uniVy:0, voiced:false, trailT:0, spawnTimer:0,
-  practice:true, calibrating:false, samples:[], activeNotes:[],
+  practice:true, calibrating:false, samples:[], activeNotes:[], earBlockUntil:0,
+  HELP_T: 8, GIVEUP_T: 15,        // 練習：止まってから 8びょうで ゆるく＋お手本、15びょうで つぎへ
   el:{
     sky: document.getElementById('sky'), uni: document.getElementById('flyUni'),
     r: document.getElementById('m2R'), p: document.getElementById('m2P'),
@@ -984,12 +1023,16 @@ const M2 = {
     const t = clamp(Math.log2(f/this.F0)/Math.log2(this.F1/this.F0), 0, 1);
     return pad + (1-t)*(H - 2*pad - uh);
   },
-  tolSemis(){ return this.popped<5 ? 1.5 : 1.25; },   // 小1の こえは ずれて あたりまえ。きびしく しすぎない
+  tolSemis(ring){   // 小1の こえは ずれて あたりまえ。きびしく しすぎない
+    return (this.popped<5 ? 1.5 : 1.25) + (ring && ring.helped ? 0.5 : 0);
+  },
+  baseHint(){ return this.practice ? 'リングに あわせて うたおう！' : 'リングが くるまえに うたおう！'; },
   setMode(practice){
     if(this.practice===practice) return;
     this.practice=practice;
     this.syncMode();
-    if(this.active) this.start();
+    // とちゅうで かえても やりなおさない（リングの かず・ポンは そのまま。はやさだけ かわる）
+    if(this.active && !this.calibrating) this.el.hint.textContent = this.baseHint();
   },
   syncMode(){
     document.getElementById('m2Practice').setAttribute('aria-pressed', String(this.practice));
@@ -998,8 +1041,12 @@ const M2 = {
   },
   fitVoice(){
     // マイク入力の中央値に近い5音を選ぶ。声を出さなくても既定の音で始められる。
-    if(this.samples.length<8) return;
+    // せきや 一瞬の まちがいで きめない：20 フレーム（約0.3びょう）以上の 声が いる。
+    // ばらつき（四分位の はば）が 1オクターブ ちかい ときも 既定の音の まま。
+    if(this.samples.length<20) return;
     const ss=[...this.samples].sort((a,b)=>a-b);
+    const q1=ss[Math.floor(ss.length*0.25)], q3=ss[Math.floor(ss.length*0.75)];
+    if(Math.log2(q3/q1) >= 0.9) return;
     const center=ss[ss.length>>1];
     this.activeNotes=[...this.NOTE_POOL]
       .sort((a,b)=>Math.abs(Math.log2(a.f/center))-Math.abs(Math.log2(b.f/center)))
@@ -1009,7 +1056,7 @@ const M2 = {
     this.stopGame();
     this.active = true;
     this.idx = 0; this.popped = 0; this.ring = null;
-    this.samples=[]; this.calibrating=true;
+    this.samples=[]; this.calibrating=true; this.earBlockUntil=0;
     this.activeNotes=this.NOTE_POOL.filter(n=>n.f>=261 && n.f<=524);
     this.syncMode();
     this.pills();
@@ -1021,8 +1068,7 @@ const M2 = {
       if(!this.active) return;
       this.fitVoice();
       this.calibrating=false;
-      this.el.hint.textContent = this.practice ?
-        'リングに あわせて うたおう！' : 'リングが くるまえに うたおう！';
+      this.el.hint.textContent = this.baseHint();
       this.spawn();
     },2300);
     this.raf = requestAnimationFrame(t=>this.loop(t));
@@ -1051,8 +1097,15 @@ const M2 = {
     this.el.sky.appendChild(el);
     const W = this.el.sky.clientWidth;
     const yC = this.yFor(f) + this.uniH()/2;     // リング中心＝その音で歌うユニコーンの中心
-    this.ring = { el, fill: el.querySelector('.fill'), x: W+70, y: yC, f, acc:0, done:false };
+    this.ring = { el, fill: el.querySelector('.fill'), x: W+70, y: yC, f, acc:0, done:false,
+      label: note.label, stopped:false, wait:0, helped:false };
+    this.el.hint.textContent = this.baseHint();
     Voice.sing(f, 0.6);                          // まねする手がかり＝「どー」と歌う声
+  },
+  /* 練習：リングの お手本を もういちど うたう（その間は マイクの判定を止める） */
+  cue(ring, t){
+    Voice.sing(ring.f, 0.8);
+    this.earBlockUntil = t + 1150;
   },
   resolveRing(pop){
     const ring = this.ring;
@@ -1068,6 +1121,7 @@ const M2 = {
     }else{
       ring.el.classList.add('miss');
     }
+    this.el.hint.textContent = this.baseHint();
     const el = ring.el;
     setTimeout(()=>{ try{ el.remove(); }catch(e){} }, 520);
     this.ring = null;
@@ -1080,7 +1134,7 @@ const M2 = {
     const W = this.el.sky.clientWidth, H = this.el.sky.clientHeight;
     const uh = this.uniH(), uw = this.el.uni.offsetWidth || 76;
     const ux = W*0.16;
-    const f = Mic.read();
+    const f = t<this.earBlockUntil ? Mic.mute() : Mic.read();
     if(this.calibrating && f>0 && this.samples.length<80) this.samples.push(f);
     let inTol = false;
     if(f>0){
@@ -1106,7 +1160,21 @@ const M2 = {
     const ring = this.ring;
     if(ring && !ring.done){
       ring.x -= ((W+180)/(this.practice ? 9.5 : 6.5))*dt;
-      if(this.practice) ring.x = Math.max(ring.x, ux+uw/2+22); // 練習は近くで止まる
+      if(this.practice){
+        // 練習は ユニコーンの まえで 止まって まつ（顔に かさならない いち）。
+        // 止まったら お手本を 1かい、8びょうで ゆるく して もう1かい、15びょうで つぎへ
+        const stopX = ux+uw/2+80;
+        if(ring.x <= stopX){
+          ring.x = stopX;
+          if(!ring.stopped){ ring.stopped = true; ring.wait = 0; this.cue(ring, t); }
+          ring.wait += dt;
+          if(ring.wait >= this.HELP_T && !ring.helped){
+            ring.helped = true;
+            this.cue(ring, t);
+            this.el.hint.textContent = 'いっしょに うたおう！「' + ring.label + 'ー」';
+          }
+        }
+      }
       ring.el.style.transform = 'translate(' + (ring.x-48) + 'px,' + (ring.y-48) + 'px)';
       // リングが ユニコーンの ちかくに きたときだけ 数える（画面の そとで はじけない・
       // 出てくるときの お手本の声を マイクが ひろっても 正解に ならない）
@@ -1114,11 +1182,12 @@ const M2 = {
       ring.el.classList.toggle('near', near);
       if(f>0 && near){
         const delta = 1200*Math.log2(f/ring.f);
-        const advice = Math.abs(delta)<=this.tolSemis()*100 ? 'その たかさ！' :
+        const tol = this.tolSemis(ring)*100;
+        const advice = Math.abs(delta)<=tol ? 'その たかさ！' :
           delta<0 ? 'もうすこし たかい こえ ↑' : 'もうすこし ひくい こえ ↓';
         if(this.el.hint.textContent!==advice) this.el.hint.textContent=advice;
         const cents = Math.abs(delta);
-        if(cents <= this.tolSemis()*100){
+        if(cents <= tol){
           inTol = true;
           ring.acc += dt;
           ring.fill.style.opacity = clamp(ring.acc/this.NEED, 0, 1);
@@ -1126,6 +1195,7 @@ const M2 = {
       }
       if(ring.acc >= this.NEED) this.resolveRing(true);
       else if(ring.x < ux - 40) this.resolveRing(false);   // 通りすぎ（おとがめなし）
+      else if(this.practice && ring.wait >= this.GIVEUP_T) this.resolveRing(false);   // まちすぎない
     }
     this.el.uni.classList.toggle('hot', inTol);
     this.raf = requestAnimationFrame(tt=>this.loop(tt));
@@ -1171,7 +1241,7 @@ const M3 = {
   NEED: 0.4,                       // 1音に必要な「合っていた時間」
   active:false, raf:0, lastT:0, runId:0,
   phrase:[], pi:0, ni:0, phase:'idle', hold:0, done:0, stuck:0, helped:false,
-  steps:[], holds:[], cleanNotes:0, assistedNotes:0, earBlockUntil:0,
+  steps:[], holds:[], cleanNotes:0, assistedNotes:0, earBlockUntil:0, phraseHelped:false,
   el:{
     tray: document.getElementById('stairsTray'), stairs: document.getElementById('stairs'),
     walker: document.getElementById('walker'), player: document.getElementById('player3'),
@@ -1181,6 +1251,7 @@ const M3 = {
     coachTarget: document.getElementById('coachTarget'),
     coachFeedback: document.getElementById('coachFeedback'),
     coachNeedle: document.getElementById('coachNeedle'),
+    coachTrack: document.getElementById('coachTrack'),
   },
   build(){
     if(this.steps.length) return;
@@ -1220,8 +1291,9 @@ const M3 = {
   parkPlayer(){ this.el.player.style.left='7%'; this.el.player.style.bottom='7%'; },
   pills(){ this.el.f.textContent = 'フレーズ ' + Math.min(this.pi+1,this.TOTAL) + '/' + this.TOTAL; },
   hint(t, cls){ this.el.hint.textContent = t; this.el.hint.className = 'hint' + (cls?' '+cls:''); },
+  tol(){ return this.stuck >= 8 ? 200 : 100; },   // 8びょう つまったら ±2はんおんに ゆるめる
   coach(f, target){
-    // オクターブをまたいでも同じ「ド」は中央。どちらへ動かすかを文字でも示す。
+    // オクターブをまたいでも同じ「ド」は中央（判定と同じ）。向きは じっさいの 高い／低い どおり。
     if(this.phase!=='play' || !target){
       this.el.coachNeedle.classList.remove('on');
       this.el.coachFeedback.textContent = 'おてほんを きいてね';
@@ -1232,15 +1304,16 @@ const M3 = {
       this.el.coachFeedback.textContent = 'こえを だしてみよう';
       return;
     }
-    let cents = 1200*Math.log2(f/target);
-    cents = ((cents+600)%1200+1200)%1200-600;
-    this.el.coachNeedle.style.left = clamp(50+cents/10, 8, 92) + '%';
+    const g = pitchGuide(f, target, this.tol());
+    // みどりの 帯（44〜56%）＝ ±1はんおん。ゆるめた あとは 帯も ひろげる（.wide）
+    this.el.coachNeedle.style.left = clamp(50+g.cents*0.06, 8, 92) + '%';
     this.el.coachNeedle.classList.add('on');
-    this.el.coachFeedback.textContent = Math.abs(cents)<=100 ? 'ぴったり！' :
-      cents<0 ? 'もうすこし たかく ↑' : 'もうすこし ひくく ↓';
+    this.el.coachFeedback.textContent = g.dir===0 ? 'ぴったり！' :
+      g.dir>0 ? 'もうすこし たかく ↑' : 'もうすこし ひくく ↓';
   },
   setAim(i){
     this.stuck = 0; this.helped = false;
+    this.el.coachTrack.classList.remove('wide');
     this.steps.forEach(s=>s.classList.remove('aim','help'));
     if(i>=0 && this.phrase[i]!=null){
       const k = this.phrase[i];
@@ -1253,6 +1326,7 @@ const M3 = {
     }else{
       this.solf(-1);
       this.el.coachTarget.textContent = 'めざす おと';
+      this.el.coachFeedback.textContent = 'おてほんを きいてね';
       this.el.coachNeedle.classList.remove('on');
     }
   },
@@ -1300,7 +1374,7 @@ const M3 = {
   },
   nextPhrase(){
     this.phrase = this.genPhrase(this.pi);
-    this.ni = 0; this.hold = 0;
+    this.ni = 0; this.hold = 0; this.phraseHelped = false;
     this.pills();
     this.demo();
   },
@@ -1337,7 +1411,7 @@ const M3 = {
     this.setAim(this.ni);                            // ヒントは setAim が「ど〜って うたってね！」を出す
   },
   noteHit(assisted=false){
-    if(assisted) this.assistedNotes++;
+    if(assisted){ this.assistedNotes++; this.phraseHelped = true; }
     else this.cleanNotes++;
     const k = this.phrase[this.ni];
     const st = this.steps[k];
@@ -1363,10 +1437,16 @@ const M3 = {
     this.setAim(-1);
     this.el.replay.classList.remove('show');
     this.done++;
-    sfx('success');
     const r = this.el.tray.getBoundingClientRect();
-    fx('burst', r.left+r.width/2, r.top+r.height*0.35, {count:24, power:1.1});
-    this.hint('できた！すごい！', 'go');
+    if(this.phraseHelped){
+      // おてつだいで すすんだ フレーズは「ぜんぶ じぶんで できた」に 見せない
+      sfx('pop');
+      this.hint('いっしょに できたね！', 'listen');
+    }else{
+      sfx('success');
+      fx('burst', r.left+r.width/2, r.top+r.height*0.35, {count:24, power:1.1});
+      this.hint('できた！すごい！', 'go');
+    }
     await wait(950);
     if(my!==this.runId) return;
     this.pi++;
@@ -1378,7 +1458,7 @@ const M3 = {
     if(!this.active) return;
     const dt = Math.min(0.05, (t-this.lastT)/1000);
     this.lastT = t;
-    const f = t<this.earBlockUntil ? 0 : Mic.read();
+    const f = t<this.earBlockUntil ? Mic.mute() : Mic.read();
     // こえの たかさマーカー（うたの音域 C4±/C5± を縦に）
     if(f>0){
       const midi = 69 + 12*Math.log2(f/440);
@@ -1391,35 +1471,28 @@ const M3 = {
     if(this.phase==='play' && this.phrase[this.ni]!=null){
       const k = this.phrase[this.ni];
       const target = this.NOTES[k];
-      this.coach(f, target);
       // つまったら たすける：8びょうで ゆるく（±2はんおん）、18びょうで「いっしょに うたおう」で すすむ
       this.stuck += dt;
-      const tol = this.stuck >= 8 ? 200 : 100;
+      const tol = this.tol();
+      this.coach(f, target);
       if(this.stuck >= 8 && !this.helped){
         this.helped = true;
         this.steps[k].classList.add('help');
+        this.el.coachTrack.classList.add('wide');
         Voice.sing(target, 0.8);
         this.earBlockUntil = t+1050;               // ヒントの歌声も判定に混ぜない
         this.hint('いっしょに うたおう！「' + SOLF[k] + 'ー」', 'listen');
       }
       if(this.stuck >= 18){ this.noteHit(true); this.raf = requestAnimationFrame(tt=>this.loop(tt)); return; }
-      let ok = false;
-      if(f>0){
-        // オクターブ折りたたみ判定：1オクターブ下（おうちの人の低い声）や
-        // 上の裏声でも、同じ「ど」なら正解にする。許容は従来どおり±1半音。
-        let c = 1200*Math.log2(f/target);
-        c = ((c % 1200) + 1200) % 1200;          // 0〜1200 セントに折りたたむ
-        ok = Math.min(c, 1200 - c) <= tol;
-      }
-      if(ok) this.hold += dt;
+      // オクターブ折りたたみ判定（pitchOk）。許容は ±1はんおん、つまったら ±2はんおん
+      if(pitchOk(f, target, tol)) this.hold += dt;
       else this.hold = Math.max(0, this.hold - dt*1.6);
       this.holds[k].style.transform = 'scaleY(' + clamp(this.hold/this.NEED,0,1) + ')';
-      if(this.hold >= this.NEED) this.noteHit();
+      if(this.hold >= this.NEED) this.noteHit(this.helped);   // ヒントの あとに とれた音は「いっしょに」
     }
     this.raf = requestAnimationFrame(tt=>this.loop(tt));
   },
   end(){
-    const done = this.done;
     this.stopGame();
     const acGain = this.cleanNotes ? Math.min(3, Math.ceil(this.cleanNotes/4)) : 0;
     if(acGain) roundReward(acGain);
@@ -1430,7 +1503,8 @@ const M3 = {
         'こ<br>いっしょに れんしゅうした おと：' + this.assistedNotes + 'こ',
       retry: ()=>micFlow(3),
     });
-    sfx('fanfare'); fx('celebrate');
+    if(this.cleanNotes){ sfx('fanfare'); fx('celebrate'); }
+    else sfx('success');                           // おてつだいだけの ときは しずかに ほめる
   },
 };
 M3.el.replay.addEventListener('click', ()=>{
@@ -1440,7 +1514,7 @@ M3.el.replay.addEventListener('click', ()=>{
 });
 
 /* ---- ヘッドレス検証用フック（テストスクリプトから状態を読む） ---- */
-window.__uta = { m1: M1, m2: M2, m3: M3, mic: Mic };
+window.__uta = { m1: M1, m2: M2, m3: M3, mic: Mic, voice: Voice, pitchGuide, pitchOk };
 </script>
 <script>Bgm.play('uta');</script>
 </body>
