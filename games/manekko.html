@@ -54,7 +54,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* 横画面：ダイヤルを左に大きく、スコア/むずかしさ/ヒント/操作は右カラムに（タブレット横を優先） */
 @media (orientation:landscape) and (min-width:720px){
   .wrap{max-width:980px;display:grid;align-items:center;justify-items:center;
-    column-gap:40px;row-gap:10px;
+    column-gap:40px;row-gap:14px;align-content:center;   /* 行を 引きのばさず まんなかに よせる */
     grid-template-columns:auto minmax(190px,300px);
     grid-template-areas:"dial status" "dial diff" "dial hint" "dial controls";}
   .statusbar{grid-area:status;align-self:end;}
@@ -129,11 +129,11 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .hub[data-state="your"]{box-shadow:0 7px 0 #7fd49a, inset 0 0 0 5px #fff, 0 0 28px rgba(95,207,128,.55);}
 .hub[data-state="clear"]{box-shadow:0 7px 0 #ffd98a, inset 0 0 0 5px #fff, 0 0 30px rgba(255,180,61,.6);}
 .hub[data-state="over"]{box-shadow:0 7px 0 #f0b6b6, inset 0 0 0 5px #fff, 0 0 24px rgba(255,107,107,.45);}
-.hub img{width:62%;height:62%;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(90,60,140,.3));
+.hub img{width:54%;height:54%;margin-top:-12%;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(90,60,140,.3));
   transition:transform .25s var(--spring);}
 .hub[data-state="clear"] img{transform:translateY(-2px) scale(1.06);}
 .hub[data-state="over"] img{transform:rotate(-6deg) scale(.95);}
-.hub .lbl{position:absolute;bottom:14%;font-family:'Mochiy Pop One';font-size:clamp(10px,3vw,13px);
+.hub .lbl{position:absolute;bottom:10%;font-family:'Mochiy Pop One';font-size:clamp(10px,3vw,13px);
   color:var(--purple-d);}
 
 /* start cover */

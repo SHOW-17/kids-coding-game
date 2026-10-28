@@ -49,13 +49,13 @@
     padding:7px 12px;border-radius:26px;max-width:calc(100vw - 24px);justify-content:center;
     box-shadow:0 5px 0 #ecd9b5,0 10px 20px rgba(180,140,80,.18), inset 0 2px 0 #fff;font-weight:800;}
   .levelbar .lv{font-family:'Mochiy Pop One';color:var(--honey-d);font-size:18px;white-space:nowrap;}
-  .stars{display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;max-width:260px;}
+  .stars{display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;max-width:290px;}   /* 19こが 1行に はいる（まえは 260px で 2こ だけ 2行目に おちた） */
   .pstar{width:13px;height:13px;background:#e7d4b0;
     clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
   .pstar.on{background:var(--honey);box-shadow:0 0 5px rgba(255,180,61,.7);}
   .pstar.cur{outline:2px solid var(--honey-d);outline-offset:2px;}
   .reset{border:none;background:#f3e2c2;color:#a87b4a;font-weight:800;border-radius:999px;
-    padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit;box-shadow:0 3px 0 #e3cfa6;}
+    padding:7px 13px;min-height:44px;font-size:12px;cursor:pointer;font-family:inherit;box-shadow:0 3px 0 #e3cfa6;}
   .reset:active{transform:translateY(2px);box-shadow:0 1px 0 #e3cfa6;}
   /* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
   .home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
@@ -75,6 +75,12 @@
   .lvnav .tri.l{border-width:8px 12px 8px 0;border-color:transparent var(--honey-d) transparent transparent;}
   .lvnav .tri.r{border-width:8px 0 8px 12px;border-color:transparent transparent transparent var(--honey-d);}
   .stars .pstar{cursor:pointer;}
+  /* せまい画面：ほしは 2だんめに ならべ、さいしょボタンを 1だんめに よせる（19こが 1行で入る） */
+  @media (max-width:480px){
+    .levelbar{gap:6px 8px;}
+    .levelbar .stars{order:9;flex:1 1 100%;max-width:none;}
+  }
+  @media (max-width:340px){ .levelbar .stars{max-width:150px;} }  /* 10こ + 9こ に そろえる */
 
   #stage{position:relative;z-index:1;}
   #board{position:relative;display:grid;gap:var(--gap);padding:12px;
@@ -174,7 +180,7 @@
   .loopbox .lhead{display:flex;align-items:center;gap:5px;font-weight:800;color:#7a4fd0;background:#fff;
     border-radius:12px;padding:4px 5px;font-size:17px;white-space:nowrap;}
   .loopbox .lcount{display:flex;align-items:center;gap:3px;padding:0 2px;min-width:46px;justify-content:center;}
-  .lstep{border:none;cursor:pointer;width:42px;height:42px;min-width:42px;border-radius:10px;font-family:inherit;
+  .lstep{border:none;cursor:pointer;width:44px;height:44px;min-width:44px;border-radius:10px;font-family:inherit;
     font-weight:800;font-size:20px;line-height:1;padding:0;background:#8a5cff;color:#fff;
     box-shadow:0 3px 0 #6f43e0, inset 0 2px 0 rgba(255,255,255,.3);
     display:flex;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s;}
@@ -248,17 +254,23 @@
   .ctrl:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18);}
   .ctrl.back{background:#f0a93c;flex:.7;}.ctrl.clear{background:#e08a8a;flex:.7;}
   .ctrl.play{background:#5fcf80;flex:1.6;font-size:20px;}
+  /* スタートの ボタンは 縦画面で いつも 画面の下に 残す（盤を みたまま おせる） */
+  @media (orientation:portrait),(max-width:719px){
+    #controls{position:sticky;bottom:0;z-index:20;padding:16px 0 calc(8px + env(safe-area-inset-bottom));margin-top:2px;}
+    #controls::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;pointer-events:none;
+      background:linear-gradient(to top,rgba(255,247,232,.94) 70%,rgba(255,247,232,0));}
+  }
   .ctrl:disabled{opacity:.45;}
   .ctrl.play.stop{background:#f08f6c;}
   .ctrl .sq{width:15px;height:15px;background:#fff;border-radius:3px;}
   #program.shake{animation:shake .4s ease;}
   /* はじめての ボタンを ひからせる（よまなくても「ここ！」が わかる） */
   .spot{position:relative;z-index:6;animation:spotPulse 1.1s ease-in-out infinite;}
-  .spot::after{content:"";position:absolute;left:50%;top:-30px;margin-left:-11px;width:0;height:0;
-    border-left:11px solid transparent;border-right:11px solid transparent;border-top:16px solid #ff7b3d;
+  .spot::after{content:"";position:absolute;left:50%;top:-17px;margin-left:-9px;width:0;height:0;
+    border-left:9px solid transparent;border-right:9px solid transparent;border-top:12px solid #ff7b3d;
     filter:drop-shadow(0 2px 0 #c9541c);animation:spotBob .8s ease-in-out infinite;pointer-events:none;}
   @keyframes spotPulse{0%,100%{box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 0 0 rgba(255,140,60,.7)}60%{box-shadow:0 5px 0 rgba(0,0,0,.18),0 0 0 12px rgba(255,140,60,0)}}
-  @keyframes spotBob{50%{transform:translateY(-7px)}}
+  @keyframes spotBob{50%{transform:translateY(3px)}}   /* となりの ボタンに かからない よう 下がわへ */
   @media (prefers-reduced-motion: reduce){ .spot,.spot::after{animation:none} .spot{outline:4px solid #ff7b3d;outline-offset:3px} }
   .ctrl .tri{width:0;height:0;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;}
 
@@ -443,15 +455,18 @@ function cellSize(w,h){
   return Math.max(26, Math.min(c, cap));   // 盤のマスは タップしないので 小さくてもよい
 }
 // 縦画面：スタートボタンまで 1画面に おさまるよう、はみ出した ぶんだけ マスを ちいさくする
+// （スタートの 下端を じっさいに はかる。sticky は いったん はずして 本来の いちで はかる）
 function fitBoard(L){
   if(window.innerWidth > window.innerHeight && window.innerWidth >= 720) return;
-  const de=document.documentElement;
-  for(let k=0;k<4;k++){
-    const over = de.scrollHeight - window.innerHeight;
+  const de=document.documentElement, ctl=$('controls'), margin=14;
+  const prevPos=ctl.style.position; ctl.style.position='relative';
+  for(let k=0;k<6;k++){
+    const over = ctl.getBoundingClientRect().bottom + margin - window.innerHeight;
     const cs = parseInt(getComputedStyle(de).getPropertyValue('--cell'));
-    if(over <= 2 || cs <= 26) break;
+    if(over <= 0 || cs <= 26) break;
     de.style.setProperty('--cell', Math.max(26, cs - Math.ceil(over / L.h)) + 'px');
   }
+  ctl.style.position=prevPos;
 }
 function isWall(L,x,y){ return L.walls.some(p=>p.x===x&&p.y===y); }
 function footprint(x,y){
@@ -600,7 +615,14 @@ function addMove(dir, jump){
   tutorSpot();
 }
 let spotEl=null;
-function spot(el){ spotOff(); if(!el) return; spotEl=el; el.classList.add('spot'); el.addEventListener('pointerdown', spotOff, {once:true}); }
+function spot(el){ spotOff(); if(!el) return; spotEl=el; el.classList.add('spot'); el.addEventListener('pointerdown', spotOff, {once:true}); keepSpotVisible(el); }
+// 縦画面で スタートの ボタンが 画面の下に のこっている とき、ひからせた ボタンが その下に かくれないよう すこし スクロール
+function keepSpotVisible(el){
+  const c=$('controls');
+  if(!c || el===c || c.contains(el) || getComputedStyle(c).position!=='sticky') return;
+  const over = el.getBoundingClientRect().bottom + 10 - c.getBoundingClientRect().top;
+  if(over>0) setTimeout(()=>window.scrollBy({top:over,behavior:'smooth'}), 60);
+}
 function spotOff(){ if(spotEl) spotEl.classList.remove('spot'); spotEl=null; }
 // あたらしい ボタンが 出た レベルでは、その ボタンを ひからせる
 const SPOT = {2:'#pad .btn.up', 3:'#pad .btn.left', 5:'#loopBtn', 7:'#jumpRow .jbtn'};

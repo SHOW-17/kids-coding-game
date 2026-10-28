@@ -42,7 +42,8 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);
 .home .ic::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
   width:20px;height:14px;background:var(--ac);border-radius:0 0 4px 4px;}
 .title{flex:1;min-width:0;font-family:'Mochiy Pop One';font-size:18px;color:var(--ink);
-  text-shadow:0 2px 0 #fff;}
+  text-shadow:0 2px 0 #fff;white-space:nowrap;}
+@media (max-width:400px){ .title{font-size:15px;} }   /* 360幅でも「わたしの おへや」を 1行に */
 /* どんぐりピル（のこり） */
 .purse{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
   background:#fffdf7;padding:8px 15px 8px 11px;border-radius:999px;

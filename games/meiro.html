@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>めいろ — あそびのもり</title>
+<meta name="description" content="ゆびで なぞって ユニコーンを ゴールへ。さきを よんで みちを えらぶ めいろあそび。">
+<meta name="theme-color" content="#c07a3c">
+<link rel="icon" href="../assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="../assets/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/apple-touch-icon.png">
+<link href="../assets/fonts/fonts.css" rel="stylesheet">
+<style>
+:root{
+  --ink:#5e3a18; --ink-soft:#8a5d34; --ink-faint:#bf9a74;
+  --ac:#c07a3c; --ac-d:#9c5c24; --ac-sh:#7a4517; --ac-soft:#f6e3cf;
+  --honey:#ffb43d; --honey-d:#f59312; --honey-l:#ffe6b8;
+  --green:#5fcf80; --green-d:#3fae62;
+  --hedge:#7cc45a; --hedge-d:#4f9a36; --hedge-sh:#3c7a28;
+  --floor:#fbeed6; --floor2:#f5e0bb;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;color:var(--ink);min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+  background:#f6e6cf url("../assets/bg/meiro.webp") center bottom / cover no-repeat fixed;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+
+/* ===== topbar ===== */
+.topbar{position:relative;z-index:3;width:100%;max-width:480px;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) 70px 2px 70px;}
+/* ホームは右上のBGM音符と対になるよう、画面の左上に固定 */
+.home{position:fixed;z-index:9999;top:calc(10px + env(safe-area-inset-top));
+  left:calc(10px + env(safe-area-inset-left));
+  width:46px;height:46px;border:none;cursor:pointer;border-radius:16px;background:#fff;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 rgba(156,92,36,.24), inset 0 2px 0 #fff;
+  transition:transform .12s var(--ease);}
+.home:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(156,92,36,.24);}
+.home .ic{width:21px;height:21px;background:var(--ac-d);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3 2 12h3v8h5v-5h4v5h5v-8h3z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.ttl{font-family:'Mochiy Pop One';font-size:19px;color:var(--ac-d);text-shadow:0 2px 0 #fff;white-space:nowrap;}
+.ttl .uni{height:32px;vertical-align:-8px;margin-right:2px;filter:drop-shadow(0 3px 3px rgba(120,70,20,.3));}
+
+/* ===== layout ===== */
+.wrap{position:relative;z-index:1;width:100%;max-width:480px;flex:1;display:flex;flex-direction:column;align-items:center;padding:0 12px 6px;}
+/* 横画面：めいろを左に大きく、レベル/ヒント/操作は右カラムに（タブレット横・PC を優先） */
+@media (orientation:landscape) and (min-width:720px){
+  .topbar{max-width:1080px;}
+  .wrap{max-width:1080px;display:grid;align-items:center;justify-content:center;
+    column-gap:36px;row-gap:8px;grid-template-columns:auto minmax(240px,340px);
+    grid-template-areas:"board status" "board dots" "board hint" "board side" "board controls";
+    align-content:center;}
+  .board-wrap{grid-area:board;margin:0;}
+  .statusbar{grid-area:status;align-self:end;}
+  .dots{grid-area:dots;}
+  .hint{grid-area:hint;}
+  .side{grid-area:side;display:flex!important;}
+  .controls{grid-area:controls;align-self:start;margin:6px 0;}
+}
+/* PC・おおきな よこ画面：みぎの カラムも 大きく（めいろと つりあう ように） */
+@media (orientation:landscape) and (min-width:1100px) and (min-height:700px){
+  .ttl{font-size:22px;}
+  .pill{font-size:19px;padding:9px 20px;}
+  .lvnav{width:56px;height:56px;}
+  .hint{font-size:17px;padding:10px 20px;}
+  .icon-btn{width:68px;height:68px;font-size:28px;}
+  .side img{width:170px;}
+}
+
+.statusbar{display:flex;gap:8px;align-items:center;margin:4px 0 2px;}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:'Mochiy Pop One';background:#fff;white-space:nowrap;
+  padding:7px 16px;border-radius:999px;font-size:16px;color:var(--ac-d);box-shadow:0 4px 0 rgba(156,92,36,.18), inset 0 2px 0 #fff;}
+.lvnav{border:none;background:#fff;border-radius:14px;width:48px;height:48px;min-width:48px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(156,92,36,.2), inset 0 2px 0 #fff;transition:transform .1s;}
+.lvnav:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(156,92,36,.2);}
+.lvnav:disabled{opacity:.34;cursor:default;}
+.lvnav .tri{width:0;height:0;border-style:solid;}
+.lvnav .tri.l{border-width:8px 12px 8px 0;border-color:transparent var(--ac-d) transparent transparent;}
+.lvnav .tri.r{border-width:8px 0 8px 12px;border-color:transparent transparent transparent var(--ac-d);}
+/* あつめた ほし（ステータス） */
+.starpill{gap:3px;padding:6px 12px;}
+.starpill i{width:20px;height:20px;background:url("../assets/tokens/star.webp") center/contain no-repeat;
+  filter:grayscale(1) opacity(.28);transition:filter .3s, transform .35s var(--spring);}
+.starpill i.on{filter:none;transform:scale(1.12);}
+.starpill i.pop{animation:starPop .5s var(--spring);}
+@keyframes starPop{0%{transform:scale(.4)}60%{transform:scale(1.4)}100%{transform:scale(1.12)}}
+@media (max-width:400px){
+  .statusbar{gap:6px;}
+  .lvnav{width:44px;height:44px;min-width:44px;}
+  .pill{font-size:14px;padding:6px 11px;}
+  .starpill i{width:17px;height:17px;}
+}
+.keypill[hidden]{display:none;}
+.keypill{padding:6px 12px;}
+.keypill .key{opacity:.28;filter:grayscale(1);transition:opacity .3s, filter .3s;}
+.keypill.on .key{opacity:1;filter:none;}
+
+.dots{display:flex;gap:6px;justify-content:center;margin:4px 0 2px;flex-wrap:wrap;}
+.dots .d{width:11px;height:11px;border-radius:50%;background:rgba(122,69,23,.18);}
+.dots .d.on{background:var(--ac);}
+.dots .d.cur{background:var(--ac-d);box-shadow:0 0 0 3px rgba(156,92,36,.25);}
+
+.hint{font-weight:800;font-size:14.5px;color:var(--ink-soft);min-height:22px;text-align:center;margin:5px auto;
+  width:fit-content;max-width:100%;background:rgba(255,255,255,.88);
+  padding:7px 16px;border-radius:999px;box-shadow:0 3px 0 rgba(156,92,36,.14), inset 0 2px 0 #fff;transition:color .2s;}
+.hint.go{color:var(--green-d);}
+.hint.warn{color:#c8641f;}
+
+/* ===== めいろ（ねんどの トレイ＋いけがき） ===== */
+.board-wrap{position:relative;margin:4px 0;border-radius:26px;padding:10px;
+  background:linear-gradient(180deg,#fff8ea 0%,#f3dfbd 100%);
+  box-shadow:0 18px 30px -14px rgba(120,70,20,.45), 0 4px 0 rgba(156,92,36,.14),
+    inset 0 0 0 4px #fff, inset 0 -10px 16px rgba(170,110,50,.12);}
+.board{position:relative;touch-action:none;border-radius:16px;overflow:visible;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.55) 0 2px, transparent 3px) 0 0/26px 26px,
+    radial-gradient(circle at 70% 75%, rgba(196,150,90,.18) 0 2px, transparent 3px) 0 0/34px 34px,
+    linear-gradient(180deg,var(--floor),var(--floor2));
+  box-shadow:inset 0 3px 8px rgba(150,100,40,.18);}
+.layer{position:absolute;inset:0;pointer-events:none;}
+/* いけがき（かべ）：ねんどの まるい ぼう。うえに ハイライト、したに あつみ */
+.w{position:absolute;border-radius:999px;
+  background:linear-gradient(180deg,#9ad877 0%,var(--hedge) 45%,var(--hedge-d) 100%);
+  box-shadow:0 3px 0 var(--hedge-sh), 0 6px 6px -2px rgba(60,90,20,.35), inset 0 2px 0 rgba(255,255,255,.55);}
+.post{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 40% 32%,#b4e894,var(--hedge) 60%,var(--hedge-d));
+  box-shadow:0 3px 0 var(--hedge-sh), inset 0 2px 0 rgba(255,255,255,.5);}
+/* とおった みち */
+.trail{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.trail polyline{fill:none;stroke:var(--honey);stroke-linecap:round;stroke-linejoin:round;opacity:.85;
+  filter:drop-shadow(0 2px 0 rgba(200,120,20,.35));}
+/* ヒントの あしあと */
+.hintdot{position:absolute;border-radius:50%;background:var(--honey);transform:translate(-50%,-50%) scale(0);
+  box-shadow:0 0 0 4px rgba(255,180,61,.3);animation:hintIn .4s var(--spring) forwards;}
+.hintdot.out{animation:hintOut .5s var(--ease) forwards;}
+@keyframes hintIn{to{transform:translate(-50%,-50%) scale(1)}}
+@keyframes hintOut{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(-50%,-50%) scale(.4);opacity:0}}
+/* コマ */
+.tok{position:absolute;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  transition:left .13s var(--ease), top .13s var(--ease);}
+.tok img{width:100%;height:100%;object-fit:contain;display:block;}
+.me{z-index:6;}
+.me .body{width:100%;height:100%;transition:transform .18s var(--spring);}
+.me .body img{filter:drop-shadow(0 5px 4px rgba(60,70,120,.35));}
+.me.left .body{transform:scaleX(-1);}
+.me.hop .body img{animation:hop .2s var(--ease);}
+@keyframes hop{0%{transform:translateY(0)}45%{transform:translateY(-14%)}100%{transform:translateY(0)}}
+.me.no .body img{animation:nope .32s var(--ease);}
+@keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-9%)}75%{transform:translateX(9%)}}
+.me.grab .body img{filter:drop-shadow(0 10px 8px rgba(60,70,120,.42));transform:scale(1.08);}
+.goal{z-index:4;}
+.goal::before{content:"";position:absolute;inset:-6%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,220,120,.75),rgba(255,220,120,0) 70%);animation:glow 1.8s ease-in-out infinite;}
+.goal img{position:relative;filter:drop-shadow(0 5px 4px rgba(90,50,140,.32));animation:goalBob 2.4s var(--ease) infinite;}
+@keyframes glow{0%,100%{transform:scale(.85);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+@keyframes goalBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6%)}}
+.star{z-index:3;}
+.star img{filter:drop-shadow(0 4px 3px rgba(180,120,20,.35));animation:twinkle 2.2s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{transform:rotate(-8deg) scale(.92)}50%{transform:rotate(8deg) scale(1.04)}}
+.star.got img{animation:gotStar .5s var(--ease) forwards;}
+@keyframes gotStar{to{transform:scale(1.8) rotate(40deg);opacity:0}}
+.gate{z-index:5;transition:opacity .35s, transform .35s var(--spring);}
+.gate img{filter:drop-shadow(0 4px 3px rgba(100,50,10,.35));}
+.gate.shake img{animation:nope .32s var(--ease);}
+.gate.open{opacity:0;transform:scale(1.3) translateY(-10%);}
+/* かぎ（CSS図形：まるい あたま＋じく＋は） */
+.key{position:relative;display:inline-block;width:26px;height:14px;}
+.key::before{content:"";position:absolute;left:0;top:0;width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,transparent 0 3px,#ffcf3d 3.5px);box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 2px 0 #c98a12;}
+.key::after{content:"";position:absolute;left:12px;top:5px;width:14px;height:5px;border-radius:2px;background:#ffcf3d;
+  box-shadow:0 2px 0 #c98a12, 9px 4px 0 -1px #ffcf3d, 5px 4px 0 -1px #ffcf3d;}
+.keytok{z-index:3;}
+.keytok .key{transform:scale(var(--ks,1.6)) rotate(-30deg);animation:keyBob 2s ease-in-out infinite;filter:drop-shadow(0 3px 2px rgba(160,100,10,.4));}
+@keyframes keyBob{0%,100%{translate:0 0}50%{translate:0 -4px}}
+.keytok.got{transition:opacity .4s, transform .4s var(--ease);opacity:0;transform:scale(1.6);}
+
+.side{display:none;flex-direction:column;align-items:center;gap:6px;}
+.side img{width:132px;filter:drop-shadow(0 10px 8px rgba(120,70,20,.3));animation:goalBob 3s var(--ease) infinite;}
+
+/* ===== 操作 ===== */
+.controls{display:flex;gap:18px;align-items:center;justify-content:center;margin:8px 0 calc(10px + env(safe-area-inset-bottom));min-height:60px;}
+.icon-btn{width:58px;height:58px;border:none;cursor:pointer;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 rgba(156,92,36,.22), inset 0 2px 0 #fff;
+  transition:transform .12s var(--ease);font-family:'Mochiy Pop One';font-size:24px;color:var(--ac-d);}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(156,92,36,.22);}
+.icon-btn .ic{width:25px;height:25px;background:var(--ac-d);}
+.ic.retry{-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5V2L7 7l5 5V8a5 5 0 1 1-5 5H5a7 7 0 1 0 7-8z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5V2L7 7l5 5V8a5 5 0 1 1-5 5H5a7 7 0 1 0 7-8z'/%3E%3C/svg%3E") center/contain no-repeat;}
+/* あたらしい めいろ（4つの マス＝まぜる） */
+.ic.shuffle{background:none!important;position:relative;width:26px;height:26px;}
+.ic.shuffle::before,.ic.shuffle::after{content:"";position:absolute;width:11px;height:11px;border-radius:3px;background:var(--ac-d);}
+.ic.shuffle::before{left:0;top:0;box-shadow:15px 15px 0 var(--ac-d);}
+.ic.shuffle::after{right:0;top:0;background:var(--hedge-d);box-shadow:-15px 15px 0 var(--hedge-d);}
+.icon-btn.hint-btn{font-size:26px;}
+.icon-btn.spot{animation:spotBounce 1.2s var(--ease) infinite;box-shadow:0 0 0 5px rgba(255,180,61,.55),0 5px 0 rgba(156,92,36,.22);}
+@keyframes spotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ===== result modal ===== */
+.ovl{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(80,45,15,.42);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s;}
+.ovl.show{opacity:1;}.ovl[hidden]{display:none;}
+.dlg{background:radial-gradient(120% 80% at 50% 0,#fff,#fdf1e2);border-radius:30px;max-width:340px;width:100%;
+  padding:8px 24px 24px;text-align:center;transform:translateY(12px) scale(.96);transition:transform .3s var(--spring);
+  max-height:calc(100dvh - 32px);overflow-y:auto;
+  box-shadow:0 28px 56px -18px rgba(120,70,20,.55), inset 0 3px 0 rgba(255,255,255,.9);}
+.ovl.show .dlg{transform:none;}
+.dlg .uni{width:112px;margin:-22px auto 0;display:block;filter:drop-shadow(0 10px 8px rgba(120,70,20,.3));}
+.dlg h2{font-family:'Mochiy Pop One';font-size:22px;color:var(--ink);margin:4px 0 8px;}
+.dlg .stars{display:flex;justify-content:center;gap:8px;margin:2px 0 8px;}
+.dlg .stars i{width:40px;height:40px;background:url("../assets/tokens/star.webp") center/contain no-repeat;filter:grayscale(1) opacity(.25);}
+.dlg .stars i.on{filter:none;animation:starPop .5s var(--spring) both;}
+.dlg .stars i.on:nth-child(2){animation-delay:.15s}.dlg .stars i.on:nth-child(3){animation-delay:.3s}
+.dlg p{font-size:14px;font-weight:700;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;}
+.dlg .row{display:flex;gap:10px;}
+.dlg button{flex:1;font-family:'Mochiy Pop One';font-size:15px;padding:13px;min-height:48px;border:none;border-radius:999px;cursor:pointer;transition:transform .12s var(--ease);}
+.dlg button:active{transform:translateY(2px);}
+.dlg button:disabled{opacity:.6;}
+.dlg .ghost{background:#f6e3cf;color:var(--ac-d);box-shadow:0 4px 0 #e5c7a4;}
+.dlg .go{background:linear-gradient(180deg,#75e093,var(--green));color:#fff;box-shadow:0 4px 0 var(--green-d);}
+
+.enter{opacity:0;transform:translateY(12px);animation:rise .5s var(--ease) forwards;}
+.enter.d1{animation-delay:.06s}.enter.d2{animation-delay:.12s}.enter.d3{animation-delay:.18s}
+.enter.d4{animation-delay:.24s}.enter.d5{animation-delay:.30s}.enter.d6{animation-delay:.36s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .enter{opacity:1;transform:none;animation:none;}
+  .goal::before,.goal img,.star img,.keytok .key,.side img,.icon-btn.spot{animation:none!important;}
+  .tok{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="home" id="homeBtn" aria-label="おうちへ もどる"><span class="ic"></span></button>
+  <div class="ttl"><img class="uni" src="../assets/uni/blue_face.webp" alt="">めいろ</div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar enter">
+    <button class="lvnav" id="prevLv" aria-label="まえの めいろ"><span class="tri l"></span></button>
+    <span class="pill" id="lvPill">レベル 1</span>
+    <button class="lvnav" id="nextLv" aria-label="つぎの めいろ"><span class="tri r"></span></button>
+    <span class="pill starpill" id="starPill" aria-label="あつめた ほし"></span>
+    <span class="pill keypill" id="keyPill" hidden aria-label="かぎ"><span class="key"></span></span>
+  </div>
+
+  <div class="dots enter d1" id="dots"></div>
+  <div class="hint enter d1" id="hint" data-talk>ゆびで なぞって ゴールへ いこう</div>
+
+  <div class="board-wrap enter d2" id="boardWrap">
+    <div class="board" id="board">
+      <svg class="trail" id="trail"><polyline id="trailLine" points=""/></svg>
+      <div class="layer" id="walls"></div>
+      <div class="layer" id="items"></div>
+      <div class="layer" id="hints"></div>
+    </div>
+  </div>
+
+  <div class="side" aria-hidden="true"><img src="../assets/uni/purple_wave.webp" alt=""></div>
+
+  <div class="controls enter d3">
+    <button class="icon-btn hint-btn" id="hintBtn" aria-label="ヒント">？</button>
+    <button class="icon-btn" id="resetBtn" aria-label="スタートに もどる"><span class="ic retry"></span></button>
+    <button class="icon-btn" id="newBtn" aria-label="あたらしい めいろ"><span class="ic shuffle"></span></button>
+  </div>
+</div>
+
+<div class="ovl" id="ovl" hidden>
+  <div class="dlg">
+    <img class="uni" id="ovlUni" src="../assets/uni/purple_wave.webp" alt="">
+    <h2 id="ovlTitle" data-talk></h2>
+    <div class="stars" id="ovlStars"></div>
+    <p id="ovlText"></p>
+    <div class="row">
+      <button class="ghost" id="ovlHome">おうち</button>
+      <button class="go" id="ovlNext">つぎへ</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/audio.js"></script>
+<script src="../assets/fx.js"></script>
+<script src="../assets/save.js"></script>
+<script src="../assets/rewards.js"></script>
+<script src="../assets/bgm.js"></script>
+<script src="../assets/talk.js"></script>
+<script src="../assets/guard.js"></script>
+<script>
+/* ====== めいろ — ゆびで なぞって ゴールへ（けいかく力） ======
+   ・あなほり法（再帰バックトラック）で「みちが ちょうど1つ」の めいろを つくる。
+   ・ほし（よりみち）は いきどまりに おく＝とらなくても ゴールできる。
+   ・レベル7から「かぎ と とびら」：とびらは ゴールへの みちの とちゅう、かぎは とびらより てまえの わきみち。
+     つくったあと BFS で「スタート→かぎ（とびらを とおらない）」「かぎ→ゴール」を かならず たしかめる。 */
+function S(){ return (window.Save&&Save.game)?Save.game('meiro'):{get:(k,d)=>d,set:()=>{}}; }
+const save = S();
+function sfx(n,a,b,c){ try{ if(window.Sfx&&Sfx[n]) Sfx[n](a,b,c); }catch(e){} }
+function fx(n,a,b,c,d){ try{ if(window.FX&&FX[n]) FX[n](a,b,c,d); }catch(e){} }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} }
+function tone(o){ try{ if(window.Sfx&&Sfx.tone) Sfx.tone(o); }catch(e){} }
+
+// cols×rows / ほしの かず / かぎ
+const LEVELS = [
+  {c:4,r:4,stars:1}, {c:4,r:5,stars:1}, {c:5,r:5,stars:1},
+  {c:5,r:6,stars:2}, {c:6,r:6,stars:2}, {c:6,r:7,stars:2},
+  {c:5,r:6,stars:2,key:true}, {c:6,r:7,stars:3}, {c:6,r:7,stars:3,key:true},
+  {c:7,r:7,stars:3}, {c:6,r:8,stars:3,key:true}, {c:7,r:8,stars:3,key:true},
+];
+const N = LEVELS.length;
+const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];   // うえ みぎ した ひだり（かべ ビット 1,2,4,8）
+const BIT = [1,2,4,8], OPP = [2,3,0,1];
+
+const board = document.getElementById('board');
+const boardWrap = document.getElementById('boardWrap');
+const wallsEl = document.getElementById('walls');
+const itemsEl = document.getElementById('items');
+const hintsEl = document.getElementById('hints');
+const trailSvg = document.getElementById('trail');
+const trailLine = document.getElementById('trailLine');
+const hint = document.getElementById('hint');
+const lvPill = document.getElementById('lvPill');
+const starPill = document.getElementById('starPill');
+const keyPill = document.getElementById('keyPill');
+const dotsEl = document.getElementById('dots');
+const prevBtn = document.getElementById('prevLv'), nextBtn = document.getElementById('nextLv');
+const hintBtnEl = document.getElementById('hintBtn');
+
+let done = save.get('done', []); if(!Array.isArray(done)) done = [];
+let bestStars = save.get('stars', {}) || {};
+let lv = Math.min(save.get('lv', 0)|0, N-1);
+if(lv > maxUnlocked()) lv = maxUnlocked();
+
+let M = null;           // いまの めいろ
+let pos = null, trail = [], gotStars = new Set(), hasKey = false, gateOpen = false, finished = false;
+let cell = 44, wallT = 10, usedHint = false;
+
+function maxUnlocked(){ let m = 0; for(let i=0;i<N;i++) if(done.indexOf(i)>=0) m = i+1; return Math.min(m, N-1); }
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function idx(x,y){ return y*M.c + x; }
+
+/* ---------- めいろ づくり ---------- */
+function carve(c, r){
+  const g = new Array(c*r).fill(15);          // 4ほう かべ
+  const seen = new Array(c*r).fill(false);
+  const st = [[0,0]]; seen[0] = true;
+  while(st.length){
+    const [x,y] = st[st.length-1];
+    const nb = [];
+    for(let d=0; d<4; d++){
+      const nx = x+DIRS[d][0], ny = y+DIRS[d][1];
+      if(nx>=0 && ny>=0 && nx<c && ny<r && !seen[ny*c+nx]) nb.push([d,nx,ny]);
+    }
+    if(!nb.length){ st.pop(); continue; }
+    const [d,nx,ny] = nb[Math.floor(Math.random()*nb.length)];
+    g[y*c+x] &= ~BIT[d]; g[ny*c+nx] &= ~BIT[OPP[d]];
+    seen[ny*c+nx] = true; st.push([nx,ny]);
+  }
+  return g;
+}
+function open(m, x, y, d){ return !(m.g[y*m.c+x] & BIT[d]); }
+// BFS（block＝とおれない マスの index）。もどりは prev 配列
+function bfs(m, sx, sy, block){
+  const prev = new Array(m.c*m.r).fill(-2); prev[sy*m.c+sx] = -1;
+  const q = [[sx,sy]];
+  while(q.length){
+    const [x,y] = q.shift();
+    for(let d=0; d<4; d++){
+      if(!open(m,x,y,d)) continue;
+      const nx = x+DIRS[d][0], ny = y+DIRS[d][1], ni = ny*m.c+nx;
+      if(prev[ni] !== -2 || ni === block) continue;
+      prev[ni] = y*m.c+x; q.push([nx,ny]);
+    }
+  }
+  return prev;
+}
+function pathTo(m, prev, tx, ty){
+  let i = ty*m.c+tx; if(prev[i] === -2) return null;
+  const out = []; while(i !== -1){ out.push([i % m.c, Math.floor(i / m.c)]); i = prev[i]; }
+  return out.reverse();
+}
+function degree(m, i){ const v = m.g[i]; return 4 - ((v&1?1:0)+(v&2?1:0)+(v&4?1:0)+(v&8?1:0)); }
+
+function makeMaze(L){
+  for(let tries=0; tries<60; tries++){
+    const m = { c:L.c, r:L.r, g:carve(L.c, L.r), goal:[L.c-1, L.r-1], stars:[], key:null, gate:null };
+    const sol = pathTo(m, bfs(m,0,0,-1), m.goal[0], m.goal[1]);
+    // ちいさい めいろでも まっすぐ すぎない（さきを よむ ぶんの まがりかどを）
+    if(sol.length < Math.min(L.c*L.r*0.4, L.c+L.r+2)) continue;
+    const onSol = new Set(sol.map(([x,y])=>y*m.c+x));
+    if(L.key){
+      // とびら：みちの 45〜75% あたり。かぎ：とびらより てまえから はいれる わきみちの おく
+      const cand = [];
+      for(let k=Math.floor(sol.length*0.45); k<=Math.floor(sol.length*0.75); k++) cand.push(k);
+      let ok = false;
+      for(const k of cand.sort(()=>Math.random()-.5)){
+        const gi = sol[k][1]*m.c + sol[k][0];
+        const prev = bfs(m,0,0,gi);
+        const keys = [];
+        for(let i=0;i<m.c*m.r;i++){
+          if(prev[i]===-2 || onSol.has(i)) continue;
+          // わきみちの ふかさ（みちから なんマス はなれているか）
+          let dpt = 0, j = i; while(j !== -1 && !onSol.has(j)){ dpt++; j = prev[j]; }
+          if(dpt >= 2 && degree(m,i) === 1) keys.push([i,dpt]);
+        }
+        if(!keys.length) continue;
+        keys.sort((a,b)=>b[1]-a[1]);
+        const pick = keys[Math.floor(Math.random()*Math.min(3, keys.length))][0];
+        m.gate = [sol[k][0], sol[k][1]]; m.key = [pick % m.c, Math.floor(pick / m.c)];
+        // けんしょう：とびらを とおらず かぎへ／かぎから ゴールへ
+        if(!pathTo(m, bfs(m,0,0,gi), m.key[0], m.key[1])) continue;
+        if(!pathTo(m, bfs(m,m.key[0],m.key[1],-1), m.goal[0], m.goal[1])) continue;
+        ok = true; break;
+      }
+      if(!ok) continue;
+    }
+    // ほし：いきどまり（みちの そと・かぎ以外）を ちらす
+    const used = new Set([0, idx2(m,m.goal)]); if(m.key) used.add(idx2(m,m.key)); if(m.gate) used.add(idx2(m,m.gate));
+    let ends = [];
+    for(let i=0;i<m.c*m.r;i++) if(!onSol.has(i) && !used.has(i) && degree(m,i)===1) ends.push(i);
+    if(ends.length < L.stars){
+      for(let i=0;i<m.c*m.r;i++) if(!onSol.has(i) && !used.has(i) && ends.indexOf(i)<0) ends.push(i);
+    }
+    if(ends.length < L.stars) continue;
+    ends = ends.sort(()=>Math.random()-.5).slice(0, L.stars);
+    m.stars = ends.map(i=>[i % m.c, Math.floor(i / m.c)]);
+    m.sol = sol;
+    return m;
+  }
+  return null;
+}
+function idx2(m, p){ return p[1]*m.c + p[0]; }
+
+/* ---------- えがく ---------- */
+function layout(){
+  const L = LEVELS[lv];
+  const land = matchMedia('(orientation:landscape) and (min-width:720px)').matches;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const maxW = land ? Math.min(vw - 440, 720) : Math.min(vw - 44, 456);
+  // たて：トップバー・レベル・ヒント・ボタンの ぶんを ひいた のこり
+  const maxH = land ? vh - 90 : vh - 292;
+  cell = Math.floor(Math.min(maxW / L.c, maxH / L.r, land ? 128 : 92));
+  cell = Math.max(cell, 40);                      // ゆびで なぞれる おおきさ（たりない ぶんは たてスクロール）
+  wallT = Math.max(8, Math.round(cell*0.2));
+  board.style.width = (L.c*cell) + 'px';
+  board.style.height = (L.r*cell) + 'px';
+}
+
+function render(){
+  layout();
+  wallsEl.innerHTML = ''; itemsEl.innerHTML = ''; hintsEl.innerHTML = '';
+  const t = wallT, h = t/2;
+  const frag = document.createDocumentFragment();
+  const posts = new Set();
+  const addW = (x,y,w,hh)=>{ const d=document.createElement('i'); d.className='w';
+    d.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${hh}px`; frag.appendChild(d); };
+  for(let y=0;y<M.r;y++) for(let x=0;x<M.c;x++){
+    const v = M.g[y*M.c+x];
+    // うえ・ひだりは すべて、みぎ・したは はしだけ（かさならないように）
+    if(v&1){ addW(x*cell-h, y*cell-h, cell+t, t); posts.add(x+','+y); posts.add((x+1)+','+y); }
+    if(v&8){ addW(x*cell-h, y*cell-h, t, cell+t); posts.add(x+','+y); posts.add(x+','+(y+1)); }
+    if((v&2) && x===M.c-1){ addW((x+1)*cell-h, y*cell-h, t, cell+t); posts.add((x+1)+','+y); posts.add((x+1)+','+(y+1)); }
+    if((v&4) && y===M.r-1){ addW(x*cell-h, (y+1)*cell-h, cell+t, t); posts.add(x+','+(y+1)); posts.add((x+1)+','+(y+1)); }
+  }
+  // かどの まるい くい（つなぎめを ぷっくり みせる）
+  posts.forEach(k=>{ const [px,py]=k.split(',').map(Number); const d=document.createElement('i'); d.className='post';
+    const s=t*1.35; d.style.cssText=`left:${px*cell-s/2}px;top:${py*cell-s/2}px;width:${s}px;height:${s}px`; frag.appendChild(d); });
+  wallsEl.appendChild(frag);
+
+  const tok = (cls, p, scale, html)=>{
+    const d = document.createElement('div'); d.className = 'tok '+cls;
+    const s = cell*scale; d.style.width = s+'px'; d.style.height = s+'px';
+    d.style.left = (p[0]*cell + (cell-s)/2)+'px'; d.style.top = (p[1]*cell + (cell-s)/2)+'px';
+    d.innerHTML = html; itemsEl.appendChild(d); return d;
+  };
+  tok('goal', M.goal, .86, '<img src="../assets/uni/purple_face.webp" alt="">');
+  M.starEls = M.stars.map((p,i)=>{ const e = tok('star', p, .6, '<img src="../assets/tokens/star.webp" alt="">'); e.dataset.i = i; if(gotStars.has(i)) e.remove(); return e; });
+  M.keyEl = M.key && !hasKey ? tok('keytok', M.key, .7, '<span class="key"></span>') : null;
+  if(M.keyEl) M.keyEl.style.setProperty('--ks', (cell/30).toFixed(2));
+  M.gateEl = M.gate && !gateOpen ? tok('gate', M.gate, .78, '<img src="../assets/tokens/gate.webp" alt="">') : null;
+  M.meEl = tok('me', pos, .84, '<div class="body"><img src="../assets/uni/blue_face.webp" alt=""></div>');
+  trailSvg.setAttribute('viewBox', `0 0 ${M.c*cell} ${M.r*cell}`);
+  trailLine.style.strokeWidth = Math.max(6, cell*0.16);
+  drawTrail();
+}
+function placeMe(){
+  const s = cell*.84;
+  M.meEl.style.left = (pos[0]*cell + (cell-s)/2)+'px'; M.meEl.style.top = (pos[1]*cell + (cell-s)/2)+'px';
+}
+function drawTrail(){
+  trailLine.setAttribute('points', trail.map(([x,y])=>`${x*cell+cell/2},${y*cell+cell/2}`).join(' '));
+}
+function renderStatus(){
+  const L = LEVELS[lv];
+  lvPill.textContent = 'レベル ' + (lv+1);
+  prevBtn.disabled = lv <= 0;
+  nextBtn.disabled = lv >= maxUnlocked();
+  starPill.innerHTML = M.stars.map((_,i)=>`<i class="${gotStars.has(i)?'on':''}"></i>`).join('');
+  keyPill.hidden = !L.key; keyPill.classList.toggle('on', hasKey);
+  dotsEl.innerHTML = '';
+  for(let i=0;i<N;i++){ const d=document.createElement('span'); d.className='d'+(done.indexOf(i)>=0?' on':'')+(i===lv?' cur':''); dotsEl.appendChild(d); }
+}
+function setHint(text, cls){ hint.textContent = text; hint.className = 'hint' + (cls?' '+cls:''); }
+
+/* ---------- あそぶ ---------- */
+function newMaze(){
+  M = makeMaze(LEVELS[lv]);
+  resetRun();
+}
+function resetRun(){
+  pos = [0,0]; trail = [[0,0]]; gotStars = new Set(); hasKey = false; gateOpen = false; finished = false; usedHint = false;
+  render(); renderStatus();
+  const L = LEVELS[lv];
+  if(L.key && !save.get('keySeen', false)) setHint('かぎを とってから とびらへ いこう', 'warn');
+  else setHint(lv===0 ? 'ゆびで なぞって ゴールへ いこう' : 'ゴールの ともだちに あいに いこう');
+}
+
+// 1マス すすむ（d＝むき）。すすめたら true
+let lastBump = 0;
+function step(d){
+  if(finished) return false;
+  const [x,y] = pos;
+  if(!open(M,x,y,d)){ bump(); return false; }
+  const nx = x+DIRS[d][0], ny = y+DIRS[d][1];
+  if(M.gate && !gateOpen && nx===M.gate[0] && ny===M.gate[1]){
+    if(!hasKey){ gateBump(); return false; }
+    openGate();
+  }
+  pos = [nx,ny];
+  // もどったら あしあとを けす（おなじ みちを もどれる＝ためしてみる が しやすい）
+  if(trail.length>=2 && trail[trail.length-2][0]===nx && trail[trail.length-2][1]===ny) trail.pop();
+  else trail.push([nx,ny]);
+  if(d===3) M.meEl.classList.add('left'); else if(d===1) M.meEl.classList.remove('left');
+  placeMe(); drawTrail();
+  M.meEl.classList.remove('hop'); void M.meEl.offsetWidth; M.meEl.classList.add('hop');
+  tone({freq: 360 + (trail.length%4)*40, dur:.05, type:'triangle', vol:.16, slideTo: 300});
+  buzz(6);
+  clearHintDots(); hintBtnEl.classList.remove('spot');
+  pickup();
+  if(nx===M.goal[0] && ny===M.goal[1]) win();
+  return true;
+}
+function bump(){
+  const t = performance.now(); if(t - lastBump < 260) return; lastBump = t;
+  M.meEl.classList.remove('no'); void M.meEl.offsetWidth; M.meEl.classList.add('no');
+  tone({freq:180, dur:.12, type:'sine', vol:.22, slideTo:140}); buzz(12);
+}
+function gateBump(){
+  const t = performance.now(); if(t - lastBump < 400) return; lastBump = t;
+  M.gateEl.classList.remove('shake'); void M.gateEl.offsetWidth; M.gateEl.classList.add('shake');
+  sfx('error'); buzz([20,30,20]);
+  setHint('とびらは しまってる！ かぎを さがそう', 'warn');
+  keyPill.animate && keyPill.animate([{transform:'scale(1)'},{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:500});
+}
+function openGate(){
+  gateOpen = true; save.set('keySeen', true);
+  M.gateEl.classList.add('open');
+  const r = M.gateEl.getBoundingClientRect();
+  fx('ring', r.left+r.width/2, r.top+r.height/2, {color:'#ffcf3d', vr:6, life:22});
+  sfx('whoosh');
+  setHint('とびらが あいた！ ゴールへ いこう', 'go');
+}
+function pickup(){
+  M.stars.forEach((p,i)=>{
+    if(gotStars.has(i) || p[0]!==pos[0] || p[1]!==pos[1]) return;
+    gotStars.add(i);
+    const el = itemsEl.querySelector('.star[data-i="'+i+'"]');
+    if(el){ const r = el.getBoundingClientRect(); fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:10, color:'#ffd23f'}); el.classList.add('got'); setTimeout(()=>el.remove(), 500); }
+    sfx('sparkle');
+    renderStatus();
+    const ic = starPill.children[i]; if(ic){ ic.classList.add('pop'); }
+    if(gotStars.size === M.stars.length) setHint('ほしを ぜんぶ みつけた！', 'go');
+  });
+  if(M.key && !hasKey && pos[0]===M.key[0] && pos[1]===M.key[1]){
+    hasKey = true;
+    if(M.keyEl){ const r = M.keyEl.getBoundingClientRect(); fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:12, color:'#ffcf3d'}); M.keyEl.classList.add('got'); }
+    sfx('ding'); renderStatus();
+    setHint('かぎを ゲット！ とびらへ いこう', 'go');
+  }
+}
+
+/* ---------- ゆびで なぞる ---------- */
+let dragging = false;
+function cellAt(ev){
+  const r = board.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - r.left) / cell), y = Math.floor((ev.clientY - r.top) / cell);
+  if(x<0 || y<0 || x>=M.c || y>=M.r) return null;
+  return [x,y];
+}
+// いまの ばしょから ゆびの マスへ。となりなら 1ぽ、はなれていたら かべを とおらない みちで 3マスまで
+function follow(target){
+  if(!target || finished) return;
+  if(target[0]===pos[0] && target[1]===pos[1]) return;
+  const dx = target[0]-pos[0], dy = target[1]-pos[1];
+  if(Math.abs(dx)+Math.abs(dy) === 1){ step(DIRS.findIndex(d=>d[0]===dx && d[1]===dy)); return; }
+  const block = (M.gate && !gateOpen && !hasKey) ? idx2(M,M.gate) : -1;
+  const p = pathTo(M, bfs(M,pos[0],pos[1],block), target[0], target[1]);
+  if(!p || p.length-1 > 3) return;
+  for(let k=1;k<p.length;k++){
+    const d = DIRS.findIndex(v=>v[0]===p[k][0]-pos[0] && v[1]===p[k][1]-pos[1]);
+    if(!step(d)) break;
+  }
+}
+board.addEventListener('pointerdown', ev=>{
+  if(finished) return;
+  ev.preventDefault();
+  try{ board.setPointerCapture(ev.pointerId); }catch(e){}
+  dragging = true; M.meEl.classList.add('grab');
+  const c = cellAt(ev);
+  if(c && (c[0]!==pos[0] || c[1]!==pos[1])){
+    // タップ：おなじ れつ／ぎょうで かべが なければ まっすぐ すべる
+    const dx = Math.sign(c[0]-pos[0]), dy = Math.sign(c[1]-pos[1]);
+    if((dx===0) !== (dy===0)){
+      const d = DIRS.findIndex(v=>v[0]===dx && v[1]===dy);
+      let n = Math.abs(c[0]-pos[0]) + Math.abs(c[1]-pos[1]);
+      let x = pos[0], y = pos[1], clear = true;
+      for(let k=0;k<n;k++){ if(!open(M,x,y,d)){ clear = false; break; } x+=dx; y+=dy; }
+      if(clear){ slide(d, n); return; }
+    }
+    follow(c);
+  }
+});
+board.addEventListener('pointermove', ev=>{ if(dragging) follow(cellAt(ev)); });
+const endDrag = ()=>{ dragging = false; if(M && M.meEl) M.meEl.classList.remove('grab'); };
+board.addEventListener('pointerup', endDrag);
+board.addEventListener('pointercancel', endDrag);
+async function slide(d, n){
+  for(let k=0;k<n;k++){ if(!step(d)) return; await wait(90); if(finished) return; }
+}
+// キーボード（PC）
+window.addEventListener('keydown', ev=>{
+  const map = {ArrowUp:0, ArrowRight:1, ArrowDown:2, ArrowLeft:3};
+  if(ev.key in map && !finished && document.getElementById('ovl').hidden){ ev.preventDefault(); step(map[ev.key]); }
+});
+
+/* ---------- ヒント（つぎの 4マスを あしあとで みせる） ---------- */
+function clearHintDots(){ [...hintsEl.children].forEach(d=>{ d.classList.add('out'); setTimeout(()=>d.remove(), 500); }); }
+function showHint(){
+  if(finished) return;
+  sfx('tap'); usedHint = true;
+  document.getElementById('hintBtn').classList.remove('spot');
+  clearHintDots();
+  let target = M.goal, block = -1;
+  if(M.gate && !gateOpen){ if(!hasKey){ target = M.key; block = idx2(M,M.gate); } }
+  const p = pathTo(M, bfs(M,pos[0],pos[1],block), target[0], target[1]);
+  if(!p) return;
+  p.slice(1, 5).forEach(([x,y],k)=>{
+    const d = document.createElement('i'); d.className = 'hintdot';
+    const s = Math.max(12, cell*0.26);
+    d.style.cssText = `left:${x*cell+cell/2}px;top:${y*cell+cell/2}px;width:${s}px;height:${s}px;animation-delay:${k*.12}s`;
+    hintsEl.appendChild(d);
+  });
+  setHint(target===M.key ? 'きいろの まるの ほうへ。かぎが あるよ' : 'きいろの まるの ほうへ すすもう', 'go');
+  setTimeout(clearHintDots, 3200);
+}
+// しばらく うごかないと ヒントボタンが はねて しらせる（せめない）
+let idleTimer = null;
+function armIdle(){
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(()=>{ if(!finished) document.getElementById('hintBtn').classList.add('spot'); }, 20000);
+}
+board.addEventListener('pointerdown', armIdle);
+
+/* ---------- ゴール ---------- */
+async function win(){
+  finished = true; dragging = false; clearTimeout(idleTimer);
+  const first = done.indexOf(lv) < 0;
+  if(first){ done.push(lv); save.set('done', done); }
+  save.set('cleared', done.length);
+  const sc = gotStars.size;
+  if(sc > (bestStars[lv]||0)){ bestStars[lv] = sc; save.set('stars', bestStars); }
+  const L = LEVELS[lv];
+  const all = sc === M.stars.length;
+  const acGain = Math.min(3, 1 + (lv >= 4 ? 1 : 0) + (all ? 1 : 0));
+  save.set('wins', (save.get('wins',0)||0) + acGain);
+  setHint('ゴール！', 'go');
+  sfx('success');
+  const g = itemsEl.querySelector('.goal'); const r = g.getBoundingClientRect();
+  fx('ring', r.left+r.width/2, r.top+r.height/2, {color:'#ffd23f', vr:8, life:26});
+  fx('sparkles', r.left+r.width/2, r.top+r.height/2, {count:14, color:'#ffd23f'});
+  boardWrap.animate && boardWrap.animate([{transform:'scale(1)'},{transform:'scale(1.02)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'});
+  await wait(420);
+  const rb = boardWrap.getBoundingClientRect();
+  sfx('sparkle'); fx('acornGain', acGain, rb.left+rb.width/2, rb.top+rb.height/2);
+  await wait(650);
+  if(all || lv === N-1){ sfx('fanfare'); fx('celebrate'); }
+  const last = lv === N-1;
+  showResult({
+    title: last && first ? 'めいろ めいじん！' : 'ゴール！',
+    stars: sc, total: M.stars.length,
+    text: all ? 'ほしも ぜんぶ みつけたね！ すごい！'
+              : (L.stars ? 'よりみちの ほしも さがしてみよう' : 'やったね！'),
+    nextLabel: last ? 'あたらしい めいろ' : 'つぎへ'
+  });
+}
+
+/* ---------- 結果 ---------- */
+const ovl = document.getElementById('ovl');
+const ovlHome = document.getElementById('ovlHome'), ovlNext = document.getElementById('ovlNext');
+function showResult({title, stars, total, text, nextLabel}){
+  document.getElementById('ovlTitle').textContent = title;
+  document.getElementById('ovlStars').innerHTML = Array.from({length:total},(_,i)=>`<i class="${i<stars?'on':''}"></i>`).join('');
+  document.getElementById('ovlText').textContent = text;
+  ovlNext.textContent = nextLabel;
+  ovlHome.disabled = false; ovlNext.disabled = false;
+  ovl.hidden = false; requestAnimationFrame(()=>ovl.classList.add('show'));
+}
+function hideResult(){ ovl.classList.remove('show'); setTimeout(()=>ovl.hidden=true, 250); }
+ovlHome.addEventListener('click', ()=>{ ovlHome.disabled = true; sfx('tap'); location.href='../index.html'; });
+ovlNext.addEventListener('click', ()=>{
+  if(ovlNext.disabled) return; ovlNext.disabled = true;   // にじゅうおし ガード
+  sfx('tap'); hideResult();
+  if(lv < N-1) lv++;
+  save.set('lv', lv); newMaze();
+});
+
+/* ---------- ボタン ---------- */
+function goLevel(n){
+  if(n<0 || n>maxUnlocked() || n===lv) return;
+  sfx('tap'); lv = n; save.set('lv', lv); newMaze();
+}
+prevBtn.addEventListener('click', ()=>goLevel(lv-1));
+nextBtn.addEventListener('click', ()=>goLevel(lv+1));
+document.getElementById('hintBtn').addEventListener('click', showHint);
+document.getElementById('resetBtn').addEventListener('click', ()=>{ if(finished) return; sfx('whoosh'); resetRun(); });
+document.getElementById('newBtn').addEventListener('click', ()=>{ if(finished) return; sfx('pop'); newMaze(); });
+document.getElementById('homeBtn').addEventListener('click', ()=>{ sfx('tap'); location.href='../index.html'; });
+let rz = null;
+window.addEventListener('resize', ()=>{ clearTimeout(rz); rz = setTimeout(()=>{ if(M){ render(); } }, 120); });
+
+newMaze(); armIdle();
+
+/* テスト用フック（scripts/test-games.js などから） */
+window.__meiro = {
+  state: ()=>({ lv, pos:[...pos], goal:[...M.goal], hasKey, gateOpen, finished, stars:gotStars.size, total:M.stars.length, c:M.c, r:M.r }),
+  maze: ()=>M,
+  load: n=>{ lv = Math.max(0, Math.min(N-1, n)); newMaze(); },
+  step: d=>step(d),
+  // スタート→（かぎ）→ゴールの みちを かえす（むきの ならび）
+  solve: ()=>{
+    const route = [];
+    let at = [...pos];
+    const legs = [];
+    if(M.gate && !gateOpen && !hasKey) legs.push([M.key, idx2(M,M.gate)]);
+    legs.push([M.goal, -1]);
+    for(const [t,b] of legs){
+      const p = pathTo(M, bfs(M,at[0],at[1],b), t[0], t[1]);
+      for(let k=1;k<p.length;k++) route.push(DIRS.findIndex(v=>v[0]===p[k][0]-p[k-1][0] && v[1]===p[k][1]-p[k-1][1]));
+      at = t;
+    }
+    return route;
+  },
+  verifyAll: (n)=>{ // すべての レベルで n こ つくって かならず とけるか
+    let bad = 0;
+    LEVELS.forEach(L=>{ for(let i=0;i<(n||30);i++){ const m = makeMaze(L); if(!m){ bad++; continue; }
+      const gi = m.gate ? idx2(m,m.gate) : -1;
+      if(m.key){ if(!pathTo(m,bfs(m,0,0,gi),m.key[0],m.key[1]) || !pathTo(m,bfs(m,m.key[0],m.key[1],-1),m.goal[0],m.goal[1])) bad++;
+                 if(pathTo(m,bfs(m,0,0,gi),m.goal[0],m.goal[1])) bad++; }   // とびらを とおらずに ゴールできたら ×
+      else if(!pathTo(m,bfs(m,0,0,-1),m.goal[0],m.goal[1])) bad++;
+      if(m.stars.length !== L.stars) bad++; } });
+    return bad;
+  }
+};
+</script>
+<script>Bgm.play('meiro');</script>
+</body>
+</html>

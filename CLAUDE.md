@@ -61,6 +61,8 @@ games/
   tomare.html           とまれあそび（Go/No-Go）     chigai.html    どこちがう（まちがいさがし）
   sokkuri.html          そっくりわけ（属性分類）     pair.html      ぺあさがし（神経衰弱）
   uta.html              うたあそび（音程トレーニング）
+  meiro.html            めいろ（けいかく力）         iromaze.html   いろまぜ（混色の発見）
+  taiko.html            たいこ（リズムまね）
 assets/                 画像・音・共通JS（置き場の規約 → docs/game-notes.md §アセット規約）
   audio.js / fx.js / save.js / rewards.js / shell.js / bgm.js / talk.js / guard.js   共通基盤（下記）
   menu/ uni/ bg/ tokens/ pairs/ items/ gacha/ room/ icons/ fonts/ bgm/
@@ -86,10 +88,11 @@ scripts/                test-games.js / build-sw.mjs / build-www.mjs / gen-place
   自前インライン実装する（色・演出のビスポーク性と「基盤が無くても落ちない」自己完結を優先）。
   `App.showModal` は絵文字を渡せる API だが「絵文字を使わない」方針のため使わない。
 - 見た目は `:root` にゲームごとのアクセント色を定義し、背景グラデも合わせる。入場は `.enter .d1..d6`。
-  新しいゲーム（tomare/chigai/sokkuri/pair/uta）は `--ac / --ac-d / --ac-sh / --ac-soft` の4つ（index.html の
+  新しいゲーム（tomare/chigai/sokkuri/pair/uta/meiro/iromaze/taiko）は `--ac / --ac-d / --ac-sh / --ac-soft` の4つ（index.html の
   カードと同じ命名）。旧ゲーム（programming/manekko/kimari/katachi/pitagora）は色名変数（`--purple` 等）のまま。
 - **アーケードのトップ（index.html）が各ゲームの進捗を読む。** 各ゲームは規定キーで保存すること：
   - manekko / kimari / tomare → `set('best', 最高記録)`（kimari は れんぞく さいこう）、その他 → `set('cleared', クリア/正解 数)`
+  - ホームの カードには `cat`（think／eye／note＝なかま わけ タブ）を必ず付ける
   - programming は独自キー `kuma_prog_save_v1`（互換のため変更しない。index.html はこれも読む）
 - **新ゲームを足したら5か所を必ず更新**：index.html の `GAMES` 配列・`doReset` の名前空間リスト・
   rewards.js の `earned()`（wins 集計）・rewards.js の `DAILY_ORDER`/`DAILY_NS`（きょうの 3つ）・scripts/test-games.js の `PAGES`。

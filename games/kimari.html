@@ -48,7 +48,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* 横画面：左に「もんだいの ならび」、右に「こたえ えらび」の2カラム（タブレット横を優先） */
 @media (orientation:landscape) and (min-width:720px){
   .wrap{max-width:1000px;display:grid;align-items:center;justify-items:center;
-    column-gap:30px;row-gap:4px;
+    column-gap:30px;row-gap:10px;align-content:center;   /* 行を 引きのばさず まんなかに よせる */
     grid-template-columns:1fr 1fr;
     grid-template-areas:"status status" "diff diff" "hint ask" "seq choices";}
   .statusbar{grid-area:status;}
@@ -104,7 +104,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .seq[data-n="6"]{--avail:calc((100vw - 84px)/6);}
 .seq[data-n="7"]{--avail:calc((100vw - 90px)/7);}
 .seq[data-n="8"]{--avail:calc((100vw - 96px)/8);}
-.seq[data-n="9"]{--avail:calc((100vw - 100px)/9);}
+.seq[data-n="9"]{--avail:calc((100vw - 62px)/9);gap:3px;margin:0 -6px;}   /* 9こ：360幅でも 33px 以上 */
 .seq[data-n="4"] .tile{--side:min(62px,var(--avail));}
 .seq[data-n="5"] .tile{--side:min(60px,var(--avail));}
 .seq[data-n="6"] .tile{--side:min(54px,var(--avail));}
@@ -164,7 +164,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 /* toast */
 .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(8px);z-index:45;opacity:0;
   background:#22506b;color:#fff;font-weight:800;font-size:14px;padding:10px 20px;border-radius:999px;
-  box-shadow:0 8px 18px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;pointer-events:none;}
+  box-shadow:0 8px 18px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;pointer-events:none;
+  max-width:calc(100vw - 32px);text-align:center;text-wrap:balance;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* modal */

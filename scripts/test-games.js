@@ -5,7 +5,7 @@
    - console.error / pageerror（JS例外）
    - 自前アセット（127.0.0.1）のリクエスト失敗・HTTP 4xx/5xx（リンク切れ）
    - 横スクロール（はみ出し）
-   合わせて /tmp/shot-<name>[-<size>].png にスクリーンショットを保存。
+   合わせて $SHOT_DIR（既定 /tmp）/shot-<name>[-<size>].png にスクリーンショットを保存。
 
    実行方法（puppeteer-core と google-chrome-stable が必要）:
      # 1) リポジトリ直下で静的サーバーを起動
@@ -18,6 +18,7 @@
 const puppeteer = require('puppeteer-core');
 
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:9123';
+const SHOT_DIR = process.env.SHOT_DIR || '/tmp';
 const PAGES = [
   { name: 'index',       url: BASE + '/index.html' },
   { name: 'room',        url: BASE + '/room.html' },
@@ -31,6 +32,9 @@ const PAGES = [
   { name: 'sokkuri',     url: BASE + '/games/sokkuri.html' },
   { name: 'pair',        url: BASE + '/games/pair.html' },
   { name: 'uta',         url: BASE + '/games/uta.html' },
+  { name: 'meiro',       url: BASE + '/games/meiro.html' },
+  { name: 'iromaze',     url: BASE + '/games/iromaze.html' },
+  { name: 'taiko',       url: BASE + '/games/taiko.html' },
 ];
 
 (async () => {
@@ -68,7 +72,7 @@ const PAGES = [
         return de.scrollWidth - de.clientWidth;
       });
       if (overflow > 4) errors.push('overflow-x: ' + overflow + 'px はみ出し');
-      await page.screenshot({ path: '/tmp/shot-' + p.name + '.png' });
+      await page.screenshot({ path: SHOT_DIR + '/shot-' + p.name + '.png' });
     } catch (e) {
       errors.push('goto failed: ' + e.message);
     }
